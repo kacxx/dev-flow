@@ -1,0 +1,11 @@
+{
+  "name": "dev-flow",
+  "version": "0.1.0",
+  "description": "Idea → tickets: capture, grill, proposal, to-tickets, flag-decision.",
+  "author": { "name": "kacxx", "url": "https://github.com/kacxx" },
+  "repository": "https://github.com/kacxx/dev-flow",
+  "license": "MIT",
+  "skills": [
+    "./skills/capture"
+  ]
+}

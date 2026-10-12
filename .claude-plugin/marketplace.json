@@ -1,0 +1,12 @@
+{
+  "name": "dev-flow",
+  "owner": { "name": "kacxx", "url": "https://github.com/kacxx" },
+  "description": "Lightweight idea → tickets workflow skills.",
+  "plugins": [
+    {
+      "name": "dev-flow",
+      "source": "./",
+      "description": "Capture an idea, settle its open questions, write a decided proposal, slice it into tickets."
+    }
+  ]
+}
