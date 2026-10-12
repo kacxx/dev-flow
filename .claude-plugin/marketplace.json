@@ -1,0 +1,15 @@
+{
+  "name": "dev-flow",
+  "owner": {
+    "name": "kacxx",
+    "url": "https://github.com/kacxx"
+  },
+  "description": "Lightweight idea \u2192 tickets workflow skills.",
+  "plugins": [
+    {
+      "name": "dev-flow",
+      "source": "./",
+      "description": "Idea \u2192 tickets workflow skills. Shipped so far: capture."
+    }
+  ]
+}
