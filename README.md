@@ -7,7 +7,7 @@ Lightweight workflow skills for getting from an idea to tickets someone can impl
 1. **idea → tickets** (this repo): capture the idea, settle the open questions, write a
    decided proposal, slice it into tickets that link back to their decisions.
 2. **tickets → merged code**: covered elsewhere (Superpowers, Matt Pocock's skills).
-3. **merged → released**: per project (e.g. a work repo).
+3. **merged → released**: per project.
 4. **retro**: after each run, fix what was clumsy.
 
 ## Status
