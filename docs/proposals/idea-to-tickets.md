@@ -1,6 +1,6 @@
 # Idea → tickets flow (#1): proposal
 
-Status: **two decisions open (D5 revised, D6 reopened by the fact-check). Merge once both are settled.**
+Status: **one decision open (D5, revised by the fact-check). Merge once it is settled.**
 
 ## Problem
 
@@ -41,12 +41,16 @@ Flow 2 needs a one-line rule: stop and flag, don't redesign.
 - **Mac and Windows:** a Claude Code plugin from this private repo, unchanged.
 - **Phone:** cloud sessions started from the Code tab in the phone app, not the chat app. Cloud sessions don't load plugins, so later the phone-friendly skills get uploaded to the claude.ai account, which cloud sessions load. Whether the Android chat app loads account skills is undocumented, so it's out of v1.
 
-### D6: Starting point (reopened by the fact-check)
-*Was:* adapt Matt Pocock's skills (MIT): `grill` from his `grill-me` and `grilling` with "the one-question-at-a-time core", `to-tickets` from his `to-tickets`, and `capture` and `proposal` new.
+### D6: Starting point (revised 12 Oct, after the fact-check reopened it)
+Adapt Matt Pocock's skills (MIT, with the notice in `NOTICE`):
+- **`grill`:** his `grilling` **frontier rounds**, used as they are. Each round asks every question whose prerequisites are already settled, numbered, each with a recommended answer and worded so "yes" accepts it. The agent looks up facts with sub-agents and never asks the user for them. Additions: each answer is recorded under a `D<n>` ID (D3), and the session ends by writing a decisions record, since the manual run showed nothing else captures them.
+- **`to-tickets`:** from his `to-tickets`, adding the `Implements:`/`Blocked by:` header (D3) and GitHub-issues output (D1).
+- **`capture` and `proposal`:** new.
 
-*Reopened because the "one-question-at-a-time" description is wrong.* His `grilling` works in **rounds**: each round asks every question whose prerequisites are already settled (the "frontier"), numbered, each with a recommended answer and worded so "yes" accepts it. Looking up facts is the agent's job, done by sub-agents, never the user's. Our manual run asked six independent questions in six turns; his method would have used one round.
+<details><summary>Superseded (12 Oct): "the one-question-at-a-time core"</summary>
 
-*Proposed:* adapt `grilling`'s rounds as they are. Add only the `D<n>` IDs and a closing decisions record (the manual run showed nothing else captures them). Everything else in D6 stands.
+The original D6 described Matt's grilling as asking one question at a time. The fact-check found it works in frontier rounds. Our manual run asked six independent questions in six turns where one round would have done.
+</details>
 
 ## Shape
 
