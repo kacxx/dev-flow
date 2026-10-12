@@ -1,6 +1,6 @@
 # Idea → tickets flow (#1): proposal
 
-Status: **one decision open (D5, revised by the fact-check). Merge once it is settled.**
+Status: **decided (D1–D6). Ready to merge, then slice into tickets.**
 
 ## Problem
 
@@ -34,12 +34,15 @@ An agent can check the header with one search, and IDs don't change when the doc
 
 Flow 2 needs a one-line rule: stop and flag, don't redesign.
 
-### D5: Devices (revised by the fact-check, needs confirming)
-*Was:* the plugin on Mac and Windows; later, `capture` and `grill` as claude.ai account skills for the Android app.
+### D5: Devices (revised 12 Oct, after the fact-check)
+- **Mac and Windows:** a Claude Code plugin from this private repo. Mac first; Windows confirmed with one install.
+- **Phone:** cloud sessions started from the Code tab in the phone app. Cloud sessions don't load plugins, so after the pilots the phone-friendly skills (`capture`, `grill`) get uploaded to the claude.ai account. Cloud sessions load account skills, and so does terminal Claude Code, through a one-way sync.
+- **The Android chat app:** out of v1. Whether it loads account skills is undocumented.
 
-*Proposed:*
-- **Mac and Windows:** a Claude Code plugin from this private repo, unchanged.
-- **Phone:** cloud sessions started from the Code tab in the phone app, not the chat app. Cloud sessions don't load plugins, so later the phone-friendly skills get uploaded to the claude.ai account, which cloud sessions load. Whether the Android chat app loads account skills is undocumented, so it's out of v1.
+<details><summary>Superseded (12 Oct): "claude.ai account skills for the Android app"</summary>
+
+The original D5 put `capture` and `grill` in the Android chat app. The fact-check found that the docs don't say the chat app loads account skills, while cloud sessions (Code tab) do.
+</details>
 
 ### D6: Starting point (revised 12 Oct, after the fact-check reopened it)
 Adapt Matt Pocock's skills (MIT, with the notice in `NOTICE`):
@@ -86,7 +89,7 @@ dev-flow/
 | Matt's `to-tickets` has blocking links and a ready label | ✅ `Blocked by`, `ready-for-agent`, sub-issues. It needs his setup skill for the tracker, so ours targets GitHub directly | mattpocock/skills `skills/engineering/to-tickets` |
 
 ## Out of scope (v1)
-Jira; the Android chat app; cross-session or cross-repo ticket discovery; automating the retro step (done by hand after each pilot).
+Jira; the Android chat app (D5); cross-session or cross-repo ticket discovery; automating the retro step (done by hand after each pilot).
 
 ## Risks
 - **The skills and the account-skill copy drift**, once the phone path exists. The plugin stays the source; account-skill zips are built from it.
