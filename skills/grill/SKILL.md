@@ -99,7 +99,7 @@ Then give the next step: `proposal` (full path, no doc yet), "ready to implement
 A ticket labelled `needs-decision` says decision `D<n>` is wrong, and the decision carries `Status: reopened — #<ticket>`.
 
 1. Read the ticket's evidence comment, then grill **that decision alone**.
-2. Revise it **where it lives** (the proposal doc, or the issue body on the short path): the new text keeps the **same ID**, the old text goes under `Superseded (YYYY-MM-DD): <old text> — reason: <what the ticket found>`, and the `Status: reopened` line is removed.
+2. Revise it **where it lives** (the proposal doc, or the issue body on the short path): the new text keeps the **same ID**, the old text moves into a superseded block (the same format `proposal` uses): `<details><summary>Superseded (YYYY-MM-DD)</summary>` + the old text + `Reason: <what the ticket found>` + `</details>`, and the `Status: reopened` line is removed.
 3. Find the open tickets built on it, and propose for each one whether it is updated, closed or split. Change nothing until the owner approves the list:
    ```bash
    gh api -X GET search/issues -f q='repo:OWNER/REPO is:issue is:open "Implements:" D<n>' --jq '.items[] | "#\(.number) \(.title)"'

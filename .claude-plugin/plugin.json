@@ -1,7 +1,7 @@
 {
   "name": "dev-flow",
-  "version": "0.2.0",
-  "description": "Idea \u2192 tickets workflow skills. Shipped so far: capture (idea \u2192 issue, picks the path), grill (settle open questions as D<n> decisions).",
+  "version": "0.3.0",
+  "description": "Idea \u2192 tickets workflow skills. Shipped so far: capture (idea \u2192 issue, picks the path), grill (settle open questions as D<n> decisions), proposal (decided, fact-checked design doc).",
   "author": {
     "name": "kacxx",
     "url": "https://github.com/kacxx"
@@ -9,7 +9,8 @@
   "repository": "https://github.com/kacxx/dev-flow",
   "skills": [
     "./skills/capture",
-    "./skills/grill"
+    "./skills/grill",
+    "./skills/proposal"
   ],
   "license": "MIT"
 }
