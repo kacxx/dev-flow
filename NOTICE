@@ -1,6 +1,7 @@
-dev-flow adapts parts of Matt Pocock's skills (https://github.com/mattpocock/skills):
-skills/grill is adapted from skills/productivity/grilling, and skills/to-tickets from
-skills/engineering/to-tickets. Those parts are used under the MIT License:
+dev-flow will adapt parts of Matt Pocock's skills (https://github.com/mattpocock/skills).
+Planned: skills/grill from skills/productivity/grilling (#6) and skills/to-tickets from
+skills/engineering/to-tickets (#10). This notice is updated as each adapted skill lands.
+Those parts are used under the MIT License:
 
 MIT License
 

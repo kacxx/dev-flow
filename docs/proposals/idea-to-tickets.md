@@ -78,7 +78,7 @@ dev-flow/
 
 - **GitHub access:** the skills read and write issues with `gh api repos/{owner}/{repo}/issues…`, not `gh issue`/`gh pr`. That works both locally and in cloud sessions, where GraphQL is blocked.
 - **Updates:** bump `version` in `plugin.json` on each change. Installed plugins only update when the version changes.
-- **Tests:** each skill must reproduce issue #1's **outcomes**, not its turn count. `capture` produces #1's body and path choice; `grill` reaches D1–D6 from #1's six open questions (in one or two rounds, where the manual run took six turns); `proposal` produces this doc's sections and catches the D6 error; `to-tickets` produces this ticket set. `flag-decision` has nothing in #1 to reproduce, so it gets its own scenario: a ticket whose work contradicts D3 → an evidence comment, the `needs-decision` label, and a stop with no redesign.
+- **Tests:** each skill must reproduce issue #1's **outcomes**, not its turn count. `capture` produces #1's shape and path choice on comparable ideas, and, now that #1 exists, finds #1 and offers to continue it when given #1's idea again; `grill` reaches D1–D6 from #1's six open questions (in one or two rounds, where the manual run took six turns); `proposal` produces this doc's sections and catches the D6 error; `to-tickets` produces this ticket set. `flag-decision` has nothing in #1 to reproduce, so it gets its own scenario: a ticket whose work contradicts D3 → an evidence comment, the `needs-decision` label, and a stop with no redesign.
 
 ## Fact-check
 
