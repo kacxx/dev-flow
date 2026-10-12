@@ -1,5 +1,5 @@
 ---
 type: regex
 weight: 1
-pattern: '\*\*D6:'
+pattern: '### D[0-9]+:'
 ---

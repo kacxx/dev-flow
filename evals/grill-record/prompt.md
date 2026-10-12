@@ -35,12 +35,41 @@ Implementation (flow 2) takes over from the tickets. The skills are plain `SKILL
 
 Earlier in this session you asked me this round:
 
-Q1 - Ticket target: GitHub issues only for v1, designed so a Jira writer can be added later? ➡️ Yes.
-Q2 - Short path: capture decides the path (ready / short / full) and says why; the owner can override in one word? ➡️ Yes.
-Q3 - Linking: decisions get stable IDs (D1, D2 …) and every ticket opens with "Implements: D<n> — <source>" / "Blocked by: #<n>"? ➡️ Yes.
-Q4 - Way back: when implementation finds a decision is wrong, the agent stops and flags it, the decision is reopened and revised under the same ID, and affected tickets are re-sliced? ➡️ Yes.
-Q5 - Devices: v1 is a Claude Code plugin on the Mac (Windows confirmed by one install), with the phone later? ➡️ Yes.
-Q6 - Starting point: adapt Matt Pocock's skills (MIT) for grill and to-tickets, and write capture and proposal new? ➡️ Yes.
+❓ **Q1 - Ticket target**: GitHub issues only for now, or design for Jira from the start?
+
+➡️ GitHub issues only for v1, with tickets described in neutral fields so a Jira writer can be added later. Both pilot repos use GitHub issues.
+
+---
+
+❓ **Q2 - Short path**: how does a one-line idea skip grill and proposal, and who decides it's small?
+
+➡️ `capture` decides the path (ready / short / full) and says why; the owner can override in one word. It keeps the decision at the cheapest point.
+
+---
+
+❓ **Q3 - Linking**: what format does a ticket use to point back to its decision?
+
+➡️ Decisions get stable IDs (D1, D2 …) and every ticket opens with "Implements: D<n> — <source>" / "Blocked by: #<n>". The header can be checked with one search.
+
+---
+
+❓ **Q4 - Way back**: when flow 2 finds a decision was wrong, how does it reopen it?
+
+➡️ The agent stops and flags it, the decision is reopened and revised under the same ID, and affected tickets are re-sliced with the owner's approval. It stops silent redesign inside a ticket.
+
+---
+
+❓ **Q5 - Devices**: what can each surface load?
+
+➡️ v1 is a Claude Code plugin on the Mac, with Windows confirmed by one install; the phone comes later. It keeps v1 to one packaging path.
+
+---
+
+❓ **Q6 - Starting point**: adapt Matt's grill-me / to-spec / to-tickets text, or write from scratch?
+
+➡️ Adapt Matt Pocock's skills (MIT) for grill and to-tickets, and write capture and proposal new. His frontier rounds and slicing already work.
+
+Answer "yes" to accept all, or per question: "1 yes, 2 no: X, 3 skip".
 
 My answer: yes
 

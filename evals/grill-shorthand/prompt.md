@@ -28,10 +28,31 @@ The design is in the proposal PR (docs/proposals/jot-status-check.md), with open
 
 Earlier in this session you asked me this round:
 
-Q1 - Closing: the agent only proposes `aside done` and I approve each one (no auto-close in v1)? ➡️ Yes.
-Q2 - Scope: same-session only for v1; jots actioned in a different session are out of scope? ➡️ Yes.
-Q3 - Codex: Codex jots have no transcript, so the answer for them is "can't tell"? ➡️ Yes.
-Q4 - Name: call the new read-only command `activity`? ➡️ Yes.
+❓ **Q1 - Closing**: should the agent only propose closures, or may it close clear cases itself?
+
+➡️ Propose only: the agent offers `aside done` and the owner approves each one. A false close hides work from the inbox.
+
+---
+
+❓ **Q2 - Other sessions**: are jots actioned in a different session in v1?
+
+➡️ Same-session only for v1. `find` already covers other sessions.
+
+---
+
+❓ **Q3 - Codex**: Codex jots have no transcript; accept "can't tell"?
+
+➡️ Yes, answer "can't tell" for them. There's no transcript to read.
+
+---
+
+❓ **Q4 - Name**: call the command `activity`, `since` or `transcript`?
+
+➡️ `activity`. It says what the command returns.
+
+Answer "yes" to accept all, or per question: "1 yes, 2 no: X, 3 skip".
+
+There are no existing decisions yet, in the issue or in the proposal doc, so numbering starts at D1.
 
 My answer: 1 yes, 2 no: include jots actioned in other sessions in v1, 3 skip, 4 yes
 

@@ -15,24 +15,26 @@ Path selection: 12/12 with the plugin. Known gap: on the full case the Idea sect
 
 Not covered by `claude plugin eval` on this machine: steps that need Bash (`gh` search, post, label). The eval sandbox refuses Bash because the local AWS config uses `credential_process`. Duplicate detection was checked with a sub-agent running the skill against kacxx/dev-flow with read-only `gh`: given #1's idea, it found #1 and offered to continue it. Posting is owner-approved and not automated.
 
-## grill — 12 Oct 2026 (plugin 0.2.0)
+## grill — 13 Oct 2026 (plugin 0.2.0, after the #15 review)
 
-3 runs per case, Sonnet judge, no-plugin baseline. `regex` graders for mechanical checks, `llm` for judgement.
+3 runs per case, no-plugin baseline. The test rounds in the prompts use the skill's own format, with real recommendations and reasons.
 
-| Case | Check | With | Without |
+| Case | Check (grader type) | With | Without |
 |---|---|---|---|
-| grill-first-round (aside-jot#78, 4 questions) | every listed question asked in one round, or held back with a reason | 3/3 † | 0/3 |
-| | "answer yes to accept all / shorthand" line (regex) | 3/3 | 0/3 |
-| | a recommendation for every question | 3/3 | 0/3 |
-| | no decisions recorded before answers | 3/3 | 3/3 |
-| grill-record (dev-flow#1, all "yes") | D1–D6 recorded as settled facts | 2/3 | 2/3 |
+| grill-first-round (aside-jot#78, 4 questions) | Q1–Q4 all in one message, asked or held back with a reason (regex) | 3/3 | 0/3 |
+| | "answer yes to accept all" line (regex) | 3/3 | 0/3 |
+| | a recommendation for every question (llm) | 3/3 | 0/3 |
+| | no decisions recorded before answers (llm) | 3/3 | 3/3 |
+| grill-record (dev-flow#1, all "yes") | `### D1:` … `### D6:` headings in order (regex) | 3/3 | 0/3 |
+| | each heading followed by its accepted recommendation, in order (regex) | 3/3 | 0/3 |
 | | `## Decisions (grill, YYYY-MM-DD)` header (regex) | 3/3 | 0/3 |
-| | `**D6:` present (regex) | 3/3 | 3/3 |
-| | stops (no new round) | 2/3 | 3/3 |
-| grill-shorthand (aside-jot#78, "1 yes, 2 no: X, 3 skip, 4 yes") | accepted, alternative and skipped answers recorded correctly | 3/3 | 3/3 |
-| | IDs: no reuse, skipped question has no ID and is listed open | 3/3 | 0/3 |
-| both record cases | **fidelity**: no added reasons or details in decisions | 0/3 | 0/3 |
+| | stops: no new round (llm) | 3/3 | 3/3 |
+| grill-shorthand (aside-jot#78, "1 yes, 2 no: X, 3 skip, 4 yes") | accepted, alternative and skipped answers recorded correctly (llm) | 3/3 | 3/3 |
+| | IDs: no reuse, skipped question has no ID and is listed open (llm) | 3/3 | 3/3 |
+| | `### D<n>:` heading format (regex) | 3/3 | 0/3 |
 
-† After the "never drop a question silently" rule; before it, the command-name question vanished in 3/3 runs. With the rule, one run held it back with a reason ("holding until Q2 is settled, which changes which name fits"); two asked it.
+Scores: first-round 1.00 (0.20), record 1.00 (0.20), shorthand 1.00 (0.75).
 
-Known: the `fidelity` LLM grader fails both arms every time, while the outputs read as faithful on manual inspection. The grader is likely too strict, but that's unconfirmed. LLM judges also swung from 3/3 to 0/3 on similar outputs between runs, so mechanical checks are regex wherever possible.
+**Fidelity** (decisions contain nothing beyond what was accepted): checked by hand, because an LLM judge failed verbatim outputs in both arms on every run. In a sampled record, each of D1–D6 is the accepted recommendation word for word, reason line included. Earlier "fidelity failures" came from a test prompt whose recommendations had no reasons, so any reason the model added really was invented; that prompt is fixed.
+
+**LLM judges** swung between 3/3 and 0/3 on near-identical outputs. Anything mechanical is checked by regex.

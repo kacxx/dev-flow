@@ -65,7 +65,7 @@ If a fact matters but you can't look it up in this session (no repo access, no s
 Check these in order and take the **first** that matches, then state the result and the reason under the draft:
 
 1. **Full** if the idea needs design: a new interface or command, a cross-cutting change, or more than about three tickets. This applies even when there are no open questions; the design questions just haven't been asked yet. Next: `grill`, then `proposal` (a decided doc), then `to-tickets`.
-2. **Short** if there are open questions the owner can answer now. Next: `grill` in the issue; the decisions go into the issue body as `D1`, `D2` … No proposal doc.
+2. **Short** if there are open questions the owner can answer now. Next: `grill` in the issue; the decisions go into the issue body as `### D<n>:` headings. No proposal doc.
 3. **Ready** only if there are no open questions, nothing under To check, and no design. Add `## Acceptance criteria` and label it `ready-for-agent`: the issue *is* the ticket. If To check is the only thing in the way, it's **short**: `grill` looks the facts up first.
 
 Tell the owner, in chat (not in the issue): `Path: full, because <reason>. Reply "ready", "short" or "full" to override.`
@@ -109,5 +109,5 @@ Edit the body rather than adding a comment: detail left in comments is how decis
 
 Give the issue link and the next step:
 - **Ready:** "ready to implement".
-- **Short or full:** run `grill` on the issue. If the `grill` skill isn't installed yet, settle the open questions by hand in the issue instead: ask them as one numbered list with a recommendation each, and write each answer into the issue body as `D1`, `D2` ….
+- **Short or full:** run `grill` on the issue. If the `grill` skill isn't installed yet, settle the open questions by hand in the issue instead: ask them as one numbered list with a recommendation each, and write each answer into the issue body under `## Decisions` as `### D1: <title>` headings.
 - **Full:** after the decisions, a proposal doc (`proposal`) and then tickets (`to-tickets`). If those skills aren't installed yet, say so and stop at the decisions.
