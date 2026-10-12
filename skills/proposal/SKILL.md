@@ -9,21 +9,29 @@ Turn an issue's decisions into one decided design doc, `docs/proposals/<name>.md
 
 ## 1. Gather
 
-Read the issue body and **every** comment, and any existing proposal doc or doc PR for it:
+Read the issue body and **every** comment:
 
 ```bash
 gh api repos/OWNER/REPO/issues/N --jq .body
 gh api --paginate repos/OWNER/REPO/issues/N/comments --jq '.[].body'
-gh api -X GET search/issues -f q='repo:OWNER/REPO is:pr "docs/proposals"' --jq '.items[] | "#\(.number) [\(.state)] \(.title)"'
 ```
 
-Collect every decision (`### D<n>:` headings, or a `## Decisions (grill, …)` comment), open question, skipped question and looked-up fact. If decisions only exist in comments, they go into the doc now: a decision left in a comment is how answers got lost before.
+Find any existing doc or doc PR for this issue, so a second run updates it instead of creating a duplicate:
 
-If an open doc PR already exists, update it rather than starting a second doc.
+```bash
+# open PRs that reference the issue (this skill writes "Refs #N" in every PR it opens)
+gh api --paginate 'repos/OWNER/REPO/pulls?state=open' --jq '.[] | select(.body // "" | test("(Refs|Closes|Fixes) #N\\b")) | "#\(.number) \(.head.ref) \(.title)"'
+# docs already on the default branch that name the issue in their title line
+gh api 'repos/OWNER/REPO/contents/docs/proposals' --jq '.[].path' 2>/dev/null
+```
+
+Read any proposal doc whose first line names `(#N)`. If an open doc PR exists, work on its branch and update that PR (step 6).
+
+Collect every decision (`### D<n>:` headings, or a `## Decisions (grill, …)` comment), every skipped or still-open question, and every looked-up fact. Decisions that only exist in comments go into the doc now: a decision left in a comment is how answers got lost before.
 
 ## 2. Write the doc
 
-On a branch, with these sections in this order:
+On a branch (or the existing PR's branch), with these sections in this order:
 
 ```markdown
 # <Title> (#<issue>): proposal
@@ -41,10 +49,15 @@ Status: **<status>**. <Don't merge yet: … | Ready to merge, then slice into ti
 ### D2: <title> (revised YYYY-MM-DD)
 <current text>
 
-<details><summary>Superseded (YYYY-MM-DD): <one-line old version></summary>
+<details><summary>Superseded (YYYY-MM-DD)</summary>
 
-<old text, and the reason it changed>
+<old text>
+
+Reason: <what changed it>
 </details>
+
+## Open questions        ← only if grill skipped or left any open
+1. <the question, as grill recorded it>
 
 ## Shape
 <what gets built, at the level of components and interfaces: files, commands, data, how they connect. No more detail than the decisions settle.>
@@ -59,15 +72,17 @@ Status: **<status>**. <Don't merge yet: … | Ready to merge, then slice into ti
 ## Risks
 ```
 
+The `<details>` block is the one superseded format; `grill` writes the same block when it revises a decision.
+
 The `<status>` is exactly one of these, counted at the moment of writing:
 - `decided`: nothing open, no fact a decision depends on is unchecked.
 - `decided, M facts unchecked`: every decision settled, but M facts it depends on aren't checked yet.
-- `N decisions open`: N decisions reopened or skipped, and no unchecked facts.
-- `N decisions open, M facts unchecked`: both.
+- `N open`: N items open (reopened decisions plus open questions), and no unchecked facts.
+- `N open, M facts unchecked`: both.
 
-Use "decision"/"fact" in the singular for 1. Only `decided` means the doc can merge.
+Use "fact" in the singular for 1. Only `decided` means the doc can merge.
 
-Write decisions exactly as recorded. Changing one's meaning while writing it up is an unapproved decision; if the wording needs to change, that's a question for the owner.
+Write decisions exactly as recorded. Changing one's meaning while writing it up is an unapproved decision; if the wording needs to change, that's a question for the owner. A question grill skipped goes under `## Open questions` with no D-number: it gets one only when grill settles it.
 
 ## 3. Fact-check every claim
 
@@ -83,31 +98,43 @@ One row per claim. ✅ confirmed, ⚠️ partly confirmed or unverified (say wha
 
 ## 4. Consistency pass
 
-Read the decisions against each other, and against Shape and the tests. Look for one decision naming something another names differently (a label, a heading format, a file name), a test that can't pass given a decision, and a decision that assumes something another rules out. Each contradiction is either fixed, if it's a wording slip the owner already settled, or becomes an open question.
+Read the decisions against each other, and against Shape and the tests. Look for one decision naming something another names differently (a label, a heading format, a file name), a test that can't pass given a decision, and a decision that assumes something another rules out. Each contradiction is either fixed, if it's a wording slip the owner already settled, or reopens the decision.
 
-## 5. Open decisions block the merge
+## 5. What blocks the merge
 
-A decision is **open** when the fact-check finds it rests on a wrong claim (❌), when the consistency pass finds a real contradiction, or when grill skipped it. For each one:
-- Add `Status: reopened — <fact-check | consistency | skipped>: <one line>` under its heading, and keep the current text.
-- Settle it with `grill` (on that decision alone). The revised text keeps the **same ID**, and the old text goes into a `Superseded (YYYY-MM-DD)` block with the reason.
+An item is **open** when:
+- the fact-check finds a decision rests on a wrong claim (❌): reopen that decision;
+- the consistency pass finds a real contradiction: reopen the decisions involved;
+- grill skipped or left a question open: it's under `## Open questions`.
 
-While any decision is open:
-- the Status line says `**N decisions open**`;
-- the PR is a **draft**: open it with `"draft": true` (see step 6);
-- say plainly that it shouldn't merge yet.
+To reopen a decision, add `Status: reopened — <fact-check | consistency>: <one line>` under its heading and keep its current text. Settle it with `grill` on that decision alone: the revised text keeps the **same ID**, and the old text moves into the `<details>` superseded block.
 
-**Unchecked facts also block the merge.** If every decision is settled but a ⚠️ row a decision depends on is still unverified (no access in this session, say), the Status is `**decided, M facts unchecked**`, the PR stays a draft, and the doc lists what to check and how. An implementer would otherwise build on an unchecked assumption. A ⚠️ row nothing depends on can stay ⚠️ without blocking; say so in that row.
+**Unchecked facts also block the merge.** A ⚠️ row a decision depends on, still unverified (no access in this session, say), counts toward `M facts unchecked`; list what to check and how. An implementer would otherwise build on an unchecked assumption. A ⚠️ row nothing depends on can stay ⚠️ without blocking; say so in that row.
 
-When nothing is open and no fact a decision depends on is unchecked: Status `**decided**`, mark the PR ready for review, and name the next step: `to-tickets`. Switching a PR between draft and ready uses GraphQL (`gh pr ready P`), which fails in cloud sessions. There, ask the owner to click **Ready for review**.
+While the status isn't `decided`, the PR is a draft and the doc says plainly not to merge yet. When it is `decided`, end your reply to the owner with this line:
 
-## 6. Open or update the PR
+`Next step: to-tickets`
 
-Commit the doc on its branch and open (or update) the PR through REST, which works in cloud sessions:
+If the `to-tickets` skill isn't installed, add that it isn't, and that the tickets can be written by hand from the decisions (one per vertical slice, each opening with `Implements: D<n> — docs/proposals/<name>.md`). Never write that line for a doc that isn't `decided`.
+
+## 6. Show, push, open or update the PR
+
+In this order:
+1. **Show the owner** the doc and the fact-check table. Wait for their yes.
+2. **Commit and push** the branch: `git add docs/proposals/<name>.md && git commit -m "docs: <name> proposal (#N)" && git push -u origin <branch>`.
+3. **Open the PR, or update the existing one** (step 1 found it), through REST, which works in cloud sessions:
 
 ```bash
+# new PR, as a draft unless the status is decided
 gh api repos/OWNER/REPO/pulls --method POST -f title='docs: <name> proposal' -f head=<branch> -f base=main -F draft=true -F body=@- <<'BODY'
-<description>
+Refs #N
+<status, reopened decisions, open questions, unchecked facts>
+BODY
+# existing PR: the push already updated the diff; refresh its description
+gh api repos/OWNER/REPO/pulls/P --method PATCH -F body=@- <<'BODY'
+Refs #N
+<…>
 BODY
 ```
 
-Use `-F draft=false` when nothing is open. Its description names the issue (`Refs #N`), lists any decisions the fact-check or consistency pass reopened, and states whether it's ready to merge. Show the owner the doc and the fact-check table before pushing.
+A PR's draft state can't be changed through REST (`draft` in a PATCH is ignored). When an existing draft becomes `decided`, mark it ready with `gh pr ready P` (GraphQL, which works locally). In a cloud session, where GraphQL fails, ask the owner to click **Ready for review**.
