@@ -1,0 +1,14 @@
+{
+  "name": "dev-flow",
+  "version": "0.1.0",
+  "description": "Idea \u2192 tickets workflow skills. Shipped so far: capture (idea \u2192 issue, picks the path).",
+  "author": {
+    "name": "kacxx",
+    "url": "https://github.com/kacxx"
+  },
+  "repository": "https://github.com/kacxx/dev-flow",
+  "skills": [
+    "./skills/capture"
+  ],
+  "license": "MIT"
+}
