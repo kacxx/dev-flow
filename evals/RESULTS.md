@@ -38,3 +38,26 @@ Scores: first-round 1.00 (0.20), record 1.00 (0.20), shorthand 1.00 (0.75).
 **Fidelity** (decisions contain nothing beyond what was accepted): checked by hand, because an LLM judge failed verbatim outputs in both arms on every run. In a sampled record, each of D1–D6 is the accepted recommendation word for word, reason line included. Earlier "fidelity failures" came from a test prompt whose recommendations had no reasons, so any reason the model added really was invented; that prompt is fixed.
 
 **LLM judges** swung between 3/3 and 0/3 on near-identical outputs. Anything mechanical is checked by regex.
+
+## proposal — 13 Oct 2026 (plugin 0.3.0)
+
+3 runs per case, no-plugin baseline. The cases use a neutral project (kacxx/notes-cli), not dev-flow, so the skill can't read its own text as facts. `catch-error` allows WebFetch, so the fact-check reads the real file.
+
+| Case | Check (grader type) | With | Without |
+|---|---|---|---|
+| proposal-catch-error (D2 claims Matt's `grilling` asks one question at a time) | sections in order + fact-check table header (regex) | 3/3 | 0/3 |
+| | D2 gets `Status: reopened` (regex) | 3/3 | 0/3 |
+| | fact-check row marks the claim ❌, says "rounds", cites the GitHub file (llm) | 3/3 | 0/3 |
+| | status `N decisions open[, M facts unchecked]` (regex) | 3/3 | 0/3 |
+| proposal-consistency (D2 tags `#ready`, D3 lists `#thought-through`) | sections in order (regex) | 3/3 | 0/3 |
+| | `Status: reopened — consistency` (regex) | 3/3 | 0/3 |
+| | contradiction named and left to the owner (llm) | 3/3 | 3/3 |
+| | status open (regex) | 3/3 | 0/3 |
+| proposal-decided (clean decisions, facts confirmed by the owner) | sections in order (regex) | 3/3 | 0/3 |
+| | D1–D3 verbatim, no D4 added (regex) | 3/3 | 0/3 |
+| | status `decided` (regex) | 2/3 | 0/3 |
+| | next step is tickets (regex) | 3/3 | 0/3 |
+
+Scores: catch-error 1.00 (0.00), consistency 1.00 (0.20), decided 0.87 (0.00).
+
+This is #9's "catches the D6 error" test: fed the same false claim in an unrelated project, the skill fetched Matt's `grilling` file, marked the claim ❌ ("asks in rounds") and reopened the decision. Found while testing: the status line needed an exact grammar (it once read "1 decision open — decided — 3 facts unchecked"), and an unrelated test-input flaw (the Problem promised "tasks" that no decision covered) was caught by the consistency pass.
