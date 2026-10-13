@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Tests for check_pointer.py. Run: python3 -I skills/to-tickets/scripts/test_check_pointer.py"""
 import os
 import sys

@@ -1,6 +1,6 @@
 ---
 name: grill
-description: Use when an idea, issue or plan has open questions to settle before it can be specified or ticketed. Settles them in rounds with the owner and records each answer as a D<n> decision.
+description: Use when an idea, issue or plan has open questions to settle before it can be specified or ticketed. Settles them in rounds with the owner and records each answer as a numbered decision (D1, D2…).
 ---
 
 # Grill
