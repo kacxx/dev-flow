@@ -3,7 +3,7 @@ max_turns: 20
 allowed_tools: [Skill, WebFetch]
 ---
 
-This session can't reach GitHub, so here is issue #4 from my repo kacxx/notes-cli and my comment on it. I answered the open questions myself; I didn't run grill. Write the proposal doc for it. Show me the result; don't write files or open a PR.
+This session has no `gh` or git access to my repo (it can still fetch public web pages), so here is issue #4 from my repo kacxx/notes-cli and my comment on it. I answered the open questions myself; I didn't run grill. Write the proposal doc for it. Paste the full doc in your reply; don't write files or open a PR.
 
 <issue>
 ## Problem

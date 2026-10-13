@@ -113,17 +113,21 @@ Without the plugin, every run quietly worked around the broken decision: the sil
 
 Not exercised: the `gh api` comment and label calls (the eval sandbox can't grant Bash here). The to-tickets "open flag" search was run live against this repo.
 
-## proposal pilot fixes — 13 Oct 2026 (plugin 0.6.0, from the #11 pilot)
+## proposal pilot fixes — 13 Oct 2026 (plugin 0.6.0, from the #11 pilot, after the #19 review)
 
-New case `proposal-prose-decisions` (kacxx/notes-cli; WebFetch allowed). The owner answers in a prose comment without grill; one answer embeds a false claim ("Matt's grilling asks one question at a time"); one line is a constraint ("cap an interview at 10 questions").
+New case `proposal-prose-decisions` (kacxx/notes-cli; WebFetch allowed). The owner answers in a prose comment without grill; one answer embeds a false claim ("Matt's grilling asks one question at a time"); one line is a constraint ("cap an interview at 10 questions"). Every proposal prompt now asks for the full doc and says plainly that public pages can be fetched but there's no `gh`/git access.
 
 | Check (grader type) | With | Without |
 |---|---|---|
 | prose answers numbered `### D1:` … `### D3:` (regex) | 3/3 | 0/3 |
 | the constraint becomes a `### D<n>: Constraint…` decision (regex) | 3/3 | 0/3 |
-| status `N open` (regex) | 3/3 | 0/3 |
+| status `N open[, M facts unchecked]` (regex) | 3/3 | 0/3 |
 | the embedded false premise reopens its decision, options under its own heading (llm) | 3/3 | 0/3 |
-| mapping shown for the owner to confirm, owner's wording kept (llm) | 3/3 | 0/3 |
-| no `## Open questions` section (nothing was skipped) (regex) | 2/3 | 2/3 |
+| mapping shown for the owner to confirm, owner's wording kept (llm) | 2/3 | 0/3 |
 
-Score: 0.95 (baseline 0.10). Regression: catch-error, consistency and decided all still 1.00.
+Scores after the review: prose-decisions 0.94 (0.00), catch-error 0.96 (0.25), consistency 0.94 (0.33), decided 1.00 (0.00).
+
+Found while re-testing:
+- The prompts said "this session can't reach GitHub", and some runs took that literally and never fetched the file, so they left the false claim unchecked. The prompts now say what's actually true.
+- Widening `## Open questions` to cover questions the fact-check raises made `decided` unreachable: runs blocked on implementation details (how `<idea>` matches a heading). The bar is now flag-decision's: an open question only if any answer would change what the owner agreed to; otherwise state the default in Shape.
+- A regex-only case keeps no response text, so `proposal-decided` has a 0.01-weight LLM grader just to keep its output visible.
