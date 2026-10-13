@@ -9,14 +9,21 @@ on:
 permissions:
   contents: read
 
+# A newer push to a PR cancels the run it replaces; runs on main all finish (D1).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   unit:
     name: ${{ matrix.os }}, ${{ matrix.pyyaml }} PyYAML
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # Pinned images, not -latest: setup-python only installs 3.9 where the image has a build for it.
+        os: [ubuntu-24.04, windows-2022]
         pyyaml: [without, with]
     steps:
       - uses: actions/checkout@v7
@@ -25,7 +32,7 @@ jobs:
           python-version: "3.9"
       - name: Install PyYAML
         if: matrix.pyyaml == 'with'
-        run: python -m pip install pyyaml
+        run: python -m pip install pyyaml==6.0.2
       # Fail loudly if the job isn't testing the parser it says it is.
       - name: Check PyYAML is ${{ matrix.pyyaml == 'with' && 'importable' || 'absent' }}
         run: python -I -c "import importlib.util, sys; found = importlib.util.find_spec('yaml') is not None; sys.exit(0 if found == ('${{ matrix.pyyaml }}' == 'with') else 1)"
