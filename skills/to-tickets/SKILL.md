@@ -29,7 +29,7 @@ gh api -X GET search/issues -f q='repo:OWNER/REPO is:issue is:open label:needs-d
 If search is refused (cloud sessions' GitHub proxy can block it), list the open `needs-decision` issues and filter on the body instead:
 
 ```bash
-gh api --paginate 'repos/OWNER/REPO/issues?state=open&labels=needs-decision&per_page=100' --jq '.[] | select(.pull_request | not) | select(.body // "" | contains("Parent: #N")) | "#\(.number) \(.title)"'
+gh api --paginate 'repos/OWNER/REPO/issues?state=open&labels=needs-decision&per_page=100' --jq '.[] | select(.pull_request | not) | select(.body // "" | test("(?m)^Parent: #N\\s*$")) | "#\(.number) \(.title)"'
 ```
 
 Tickets built on undecided work end up rebuilt. That's the failure this check prevents.

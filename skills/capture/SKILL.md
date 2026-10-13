@@ -17,10 +17,10 @@ Search **all** issues and PRs, open and closed, for the same idea before writing
 gh api -X GET search/issues -f q='repo:OWNER/REPO KEYWORDS' --jq '.items[] | "#\(.number) [\(if .pull_request then (if .pull_request.merged_at then "PR, merged" else "PR, \(.state)" end) else "issue, \(.state)" end)] \(.title)"'
 ```
 
-If the search call fails (the GitHub proxy in cloud sessions can refuse `search/issues`), list every issue and PR instead and match the titles and bodies yourself:
+If the search call fails (the GitHub proxy in cloud sessions can refuse `search/issues`), list every issue and PR instead and filter their titles and bodies on the same key words, written as a case-insensitive regex (`KEYWORDS` becomes e.g. `CI|workflow`):
 
 ```bash
-gh api --paginate 'repos/OWNER/REPO/issues?state=all&per_page=100' --jq '.[] | "#\(.number) [\(if .pull_request then (if .pull_request.merged_at then "PR, merged" else "PR, \(.state)" end) else "issue, \(.state)" end)] \(.title)"'
+gh api --paginate 'repos/OWNER/REPO/issues?state=all&per_page=100' --jq '.[] | select((.title + "\n" + (.body // "")) | test("KEYWORDS"; "i")) | "#\(.number) [\(if .pull_request then (if .pull_request.merged_at then "PR, merged" else "PR, \(.state)" end) else "issue, \(.state)" end)] \(.title)"'
 ```
 
 Results mix issues and PRs: a PR is the work for an issue, not a duplicate of it. If an issue matches, show it with its state and offer to continue that one instead: an open one gets the new detail added (step 5), and a closed one, or a merged PR, may mean it's already done. Two write-ups of one idea is the failure this step prevents.
