@@ -19,13 +19,20 @@ Ideas get from "I want X" to "here are the tickets" ad hoc. `kacxx/aside-jot#78`
 ### D1: Ticket target
 GitHub issues only for v1. Tickets are described in neutral fields (title, problem, acceptance criteria, which decision it implements, what blocks it), so a Jira writer can be added later without a redesign.
 
-### D2: Short path
+### D2: Short path (revised 2026-10-13)
 `capture` decides the path and says why; the owner can override in one word.
 - **No open questions:** the issue becomes the ticket (acceptance criteria added, labelled `ready-for-agent`, the same label `to-tickets` uses).
 - **Open questions answerable in one sitting:** grill them in the issue and write the decisions into the issue body. No proposal doc.
 - **Needs design** (a new interface or command, a cross-cutting change, or more than about three tickets): the full path, ending in a proposal doc.
 
+The three-ticket cut-off gets tuned after the pilots. A change to it is a revision of D2 through `grill` (same ID, old text superseded); the evidence (which ideas took which path, and whether that was right) is appended to `docs/path-tuning.md` after each pilot, one entry per idea, so all pilots feed one record.
+
+<details><summary>Superseded (2026-10-13)</summary>
+
 The three-ticket cut-off gets tuned after the pilots.
+
+Reason: it didn't say where the tuning is recorded (review on #1).
+</details>
 
 ### D3: Linking
 Decisions get stable IDs (`D1`, `D2`, …): headings in the proposal doc or, on the short path, in the issue body. Every ticket opens with:
@@ -35,12 +42,25 @@ Blocked by: #12
 ```
 On the short path there's no doc, so the header points at the issue holding the decisions: `Implements: D2 — #<issue>`. An agent can check the header with one search, and IDs don't change when the doc is edited.
 
-### D4: Way back
+### D4: Way back (revised 2026-10-13)
+1. The implementing agent stops and flags with the **`flag-decision`** skill: it comments on the ticket with the evidence and the decision it breaks (`## Decision flagged: D<n>`), swaps `ready-for-agent` for `needs-decision`, and doesn't redesign inside the ticket.
+2. **The `needs-decision` label plus that comment are the reopen marker.** Nothing is written into the doc or issue until the decision is revised: `grill` settles it alone, and the revision keeps the same ID with the old text in a superseded block.
+3. `grill` proposes a re-slice of the open tickets that say `Implements: D<n>`, and the owner approves it. Then `grill` removes `needs-decision` from the flagged ticket, and puts `ready-for-agent` back if the ticket is still valid and unblocked. Until then, `to-tickets` won't slice the source again.
+
+A decision reopened **while a proposal is still being drafted** (by its fact-check or consistency pass) is marked differently: `proposal` writes `Status: reopened — <fact-check | consistency>: <one line>` under its heading in the draft doc. Two moments, two markers, each with one owner.
+
+Each project's `CLAUDE.md` gets the one-line pointer from `skills/flag-decision/SKILL.md` that triggers it. The procedure exists once; only the trigger is per project.
+
+<details><summary>Superseded (2026-10-13)</summary>
+
 1. The implementing agent stops and flags. It comments with the evidence and the decision it breaks, and labels the ticket `needs-decision`. It doesn't redesign inside the ticket.
 2. The decision gets `Status: reopened — #<ticket>`, is grilled on its own, and is revised under the same ID with the old text kept as superseded.
 3. Open tickets that say `Implements: D<n>` are re-sliced, and the owner approves the list.
 
 The procedure lives in the plugin as a short **`flag-decision`** skill: comment with the evidence, add the `needs-decision` label, stop. Each project's `CLAUDE.md` gets a one-line pointer that triggers it ("if a ticket conflicts with a decision, run flag-decision; don't redesign"). The procedure exists once; only the trigger is per project. *(Added 12 Oct: PR #3 found that D4 didn't say where the rule lives.)*
+
+Reason: the #18 review gave the reopen marker a single owner. During implementation it is the `needs-decision` label plus the flag comment, not a `Status: reopened — #<ticket>` line in the doc (review on #1).
+</details>
 
 ### D5: Devices (revised again 12 Oct, after the phone probe)
 - **Source:** this repo. Skills are written and versioned here.
@@ -97,7 +117,7 @@ dev-flow/
 | The same plugin works on Windows | ⚠️ Native and WSL are both supported, but the docs don't say install is identical. WSL is a separate home directory, so a separate install | code.claude.com/docs/en/setup |
 | Cloud sessions load repo-committed skills | ✅ **Probe:** `dev-flow-probe` loaded live from the checked-out branch, after a short delay, no restart | Phone probe, PR #3 comment |
 | Cloud sessions load claude.ai account skills | ✅ **Probe:** 15 account skills synced to `~/.claude/skills/synced/` | Phone probe |
-| Cloud sessions load plugins | ⚠️ **Probe:** account-synced plugins load (`~/.claude/plugins/synced/`: engineering, design, …). The docs say machine-installed marketplace plugins don't. Not tested: adding a personal GitHub-marketplace plugin to the account | Phone probe; cloud-environments "what carries over" |
+| Cloud sessions load plugins | ⚠️ **Probe:** account-synced plugins load (`~/.claude/plugins/synced/`: engineering, design, …). The docs say machine-installed marketplace plugins don't. Not tested: adding a personal GitHub-marketplace plugin to the account. Nothing depends on this: D5 routes the phone through account skills (✅ above). | Phone probe; cloud-environments "what carries over" |
 | Cloud sessions can write to a private repo | ✅ **Probe:** posted a comment on #1 and pushed a branch. The docs say `gh issue`/`gh pr` fail (GraphQL blocked), so the skills use `gh api` | Phone probe; cloud-environments "github-proxy" |
 | A phone session starts on the requested branch | ❌ **Probe:** it started on a fresh `claude/…` branch from `main` and needed `git checkout` | Phone probe |
 | The Android chat app loads account skills | Not tested, undocumented. Out of v1 | support article 11869629 |
