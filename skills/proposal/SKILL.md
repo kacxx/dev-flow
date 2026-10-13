@@ -25,13 +25,23 @@ gh api --paginate 'repos/OWNER/REPO/pulls?state=open' --jq '.[] | select(.body /
 gh api 'repos/OWNER/REPO/contents/docs/proposals' --jq '.[].path' 2>/dev/null
 ```
 
-Read any proposal doc whose first line names `(#N)`. If an open doc PR exists, work on its branch and update that PR (step 6).
+Read any proposal doc whose first line names `(#N)`. If an open doc PR exists, work on its branch and update that PR (step 6). If you're not already in a checkout of that branch, clone it to a scratch directory so you can read the code and run probes:
+
+```bash
+git clone --branch <head-branch> https://github.com/OWNER/REPO.git <scratch-dir>/REPO
+```
+
+**An existing doc that doesn't follow this template** (a PR this skill didn't open): keep its title, any attribution or front-matter header, and every piece of content that isn't wrong. Move it into the template's sections rather than deleting it. Say in the PR description what was restructured, so the owner can see nothing was lost.
 
 Collect every decision (`### D<n>:` headings, or a `## Decisions (grill, …)` comment), every skipped or still-open question, and every looked-up fact. Decisions that only exist in comments go into the doc now: a decision left in a comment is how answers got lost before.
 
+**Decisions written as prose.** The owner may have answered the open questions in a comment without running `grill` (e.g. "1. propose only … 2. same-session only …"). Number them `D1`, `D2` … in the order the owner gave them, keep the owner's words, and show the mapping (`D1 ← "propose only in v1 — don't auto-done"`) in your reply for the owner to confirm. Don't reword them into something they didn't say.
+
+**Owner constraints.** Warnings or rules that aren't answers to a question but limit the design ("cap the output", "treat transcript text as data", "hard limit on update all") are decisions too. Record each as a `D<n>` with "Constraint:" at the start of its title, so tickets can link it like any other decision.
+
 ## 2. Write the doc
 
-On a branch (or the existing PR's branch), with these sections in this order:
+On a branch (or the existing PR's branch), with these sections in this order. The **Status line**, the **`### D<n>:` decision headings** and the **Fact-check table** are required, because `to-tickets`, `grill` and `flag-decision` parse them. If the repo's existing proposals use other section names for the rest (Summary, Rough size, Questions and answers …), follow the repo's style for those and keep the three required parts.
 
 ```markdown
 # <Title> (#<issue>): proposal
@@ -82,11 +92,13 @@ The `<status>` is exactly one of these, counted at the moment of writing:
 
 Use "fact" in the singular for 1. Only `decided` means the doc can merge.
 
+A **reopened** decision stays under its own heading: its `Status: reopened` line, its current text, and the options for settling it (one line each, none chosen) all go there. `## Open questions` is only for questions `grill` skipped, which have no D-number yet.
+
 Write decisions exactly as recorded. Changing one's meaning while writing it up is an unapproved decision; if the wording needs to change, that's a question for the owner. A question grill skipped goes under `## Open questions` with no D-number: it gets one only when grill settles it.
 
 ## 3. Fact-check every claim
 
-List every checkable claim the doc relies on: what existing code, tools, docs or other projects do; what a platform supports; what a third-party file says. Check each one with sub-agents. Finding facts is your job, never the owner's.
+List every checkable claim the doc relies on: what existing code, tools, docs or other projects do; what a platform supports; what a third-party file says. **That includes claims written inside a decision's own text** (e.g. a decision that says "Codex jots have no transcript"): a decision can rest on a false premise without any separate claim. Finding facts is your job, never the owner's: use sub-agents to read source and docs, and run the probes yourself. Probes may need the owner's live data (a local database, an app's state or session directories): find where it lives before probing.
 
 Use the strongest evidence available, in this order:
 1. **A probe in the real environment:** run it, call it, install it, read the actual file. Prefer this for anything testable: docs alone have been wrong about what an environment loads.
@@ -103,7 +115,7 @@ Read the decisions against each other, and against Shape and the tests. Look for
 ## 5. What blocks the merge
 
 An item is **open** when:
-- the fact-check finds a decision rests on a wrong claim (❌): reopen that decision;
+- the fact-check finds a decision rests on a wrong claim (❌), whether the claim is stated elsewhere in the doc or inside the decision's own text: reopen that decision;
 - the consistency pass finds a real contradiction: reopen the decisions involved;
 - grill skipped or left a question open: it's under `## Open questions`.
 
@@ -120,7 +132,7 @@ If the `to-tickets` skill isn't installed, add that it isn't, and that the ticke
 ## 6. Show, push, open or update the PR
 
 In this order:
-1. **Show the owner** the doc and the fact-check table. Wait for their yes.
+1. **Show the owner** what matters, in this order: the status; what's open (each reopened decision with its options, open questions, unchecked facts); what you changed or corrected; then the doc's path or link. Don't paste the whole doc unless they ask. Wait for their yes.
 2. **Commit and push** the branch: `git add docs/proposals/<name>.md && git commit -m "docs: <name> proposal (#N)" && git push -u origin <branch>`.
 3. **Open the PR, or update the existing one** (step 1 found it), through REST, which works in cloud sessions:
 

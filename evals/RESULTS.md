@@ -112,3 +112,18 @@ Scores: flag-contradiction 1.00 (0.00), flag-not-needed 1.00 (1.00).
 Without the plugin, every run quietly worked around the broken decision: the silent redesign D4 exists to stop. With it, every run stopped and flagged. The not-needed case shows the skill doesn't over-flag.
 
 Not exercised: the `gh api` comment and label calls (the eval sandbox can't grant Bash here). The to-tickets "open flag" search was run live against this repo.
+
+## proposal pilot fixes — 13 Oct 2026 (plugin 0.6.0, from the #11 pilot)
+
+New case `proposal-prose-decisions` (kacxx/notes-cli; WebFetch allowed). The owner answers in a prose comment without grill; one answer embeds a false claim ("Matt's grilling asks one question at a time"); one line is a constraint ("cap an interview at 10 questions").
+
+| Check (grader type) | With | Without |
+|---|---|---|
+| prose answers numbered `### D1:` … `### D3:` (regex) | 3/3 | 0/3 |
+| the constraint becomes a `### D<n>: Constraint…` decision (regex) | 3/3 | 0/3 |
+| status `N open` (regex) | 3/3 | 0/3 |
+| the embedded false premise reopens its decision, options under its own heading (llm) | 3/3 | 0/3 |
+| mapping shown for the owner to confirm, owner's wording kept (llm) | 3/3 | 0/3 |
+| no `## Open questions` section (nothing was skipped) (regex) | 2/3 | 2/3 |
+
+Score: 0.95 (baseline 0.10). Regression: catch-error, consistency and decided all still 1.00.
