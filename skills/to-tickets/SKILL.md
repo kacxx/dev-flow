@@ -124,27 +124,17 @@ gh api repos/OWNER/REPO/issues/N/labels/ready-for-agent --method DELETE
 
 ## 6. Report
 
-Check the target repo's `CLAUDE.md` (root and `.claude/`) for the `flag-decision` pointer line (see `skills/flag-decision/SKILL.md`). It's the main bridge into flow 2: the skill's own description can trigger it too, but the line makes a Superpowers or Matt Pocock flow-2 agent stop and flag rather than redesign. The check tells apart *present*, *missing line*, *no file* and *couldn't check*, so an error isn't mistaken for a missing pointer:
+Check the target repo's agent instructions for the `flag-decision` pointer line (the one copy is in `skills/flag-decision/SKILL.md`). It's the main bridge into flow 2: the skill's own description can trigger it too, but the line makes a Superpowers or Matt Pocock flow-2 agent (or Codex, via its fallback sentence) stop and flag rather than redesign. Run the bundled script from this skill's base directory:
 
 ```bash
-repo_out=$(gh api "repos/OWNER/REPO" --silent 2>&1) || { echo "could not check: repo OWNER/REPO: $repo_out"; exit 0; }
-found=""; missing=0; err=""
-for f in CLAUDE.md .claude/CLAUDE.md; do
-  if out=$(gh api "repos/OWNER/REPO/contents/$f" --jq '.content | @base64d' 2>&1); then
-    printf '%s' "$out" | grep -qF 'run the `flag-decision` skill and stop' && found="$f"
-  elif printf '%s' "$out" | grep -q 'HTTP 404'; then
-    missing=$((missing+1))
-  else
-    err="$f: $out"
-  fi
-done
-if [ -n "$found" ]; then echo "pointer present in $found"
-elif [ -n "$err" ]; then echo "could not check: $err"
-elif [ "$missing" -eq 2 ]; then echo "no CLAUDE.md: offer to create one with the pointer"
-else echo "CLAUDE.md has no flag-decision pointer: offer the line"; fi
+python3 -I scripts/check_pointer.py OWNER/REPO
 ```
 
-Act on the result: present, say nothing; missing line, offer it; no file, offer to create `CLAUDE.md` with it; couldn't check, report the error. If the repo might pull the line in another way (an `@import`, or a branch not yet merged), ask before offering a duplicate.
-
+It reads `CLAUDE.md`, `.claude/CLAUDE.md` and `AGENTS.md`, follows their `@….md` imports, and prints one result. Act on it:
+- `present in <file>`: say nothing.
+- `outdated in <file>`: the pointer predates the fallback sentence. Offer the current wording.
+- `missing line`: offer the line, in the file that `CLAUDE.md` imports if it's just an import (e.g. `AGENTS.md`).
+- `no instruction file`: offer to create `CLAUDE.md` with it.
+- `could not check: …`: report the files and reasons it gives. Don't offer a line.
 
 List the published tickets with their numbers, what each implements and what blocks it, and which can start now (labelled `ready-for-agent`). For each blocked ticket, say it gets the label when its blockers close. Name any decision no ticket implements.
