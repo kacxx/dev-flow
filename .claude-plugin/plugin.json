@@ -1,6 +1,6 @@
 {
   "name": "dev-flow",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "description": "Idea \u2192 tickets workflow skills: capture (idea \u2192 issue, picks the path), grill (settle open questions as D<n> decisions), proposal (decided, fact-checked design doc), to-tickets (vertical tickets linked to decisions), flag-decision (stop and flag a wrong decision mid-implementation).",
   "author": {
     "name": "kacxx",
