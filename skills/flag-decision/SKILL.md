@@ -78,8 +78,8 @@ Then stop working on the ticket.
 
 ## The CLAUDE.md pointer
 
-This is the one copy of the line; the README links here. Projects that use these skills add it to their `CLAUDE.md`:
+This is the one copy of the line; the README links here. Projects that use these skills add it to their `CLAUDE.md`, or to the file it imports (e.g. `AGENTS.md`). The fallback sentence keeps it followable by agents without the plugin (Codex, or anyone who hasn't installed dev-flow):
 
 ```markdown
-- If a ticket's work shows a decision it implements (on its `Implements:` line, or in its own `### D<n>` decisions) is wrong, impossible or contradicted, run the `flag-decision` skill and stop. Don't redesign inside the ticket.
+- If a ticket's work shows a decision it implements (on its `Implements:` line, or in its own `### D<n>` decisions) is wrong, impossible or contradicted, run the `flag-decision` skill and stop. If that skill isn't available, stop anyway and comment on the ticket saying which decision is wrong and why. Don't redesign inside the ticket.
 ```
