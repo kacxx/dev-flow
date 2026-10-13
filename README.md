@@ -29,3 +29,7 @@ Cloud sessions started from the phone's Code tab don't load plugins, but they do
 
 Phone sessions start on a fresh `claude/…` branch, so check out the branch you need before working.
 
+
+## Tests
+
+`python3 -I scripts/run_tests.py` (`python` on Windows) runs every `test_*.py` in the repo. CI runs the same command on every PR and on pushes to `main`, on Ubuntu and Windows, with and without PyYAML (#25).
