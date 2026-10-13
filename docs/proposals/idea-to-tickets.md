@@ -1,6 +1,6 @@
 # Idea → tickets flow (#1): proposal
 
-Status: **decided**. The Windows install (D5) was checked by #8. The tickets (#5–#12) were sliced by hand before this status grammar existed.
+Status: **decided**. Ready to merge; the tickets are already sliced (#5–#12, by hand, before this status grammar existed). The Windows install (D5) was checked by #8.
 
 ## Problem
 
@@ -106,7 +106,7 @@ dev-flow/
 |---|---|---|
 | A private repo can be a plugin marketplace (`/plugin marketplace add kacxx/dev-flow`) | ✅ Uses the existing git credentials (`gh auth setup-git` or SSH); `GITHUB_TOKEN` alone doesn't cover background updates | code.claude.com/docs/en/plugins/host-marketplace |
 | Plugin = `marketplace.json` + `plugin.json` + `skills/<name>/SKILL.md` | ✅ Matches Matt's repo (`source: "./"`, explicit `skills` list) | create-marketplace docs; mattpocock/skills `.claude-plugin/` |
-| The same plugin works on Windows | ✅ **Probe (#8), native Windows 10, Claude Code 2.1.296, Git Bash for the Bash tool:** `marketplace add` and `install` from the private repo work, with no auth step, and 0.7.3 loads all five skills. `dev-flow:capture` ran end to end as a skill (duplicate search, draft, path). Differences: 0.7.2 dropped `flag-decision` because its description had an unquoted `: ` (the Mac loaded it without its description), fixed in 0.7.3 (#23), and the ZIP build now rejects invalid frontmatter. `python3` there is the Microsoft Store stub (exit 126), so the scripts run with `python`. WSL not tested: it's a separate home directory and would need its own install | #8 run on the PC |
+| The same plugin works on Windows | ✅ **Probe (#8), native Windows 10, Claude Code 2.1.296, Git Bash for the Bash tool:** `marketplace add` and `install` from the private repo work with no auth step, and 0.7.3 loads all five skills. `dev-flow:capture` ran end to end as a skill (duplicate search, draft, path). Differences: 0.7.2 dropped `flag-decision` without a warning because its description had an unquoted `: ` (the Mac loaded it without its description), fixed in 0.7.3 (#23). The guard is `test_every_real_skill_passes_checks` in `scripts/test_build_account_skills.py`, which parses every skill's frontmatter, not only the phone set's. Nothing runs it automatically until the repo has CI. `python3` there is the Microsoft Store stub (exit 126); `python` works when substituted, and the entry points still say `python3` with a fallback note. WSL not tested (out of scope) | owner, Windows probe on #8: https://github.com/kacxx/dev-flow/issues/8#issuecomment-6144260261 |
 | Cloud sessions load repo-committed skills | ✅ **Probe:** `dev-flow-probe` loaded live from the checked-out branch, after a short delay, no restart | Phone probe, PR #3 comment |
 | Cloud sessions load claude.ai account skills | ✅ **Probe:** 15 account skills synced to `~/.claude/skills/synced/` | Phone probe |
 | Cloud sessions load plugins | ⚠️ **Probe:** account-synced plugins load (`~/.claude/plugins/synced/`: engineering, design, …). The docs say machine-installed marketplace plugins don't. Not tested: adding a personal GitHub-marketplace plugin to the account. Nothing depends on this: D5 routes the phone through account skills (✅ above). | Phone probe; cloud-environments "what carries over" |
@@ -125,8 +125,8 @@ dev-flow/
 A phone-started cloud session wrote its own version of this proposal (PR #3, closed). It reached the same rounds-vs-one-question conflict independently, and caught the two corrections credited above (to-tickets, D4).
 
 ## Out of scope (v1)
-Jira; the Android chat app (D5); cross-session or cross-repo ticket discovery; automating the retro step (done by hand after each pilot).
+Jira; the Android chat app (D5); WSL (D5's Windows install was checked natively; WSL is a separate home directory and would need its own install); cross-session or cross-repo ticket discovery; automating the retro step (done by hand after each pilot).
 
 ## Risks
 - **The skills and the account-skill copy drift**, once the phone path exists. The plugin stays the source; account-skill zips are built from it.
-- **The fact-check depends on doc pages**, and some were secondhand (third-party issue trackers). Each ⚠️ row gets confirmed by one real install before the phone ticket is closed.
+- **The fact-check depends on doc pages**, and some were secondhand (third-party issue trackers). Each ⚠️ row a decision depends on was confirmed by a real probe before the doc was decided. The one ⚠️ row left (cloud sessions loading personal-marketplace plugins) carries no decision, as the row says.
