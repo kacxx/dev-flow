@@ -14,3 +14,7 @@ Lightweight workflow skills for getting from an idea to tickets someone can impl
 
 Designing flow 1 by running it by hand on itself (issue #1), then piloting on
 aside-jot and shipledger. Skills get written from what the manual runs show.
+
+## Using it in a project
+
+Install the plugin (`/plugin marketplace add kacxx/dev-flow`, then `/plugin install dev-flow@dev-flow`), and add the one-line pointer from [`skills/flag-decision/SKILL.md`](skills/flag-decision/SKILL.md#the-claudemd-pointer) to the project's `CLAUDE.md`. Then an agent implementing a ticket stops instead of redesigning when a decision turns out wrong.
