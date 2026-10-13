@@ -27,7 +27,7 @@ Cloud sessions started from the phone's Code tab don't load plugins, but they do
 2. Upload each ZIP on claude.ai under **Customize → Skills** (code execution must be enabled).
 3. Re-upload after a skill changes: account skills don't follow plugin versions.
 
-Phone sessions start on a fresh `claude/…` branch, so check out the branch you need before working.
+Phone sessions start on a fresh `claude/…` branch, and the local copy of `main` can be behind. Check out the branch you need and bring it up to date before working: `git fetch origin && git checkout BRANCH && git merge --ff-only origin/BRANCH`.
 
 
 ## Tests
