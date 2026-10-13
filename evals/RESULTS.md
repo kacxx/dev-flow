@@ -65,3 +65,31 @@ Scores: catch-error 1.00 (0.25), consistency 1.00 (0.33), decided 1.00 (0.00).
 This is #9's "catches the D6 error" test: fed the same false claim in an unrelated project, the skill fetched Matt's `grilling` file, marked the claim ❌ ("asks in rounds"), reopened that decision and only that one, and kept the doc open.
 
 Not exercised: commit, push and the REST PR calls (the eval sandbox can't grant Bash on this machine). The `Refs #N` PR lookup was checked live against this repo.
+
+## to-tickets — 13 Oct 2026 (plugin 0.4.0)
+
+3 runs per case, no-plugin baseline.
+
+| Case | Check (grader type) | With | Without |
+|---|---|---|---|
+| tickets-devflow (dev-flow's own decided proposal) | ≥6 tickets with `Implements: D<n>` (regex) | 3/3 | 3/3 |
+| | ≥6 `Blocked by:` (regex) | 3/3 | 3/3 |
+| | covers ≥7 of the 8 pieces #5–#12 were (llm) | 3/3 | 3/3 |
+| | breakdown shown for approval, nothing published (llm) | 3/3 | 3/3 |
+| tickets-neutral (kacxx/notes-cli, D1–D3) | `Implements: D<n>` on the tickets (regex) | 3/3 | 0/3 |
+| | vertical slices; every decision covered (llm) | 3/3 | 0/3 |
+| | no `Blocked by: #n` before publishing; uses T-numbers (regex) | 3/3 | 3/3 |
+| | approval first, nothing published (llm) | 3/3 | 3/3 |
+| tickets-undecided (Status `1 open`, D2 reopened) | no tickets drafted (regex) | 3/3 | 3/3 |
+| | names the open D2 and declines (llm) | 3/3 | 0/3 |
+
+Scores: devflow 1.00 (1.00), neutral 1.00 (0.33), undecided 1.00 (0.75).
+
+The devflow case meets #10's "reproduces #5–#12" test but doesn't discriminate: the doc itself describes the `Implements:` header and the ticket set, so a model with no skill reproduces it too. The neutral case is the real test.
+
+Found while testing:
+- The first slice was horizontal ("ask the questions, save nothing yet"). The skill now requires the first ticket to be the thinnest path through every layer ("ask one question and save the answer").
+- The breakdown wrote "Blocked by: #1" before anything was published, which reads as an existing issue. It now uses T1, T2 … until real numbers exist.
+- dev-flow's own proposal had a status line (`decided (D1–D6). …`) that predates the exact grammar, so to-tickets would refuse it. Fixed to `**decided**`.
+
+Not exercised: the publish step (`gh api` issue creation, label, sub-issue link); the eval sandbox can't grant Bash here. The same calls were used by hand to publish #5–#12.

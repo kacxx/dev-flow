@@ -1,6 +1,6 @@
 # Idea → tickets flow (#1): proposal
 
-Status: **decided (D1–D6). Ready to merge, then slice into tickets.**
+Status: **decided**. Ready to merge, then slice into tickets.
 
 ## Problem
 
