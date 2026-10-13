@@ -9,7 +9,7 @@ You're implementing a ticket, and what you found means a decision it implements 
 
 ## When this applies
 
-Flag it when the work shows a decision named in the ticket's `Implements:` line is:
+Flag it when the work shows a decision the ticket implements is wrong, impossible or contradicted. That's a decision named on its `Implements:` line or, for a short-path issue that is itself the ticket, one of its own `### D<n>` decisions. The decision is:
 - **wrong:** it rests on something that isn't true (a file, API or behaviour that doesn't exist or works differently);
 - **impossible:** it can't be built as written without breaking something else;
 - **contradicted:** another decision, the existing code, or a constraint you've found rules it out.
@@ -18,7 +18,7 @@ Don't flag implementation details the decision doesn't settle: a helper's name, 
 
 ## 1. Stop
 
-Don't write code that works around the decision, and don't commit or push a partial workaround. Leave any work in progress on its branch, uncommitted or clearly marked WIP, for whoever picks it up after the decision is settled.
+Don't write code that works around the decision. If you have work in progress worth keeping, commit and push it on the ticket's branch as one commit titled `WIP: stopped at flag-decision D<n>, not a workaround`, and open no PR from it. Uncommitted work is lost when a cloud or phone session ends.
 
 ## 2. Post the evidence on the ticket
 
@@ -48,14 +48,18 @@ Swap the labels, so no other agent picks it up while the decision is open:
 gh api repos/OWNER/REPO/labels/needs-decision --silent \
   || gh api repos/OWNER/REPO/labels --method POST -f name=needs-decision -f color=d93f0b
 gh api repos/OWNER/REPO/issues/T/labels --method POST -f 'labels[]=needs-decision'
-gh api repos/OWNER/REPO/issues/T/labels/ready-for-agent --method DELETE 2>/dev/null || true   # it may not have it
+# remove ready-for-agent only if the ticket has it, so a real error (403, rate limit) isn't hidden
+gh api repos/OWNER/REPO/issues/T/labels --jq '.[].name' | grep -qx ready-for-agent \
+  && gh api repos/OWNER/REPO/issues/T/labels/ready-for-agent --method DELETE
 ```
+
+If any of these fails, say so: a ticket left with `ready-for-agent` next to `needs-decision` can still be picked up.
 
 Post the comment the same way (`gh api repos/OWNER/REPO/issues/T/comments --method POST -F body=@-` with a quoted heredoc). Use `gh api`, never `gh issue` (GraphQL fails in cloud sessions).
 
 ## 4. Point the source at it
 
-On the source issue (the ticket's `Parent:`), add one comment so the decision's owner sees it:
+On the source issue (the ticket's `Parent:`), add one comment so the decision's owner sees it. Skip this when the ticket is itself the source (a short-path issue):
 
 ```markdown
 D<n> flagged by #T: <one line>. See #T for the evidence.
@@ -63,18 +67,19 @@ D<n> flagged by #T: <one line>. See #T for the evidence.
 
 ## 5. Hand off and stop
 
-Tell the owner what you flagged and why, and the next steps, which belong to `grill` and the owner, not to you:
-1. Mark the decision `Status: reopened — #T` where it lives (the proposal doc or the issue body).
-2. Run `grill` on D<n> alone. The revised decision keeps the **same ID**, with the old text kept as superseded.
-3. Re-slice the open tickets that say `Implements: D<n>`; the owner approves the list.
-4. Remove `needs-decision` from #T, and put back `ready-for-agent` if it's still the right ticket.
+Tell the owner what you flagged and why, and the next steps, which belong to `grill` and the owner, not to you. The `needs-decision` label and your comment are the reopen marker; don't edit the doc or the decision yourself:
+1. Run `grill` on D<n> alone. It revises the decision where it lives, keeping the **same ID** and the old text as superseded.
+2. It proposes a re-slice of the open tickets that say `Implements: D<n>`, including #T, for the owner to approve.
+3. It removes `needs-decision` from #T and puts `ready-for-agent` back if #T is still valid and unblocked.
+
+Until then, `to-tickets` won't slice the source again.
 
 Then stop working on the ticket.
 
 ## The CLAUDE.md pointer
 
-Projects that use these skills add this one line to their `CLAUDE.md`:
+This is the one copy of the line; the README links here. Projects that use these skills add it to their `CLAUDE.md`:
 
 ```markdown
-- If a ticket's work shows a decision it implements (`Implements: D<n>`) is wrong, impossible or contradicted, run the `flag-decision` skill and stop. Don't redesign inside the ticket.
+- If a ticket's work shows a decision it implements (on its `Implements:` line, or in its own `### D<n>` decisions) is wrong, impossible or contradicted, run the `flag-decision` skill and stop. Don't redesign inside the ticket.
 ```
