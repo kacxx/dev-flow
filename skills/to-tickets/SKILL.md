@@ -124,4 +124,11 @@ gh api repos/OWNER/REPO/issues/N/labels/ready-for-agent --method DELETE
 
 ## 6. Report
 
+Check the target repo's `CLAUDE.md` for the `flag-decision` pointer line (see `skills/flag-decision/SKILL.md`). If it's missing, say so in the report and offer the line: it's the only thing that tells a flow-2 agent (Superpowers, Matt Pocock's skills, or none) to stop and flag rather than redesign.
+
+```bash
+gh api repos/OWNER/REPO/contents/CLAUDE.md --jq .content 2>/dev/null | base64 -d | grep -q flag-decision || echo "CLAUDE.md has no flag-decision pointer"
+```
+
+
 List the published tickets with their numbers, what each implements and what blocks it, and which can start now (labelled `ready-for-agent`). For each blocked ticket, say it gets the label when its blockers close. Name any decision no ticket implements.
