@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for check_pointer.py. Run: python3 -I skills/to-tickets/scripts/test_check_pointer.py"""
+"""Tests for check_pointer.py. Run: python3 -I skills/to-tickets/scripts/test_check_pointer.py (or `python` on Windows)"""
 import os
 import sys
 import unittest
