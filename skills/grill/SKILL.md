@@ -96,7 +96,7 @@ Then give the next step: `proposal` (full path, no doc yet), "ready to implement
 
 ## Reopening a decision (from `flag-decision`)
 
-A ticket labelled `needs-decision` says decision `D<n>` is wrong, and the decision carries `Status: reopened — #<ticket>`.
+A ticket labelled `needs-decision` says decision `D<n>` is wrong (its evidence comment is headed `## Decision flagged: D<n>`). If the decision doesn't yet carry `Status: reopened — #<ticket>` where it lives, add that line first.
 
 1. Read the ticket's evidence comment, then grill **that decision alone**.
 2. Revise it **where it lives** (the proposal doc, or the issue body on the short path): the new text keeps the **same ID**, the old text moves into a superseded block (the same format `proposal` uses): `<details><summary>Superseded (YYYY-MM-DD)</summary>` + the old text + `Reason: <what the ticket found>` + `</details>`, and the `Status: reopened` line is removed.

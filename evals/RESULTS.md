@@ -93,3 +93,22 @@ Found while testing:
 - dev-flow's own proposal status was hand-edited to `decided`, but D5 depends on an unchecked fact (the Windows install, #8). It now reads `decided, 1 fact unchecked`, so the devflow case uses a decided variant of the doc as its fixture.
 
 Not exercised: the publish step (`gh api` issue creation, labels, sub-issue link, partial-publish recovery); the eval sandbox can't grant Bash here. The label-exists and list-children calls were checked live against this repo.
+
+## flag-decision — 13 Oct 2026 (plugin 0.5.0)
+
+3 runs per case, no-plugin baseline. The prompts never name the skill, so these also test that its description triggers it.
+
+| Case | Check (grader type) | With | Without |
+|---|---|---|---|
+| flag-contradiction (ticket implements D3 "under the idea's heading"; `ideas.md` has no headings) | `## Decision flagged: D3` comment (regex) | 3/3 | 0/3 |
+| | `needs-decision` label (regex) | 3/3 | 0/3 |
+| | no workaround implemented; options left to the owner (llm) | 3/3 | 0/3 |
+| | evidence: quotes D3, states the finding, says why it blocks (llm) | 3/3 | 0/3 |
+| flag-not-needed (file uses CRLF; decision unaffected) | no flag, no `needs-decision` (regex) | 3/3 | 3/3 |
+| | carries on and handles CRLF itself (llm) | 3/3 | 3/3 |
+
+Scores: flag-contradiction 1.00 (0.00), flag-not-needed 1.00 (1.00).
+
+Without the plugin, every run quietly worked around the broken decision: the silent redesign D4 exists to stop. With it, every run stopped and flagged. The not-needed case shows the skill doesn't over-flag.
+
+Not exercised: the `gh api` comment and label calls (the eval sandbox can't grant Bash here).
