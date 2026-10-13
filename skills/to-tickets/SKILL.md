@@ -124,31 +124,17 @@ gh api repos/OWNER/REPO/issues/N/labels/ready-for-agent --method DELETE
 
 ## 6. Report
 
-Check the target repo's `CLAUDE.md` (root and `.claude/`) for the `flag-decision` pointer line (see `skills/flag-decision/SKILL.md`). It's the main bridge into flow 2: the skill's own description can trigger it too, but the line makes a Superpowers or Matt Pocock flow-2 agent stop and flag rather than redesign. The check tells apart *present*, *missing line*, *no file* and *couldn't check*, so an error isn't mistaken for a missing pointer:
+Check the target repo's agent instructions for the `flag-decision` pointer line (the one copy is in `skills/flag-decision/SKILL.md`). It's the main bridge into flow 2: the skill's own description can trigger it too, but the line makes a Superpowers or Matt Pocock flow-2 agent (or Codex, via its fallback sentence) stop and flag rather than redesign. Run the bundled script from this skill's base directory:
 
 ```bash
-# reads a repo file; prints its text, or "MISSING" on 404; any other error goes to stderr and returns 1
-read_file() { local out; if out=$(gh api "repos/OWNER/REPO/contents/$1" --jq '.content | @base64d' 2>&1); then printf '%s' "$out";
-  elif printf '%s' "$out" | grep -q 'HTTP 404'; then echo MISSING; else echo "$1: $out" >&2; return 1; fi; }
-has_pointer() { grep -qE 'run the `flag-decision` skill.*and stop'; }
-
-repo_out=$(gh api "repos/OWNER/REPO" --silent 2>&1) || { echo "could not check: repo OWNER/REPO: $repo_out"; exit 0; }
-result="no CLAUDE.md: offer to create one with the pointer"
-for f in CLAUDE.md .claude/CLAUDE.md; do
-  text=$(read_file "$f") || { result="could not check"; break; }
-  [ "$text" = MISSING ] && continue
-  result="CLAUDE.md has no flag-decision pointer: offer the line"
-  if printf '%s' "$text" | has_pointer; then result="pointer present in $f"; break; fi
-  # follow @file imports one level (e.g. CLAUDE.md containing "@AGENTS.md")
-  for imp in $(printf '%s\n' "$text" | sed -n 's/^@\([^[:space:]]*\).*/\1/p'); do
-    sub=$(read_file "$imp") || { result="could not check"; break 2; }
-    [ "$sub" != MISSING ] && printf '%s' "$sub" | has_pointer && { result="pointer present in $imp (imported by $f)"; break 2; }
-  done
-done
-echo "$result"
+python3 -I scripts/check_pointer.py OWNER/REPO
 ```
 
-Act on the result: present, say nothing; missing line, offer it; no file, offer to create `CLAUDE.md` with it; couldn't check, report the error. `@file` imports are followed one level (a `CLAUDE.md` that is just `@AGENTS.md` is common). If the line might arrive another way (a deeper import, or a branch not yet merged), ask before offering a duplicate.
-
+It reads `CLAUDE.md`, `.claude/CLAUDE.md` and `AGENTS.md`, follows their `@….md` imports, and prints one result. Act on it:
+- `present in <file>`: say nothing.
+- `outdated in <file>`: the pointer predates the fallback sentence. Offer the current wording.
+- `missing line`: offer the line, in the file that `CLAUDE.md` imports if it's just an import (e.g. `AGENTS.md`).
+- `no instruction file`: offer to create `CLAUDE.md` with it.
+- `could not check: …`: report the files and reasons it gives. Don't offer a line.
 
 List the published tickets with their numbers, what each implements and what blocks it, and which can start now (labelled `ready-for-agent`). For each blocked ticket, say it gets the label when its blockers close. Name any decision no ticket implements.
