@@ -104,7 +104,11 @@ A ticket labelled `needs-decision`, with an evidence comment headed `## Decision
    ```bash
    gh api -X GET search/issues -f q='repo:OWNER/REPO is:issue is:open "Implements:" D<n>' --jq '.items[] | "#\(.number) \(.title)"'
    ```
-   Read each body to confirm its `Implements:` line names `D<n>`: search matches loosely (a decision mentioned in a comment also matches).
+   If search is refused (cloud sessions' GitHub proxy can block it), list the open issues and filter on the `Implements:` line instead. D-numbers are only unique within one source, so the line must also name this decision's source: `docs/proposals/<name>.md`, or `#N` on the short path:
+   ```bash
+   gh api --paginate 'repos/OWNER/REPO/issues?state=open&per_page=100' --jq '.[] | select(.pull_request | not) | select(.body // "" | test("Implements:[^\\n]*\\bD<n>\\b[^\\n]*(docs/proposals/<name>\\.md|#N\\b)")) | "#\(.number) \(.title)"'
+   ```
+   Read each body to confirm its `Implements:` line names `D<n>` **and** this decision's source. Search matches loosely: a decision mentioned only in a comment matches, and so does the same `D<n>` from another proposal.
 4. Once the owner approves, apply the changes. Then take the flagged ticket off hold: remove `needs-decision`, and if the ticket is still valid and has no open blockers, put `ready-for-agent` back so an agent picks it up again (a ticket left with neither label is stranded):
    ```bash
    gh api repos/OWNER/REPO/issues/TICKET/labels/needs-decision --method DELETE
