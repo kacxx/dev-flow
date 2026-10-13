@@ -6,9 +6,12 @@
 
 Writes dist/account-skills/<name>.zip for each skill and checks what claude.ai
 requires: the skill folder at the ZIP root, its name matching the frontmatter
-`name`, `name` ≤ 64 characters and `description` ≤ 200. It also rejects an
-unquoted value containing `: ` or ` #`, which is invalid YAML: some Claude Code
-builds drop such a skill without a warning. Each ZIP also carries the
+`name`, `name` ≤ 64 characters and `description` ≤ 200. The frontmatter must
+parse as YAML: some Claude Code builds drop a skill whose frontmatter doesn't,
+without a warning. With PyYAML installed it is parsed with `yaml.safe_load`;
+without it, a strict parser accepts only the forms it can verify (one-line plain
+or quoted values, plain continuation lines, `>`/`|` block scalars) and rejects
+anything else, so a skill is never passed unchecked. Each ZIP also carries the
 repo's NOTICE, because some skills adapt MIT-licensed text that must travel with
 every copy. Exits non-zero, building nothing, if any skill fails a check.
 """
@@ -17,57 +20,101 @@ import re
 import sys
 import zipfile
 
+try:
+    import yaml
+except ImportError:  # stdlib-only machines (e.g. a fresh Windows Python): strict fallback
+    yaml = None
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PHONE_SET = ["capture", "grill", "flag-decision"]  # D5
 MAX_NAME, MAX_DESC = 64, 200
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 RESERVED = ("anthropic", "claude")
 
+FRONTMATTER = re.compile(r"\A---\r?\n(.*?)\r?\n---[ \t]*(?:\r?\n|\Z)", re.S)
+KEY_LINE = re.compile(r"^([A-Za-z0-9_-]+):(?:[ \t]+(.*?))?[ \t]*$")
+BLOCK_HEADER = re.compile(r"^[>|](?:[1-9][+-]?|[+-][1-9]?)?(?:[ \t]+#.*)?$")
+DOUBLE = re.compile(r'^"((?:[^"\\]|\\.)*)"(?:[ \t]+#.*)?$')
+SINGLE = re.compile(r"^'((?:[^']|'')*)'(?:[ \t]+#.*)?$")
+PLAIN_START = set("-?:,[]{}#&*!|>'\"%@`")
+COMMENT = re.compile(r"(?:^|[ \t])#")
 
-def _unquote(v):
-    if len(v) >= 2 and v[0] == v[-1] and v[0] in "\"'":
-        return v[1:-1]
+
+def _plain(v):
+    """A plain scalar's value with any comment removed, or None if YAML would reject it."""
+    v = COMMENT.split(v, 1)[0].rstrip()
+    if not v or ": " in v or ":\t" in v or v.endswith(":"):
+        return None
+    if v[0] in PLAIN_START and not (v[0] in "-?:" and len(v) > 1 and not v[1].isspace()):
+        return None
     return v
 
 
-def frontmatter(text):
-    """Top-level `key: value` pairs, including quoted values and `>`/`|` block scalars."""
-    m = re.match(r"---\r?\n(.*?)\r?\n---\r?\n", text, re.S)
-    if not m:
-        return None
-    fields, lines, i = {}, m.group(1).splitlines(), 0
-    fields["_unsafe"] = []
+def _strict(body):
+    """(fields, error): the forms this parser can verify, or an error naming the first line it can't."""
+    fields, lines, i = {}, body.splitlines(), 0
     while i < len(lines):
-        k, sep, v = lines[i].partition(":")
+        line = lines[i]
         i += 1
-        if not sep or lines[i - 1][:1].isspace():
+        if not line.strip() or line.lstrip().startswith("#"):
             continue
-        v = v.strip()
-        if v in (">", ">-", ">+", "|", "|-", "|+"):
-            block = []
-            while i < len(lines) and (lines[i].startswith((" ", "\t")) or not lines[i].strip()):
-                block.append(lines[i].strip())
-                i += 1
-            joined = (" " if v.startswith(">") else "\n").join(x for x in block if x) if v.startswith(">") else "\n".join(block).strip("\n")
-            fields[k.strip()] = joined
-        else:
-            if v[:1] not in "\"'" and (": " in v or " #" in v or v.endswith(":")):
-                fields["_unsafe"].append(k.strip())
-            fields[k.strip()] = _unquote(v)
-    return fields
+        m = KEY_LINE.match(line)
+        if not m:
+            return None, f"line {i}: not a top-level `key: value` this check can verify"
+        key, v = m.group(1), (m.group(2) or "")
+        cont = []
+        while i < len(lines) and (lines[i][:1] in (" ", "\t") or not lines[i].strip()):
+            cont.append(lines[i].strip())
+            i += 1
+        if BLOCK_HEADER.match(v):
+            parts = [x for x in cont if x] if v[0] == ">" else cont
+            fields[key] = (" " if v[0] == ">" else "\n").join(parts).strip("\n")
+            continue
+        if v and v[0] in "\"'":
+            m = (DOUBLE if v[0] == '"' else SINGLE).match(v)
+            if not m or any(cont):
+                return None, f"line {i - len(cont)}: `{key}` is quoted but not closed on its line, or has text after the closing quote"
+            s = m.group(1)
+            fields[key] = s.replace("''", "'") if v[0] == "'" else re.sub(r'\\(.)', lambda c: {"n": "\n", "t": "\t"}.get(c.group(1), c.group(1)), s)
+            continue
+        words = [x for x in [v] + cont if x]
+        if not words:
+            fields[key] = ""
+            continue
+        values = [_plain(x) for x in words]
+        if any(x is None for x in values):
+            return None, f"line {i - len(cont)}: `{key}` is invalid YAML unquoted (a `: `, a trailing `:`, or a leading indicator such as `[` or a backtick); quote the value"
+        fields[key] = " ".join(values)
+    return fields, None
 
 
-def check(skill_dir):
+def frontmatter(text, use_yaml=True):
+    """(fields, error) for a SKILL.md's frontmatter. fields is None when there is none or it doesn't parse."""
+    m = FRONTMATTER.match(text)
+    if not m:
+        return None, "SKILL.md has no frontmatter"
+    if use_yaml and yaml is not None:
+        try:
+            data = yaml.safe_load(m.group(1))
+        except yaml.YAMLError as e:
+            return None, "frontmatter is invalid YAML: " + str(e).splitlines()[0]
+        if not isinstance(data, dict):
+            return None, "frontmatter is not a `key: value` mapping"
+        return {str(k): "" if v is None else str(v) for k, v in data.items()}, None
+    return _strict(m.group(1))
+
+
+def check(skill_dir, use_yaml=True):
     """Problems with one skill folder, as a list of strings (empty when it's fine)."""
-    name = os.path.basename(skill_dir.rstrip("/"))
+    name = os.path.basename(skill_dir.rstrip("/\\"))
     path = os.path.join(skill_dir, "SKILL.md")
     if not os.path.isfile(path):
         return [f"{name}: no SKILL.md"]
-    fm = frontmatter(open(path, encoding="utf-8-sig").read())
+    with open(path, encoding="utf-8-sig") as f:
+        fm, error = frontmatter(f.read(), use_yaml)
     if fm is None:
-        return [f"{name}: SKILL.md has no frontmatter"]
-    problems = [f"{name}: {k} contains ': ' or ' #' unquoted, which is invalid YAML; quote the value"
-                for k in fm.get("_unsafe", [])]
+        return [f"{name}: {error}"]
+    problems = []
     if fm.get("name") != name:
         problems.append(f"{name}: frontmatter name {fm.get('name')!r} doesn't match the folder")
     fname = fm.get("name", "")
@@ -89,7 +136,7 @@ def check(skill_dir):
 
 def build(skill_dir, out_dir, notice):
     """ZIP one skill. `notice` is required: the MIT notice must travel with every copy."""
-    name = os.path.basename(skill_dir.rstrip("/"))
+    name = os.path.basename(skill_dir.rstrip("/\\"))
     if not os.path.isfile(notice):
         raise FileNotFoundError(f"NOTICE not found at {notice}: refusing to build without it")
     os.makedirs(out_dir, exist_ok=True)
@@ -119,9 +166,11 @@ def main(argv):
     if not os.path.isfile(notice):
         print(f"not built: NOTICE not found at {notice}", file=sys.stderr)
         return 1
-    if os.path.isdir(out_dir):  # stale ZIPs from earlier runs would be uploaded by mistake
+    # Stale ZIPs would be uploaded by mistake. A default build replaces the whole set (so a
+    # skill dropped from it doesn't linger); a named build replaces only the ZIPs it names.
+    if os.path.isdir(out_dir):
         for f in os.listdir(out_dir):
-            if f.endswith(".zip"):
+            if f.endswith(".zip") and (not argv[1:] or f[:-4] in names):
                 os.remove(os.path.join(out_dir, f))
     for d in dirs:
         print(build(d, out_dir, notice))

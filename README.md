@@ -23,7 +23,7 @@ Install the plugin (`/plugin marketplace add kacxx/dev-flow`, then `/plugin inst
 
 Cloud sessions started from the phone's Code tab don't load plugins, but they do load claude.ai account skills (D5). The phone set is `capture`, `grill` and `flag-decision`:
 
-1. Build the ZIPs: `python3 -I scripts/build_account_skills.py` (`python` on Windows, where `python3` is often the Microsoft Store stub) writes `dist/account-skills/<name>.zip`, after checking the folder name, `name` ≤ 64, `description` ≤ 200, and that the frontmatter is valid YAML (an unquoted `: ` breaks it).
+1. Build the ZIPs: `python3 -I scripts/build_account_skills.py` (`python` on Windows, where `python3` is often the Microsoft Store stub) writes `dist/account-skills/<name>.zip`, after checking the folder name, `name` ≤ 64, `description` ≤ 200, and that the frontmatter parses as YAML (an unquoted `: ` breaks it): with `yaml.safe_load` if PyYAML is installed, otherwise a strict parser that rejects any form it can't verify.
 2. Upload each ZIP on claude.ai under **Customize → Skills** (code execution must be enabled).
 3. Re-upload after a skill changes: account skills don't follow plugin versions.
 
