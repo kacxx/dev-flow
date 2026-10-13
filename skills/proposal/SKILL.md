@@ -133,15 +133,18 @@ While the status isn't `decided`, the PR is a draft and the doc says plainly not
 
 If the `to-tickets` skill isn't installed, add that it isn't, and that the tickets can be written by hand from the decisions (one per vertical slice, each opening with `Implements: D<n> — docs/proposals/<name>.md`). Never write that line for a doc that isn't `decided`.
 
-## 6. Show, push, open or update the PR
+## 6. Push a draft, then show the owner
+
+Push before you ask, so the draft can't be lost: a session can end while it waits for the owner, and a doc left in a scratch clone is gone with it. **Where** it goes depends on whether a push could be merged, or could change someone else's work, before the owner has seen it:
+- **A new doc, or an existing PR that is a draft and the owner's own:** push to the PR's branch. A draft can't be merged, so the push is safe.
+- **An existing PR that isn't a draft, or another author's PR (a fork included):** don't push to its branch yet. Push the commit to a new branch of your own, `<branch>-proposal-draft`, and open nothing from it. After the owner's yes, push to the PR's branch (or open the superseding PR from step 1) and delete the draft branch.
 
 In this order:
-1. **Show the owner** what matters, in this order: the status; what's open (each reopened decision with its options, open questions, unchecked facts); what you changed or corrected; the **full fact-check table**, so they can see the evidence behind every ✅ before approving; then the doc's local path. Paste the whole doc if they ask. Wait for their yes. Give the link once step 3 has pushed it.
-2. **Commit and push** the branch: `git add docs/proposals/<name>.md && git commit -m "docs: <name> proposal (#N)" && git push -u origin <branch>`.
-3. **Open the PR, or update the existing one** (step 1 found it), through REST, which works in cloud sessions:
+1. **Commit and push** to the branch chosen above: `git add docs/proposals/<name>.md && git commit -m "docs: <name> proposal (#N)" && git push -u origin <branch>`.
+2. **Open the PR as a draft, or update the existing one** (step 1 found it), through REST, which works in cloud sessions. A new PR is always a draft at this point, whatever the status. Skip this for a `-proposal-draft` branch until the owner says yes.
 
 ```bash
-# new PR, as a draft unless the status is decided
+# new PR: always a draft until the owner says yes
 gh api repos/OWNER/REPO/pulls --method POST -f title='docs: <name> proposal' -f head=<branch> -f base=main -F draft=true -F body=@- <<'BODY'
 Refs #N
 <status, reopened decisions, open questions, unchecked facts>
@@ -153,4 +156,7 @@ Refs #N
 BODY
 ```
 
-A PR's draft state can't be changed through REST (`draft` in a PATCH is ignored). When an existing draft becomes `decided`, mark it ready with `gh pr ready P` (GraphQL, which works locally). In a cloud session, where GraphQL fails, ask the owner to click **Ready for review**.
+3. **Show the owner** what matters, in this order: the status; what's open (each reopened decision with its options, open questions, unchecked facts); what you changed or corrected; the **full fact-check table**, so they can see the evidence behind every ✅ before approving; then the PR link. Paste the whole doc if they ask. Wait for their yes. If they ask for changes, edit, commit and push again, refresh the PR description so its status matches the doc, then show what changed.
+4. **Once they say yes:** push to the PR's branch if the draft was on a `-proposal-draft` branch, and refresh the description. If the status is `decided`, mark the PR ready for review; while it isn't, the PR stays a draft.
+
+A PR's draft state can't be changed through REST (`draft` in a PATCH is ignored). Mark it ready with `gh pr ready P` (GraphQL, which works locally). In a cloud session, where GraphQL fails, ask the owner to click **Ready for review**.
