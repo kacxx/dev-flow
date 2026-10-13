@@ -130,6 +130,8 @@ Check the target repo's agent instructions for the `flag-decision` pointer line 
 python3 -I scripts/check_pointer.py OWNER/REPO
 ```
 
+On Windows, run it with `python` if `python3` is the Microsoft Store stub (it exits 126 with "Permission denied").
+
 It reads `CLAUDE.md`, `.claude/CLAUDE.md` and `AGENTS.md`, follows their `@….md` imports, and prints one result. Act on it:
 - `present in <file>`: say nothing.
 - `outdated in <file>`: the pointer predates the fallback sentence. Offer the current wording.

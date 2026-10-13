@@ -2,10 +2,13 @@
 """Build claude.ai account-skill ZIPs from this plugin's skill folders.
 
   python3 -I scripts/build_account_skills.py [skill ...]   # default: the phone set (D5)
+  (on Windows, use `python` if `python3` is the Microsoft Store stub)
 
 Writes dist/account-skills/<name>.zip for each skill and checks what claude.ai
 requires: the skill folder at the ZIP root, its name matching the frontmatter
-`name`, `name` ≤ 64 characters and `description` ≤ 200. Each ZIP also carries the
+`name`, `name` ≤ 64 characters and `description` ≤ 200. It also rejects an
+unquoted value containing `: ` or ` #`, which is invalid YAML: some Claude Code
+builds drop such a skill without a warning. Each ZIP also carries the
 repo's NOTICE, because some skills adapt MIT-licensed text that must travel with
 every copy. Exits non-zero, building nothing, if any skill fails a check.
 """
@@ -33,6 +36,7 @@ def frontmatter(text):
     if not m:
         return None
     fields, lines, i = {}, m.group(1).splitlines(), 0
+    fields["_unsafe"] = []
     while i < len(lines):
         k, sep, v = lines[i].partition(":")
         i += 1
@@ -47,6 +51,8 @@ def frontmatter(text):
             joined = (" " if v.startswith(">") else "\n").join(x for x in block if x) if v.startswith(">") else "\n".join(block).strip("\n")
             fields[k.strip()] = joined
         else:
+            if v[:1] not in "\"'" and (": " in v or " #" in v or v.endswith(":")):
+                fields["_unsafe"].append(k.strip())
             fields[k.strip()] = _unquote(v)
     return fields
 
@@ -60,7 +66,8 @@ def check(skill_dir):
     fm = frontmatter(open(path, encoding="utf-8-sig").read())
     if fm is None:
         return [f"{name}: SKILL.md has no frontmatter"]
-    problems = []
+    problems = [f"{name}: {k} contains ': ' or ' #' unquoted, which is invalid YAML; quote the value"
+                for k in fm.get("_unsafe", [])]
     if fm.get("name") != name:
         problems.append(f"{name}: frontmatter name {fm.get('name')!r} doesn't match the folder")
     fname = fm.get("name", "")

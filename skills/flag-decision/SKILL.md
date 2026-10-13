@@ -1,6 +1,6 @@
 ---
 name: flag-decision
-description: Use when implementing a ticket and the work shows a decision it implements (the ticket's Implements: line) is wrong, impossible or contradicted by the code. Stops and flags it instead of redesigning.
+description: "Use when implementing a ticket and the work shows a decision it implements (the ticket's Implements: line) is wrong, impossible or contradicted by the code. Stops and flags it instead of redesigning."
 ---
 
 # Flag decision

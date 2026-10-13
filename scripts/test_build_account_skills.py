@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for build_account_skills.py. Run: python3 -I scripts/test_build_account_skills.py"""
+"""Tests for build_account_skills.py. Run: python3 -I scripts/test_build_account_skills.py (or `python` on Windows)"""
 import os
 import shutil
 import sys
@@ -11,14 +11,19 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build_account_skills as b  # noqa: E402
 
 
+def write(path, text, encoding="utf-8"):
+    with open(path, "w", encoding=encoding) as f:
+        f.write(text)
+
+
 def skill(root, name, fm_name=None, desc="Use when testing.", extra=None):
     d = os.path.join(root, name)
     os.makedirs(d)
-    with open(os.path.join(d, "SKILL.md"), "w") as f:
+    with open(os.path.join(d, "SKILL.md"), "w", encoding="utf-8") as f:
         f.write(f"---\nname: {fm_name or name}\ndescription: {desc}\n---\n\n# body\n")
     for rel, text in (extra or {}).items():
         os.makedirs(os.path.dirname(os.path.join(d, rel)) or d, exist_ok=True)
-        open(os.path.join(d, rel), "w").write(text)
+        write(os.path.join(d, rel), text)
     return d
 
 
@@ -27,7 +32,7 @@ class Build(unittest.TestCase):
         self.tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.tmp, True)
         self.notice = os.path.join(self.tmp, "NOTICE")
-        open(self.notice, "w").write("MIT")
+        write(self.notice, "MIT")
 
     def test_valid_skill_has_no_problems(self):
         self.assertEqual(b.check(skill(self.tmp, "capture")), [])
@@ -39,7 +44,7 @@ class Build(unittest.TestCase):
         self.assertIn("201 characters", b.check(skill(self.tmp, "grill", desc="x" * 201))[0])
 
     def test_no_frontmatter(self):
-        d = os.path.join(self.tmp, "x"); os.makedirs(d); open(os.path.join(d, "SKILL.md"), "w").write("# no fm")
+        d = os.path.join(self.tmp, "x"); os.makedirs(d); write(os.path.join(d, "SKILL.md"), "# no fm")
         self.assertIn("no frontmatter", b.check(d)[0])
 
     def test_zip_has_folder_at_root_and_notice(self):
@@ -61,7 +66,7 @@ class Build(unittest.TestCase):
 
     def test_folded_description_measured_in_full(self):
         d = os.path.join(self.tmp, "grill"); os.makedirs(d)
-        open(os.path.join(d, "SKILL.md"), "w").write("---\nname: grill\ndescription: >-\n  " + "word " * 50 + "\n  more\n---\n")
+        write(os.path.join(d, "SKILL.md"), "---\nname: grill\ndescription: >-\n  " + "word " * 50 + "\n  more\n---\n")
         self.assertTrue(any("characters" in p for p in b.check(d)), b.check(d))
 
     def test_quoted_name(self):
@@ -75,12 +80,23 @@ class Build(unittest.TestCase):
 
     def test_bom_is_accepted(self):
         d = os.path.join(self.tmp, "capture"); os.makedirs(d)
-        open(os.path.join(d, "SKILL.md"), "w", encoding="utf-8-sig").write("---\nname: capture\ndescription: Use when x.\n---\n")
+        write(os.path.join(d, "SKILL.md"), "---\nname: capture\ndescription: Use when x.\n---\n", "utf-8-sig")
         self.assertEqual(b.check(d), [])
 
-    def test_real_phone_set_passes_checks(self):
+    def test_unquoted_colon_space_rejected(self):
+        d = skill(self.tmp, "flag-decision", desc="Use when the Implements: line is wrong.")
+        self.assertTrue(any("invalid YAML" in p for p in b.check(d)), b.check(d))
+
+    def test_quoted_colon_space_accepted(self):
+        self.assertEqual(b.check(skill(self.tmp, "flag-decision", desc='"Use when the Implements: line is wrong."')), [])
+
+    def test_unquoted_comment_rejected(self):
+        self.assertTrue(any("invalid YAML" in p for p in b.check(skill(self.tmp, "grill", desc="Use when x #1 is open."))))
+
+    def test_every_real_skill_passes_checks(self):
+        # all of them, not just the phone set: the plugin loads every skill
         root = os.path.join(b.ROOT, "skills")
-        for n in b.PHONE_SET:
+        for n in sorted(os.listdir(root)):
             self.assertEqual(b.check(os.path.join(root, n)), [], n)
 
 
