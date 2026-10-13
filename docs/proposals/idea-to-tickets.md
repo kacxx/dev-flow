@@ -1,6 +1,6 @@
 # Idea → tickets flow (#1): proposal
 
-Status: **decided, 1 fact unchecked**. The Windows install (D5) is checked by #8. The tickets (#5–#12) were sliced by hand before this status grammar existed.
+Status: **decided**. The Windows install (D5) was checked by #8. The tickets (#5–#12) were sliced by hand before this status grammar existed.
 
 ## Problem
 
@@ -106,7 +106,7 @@ dev-flow/
 |---|---|---|
 | A private repo can be a plugin marketplace (`/plugin marketplace add kacxx/dev-flow`) | ✅ Uses the existing git credentials (`gh auth setup-git` or SSH); `GITHUB_TOKEN` alone doesn't cover background updates | code.claude.com/docs/en/plugins/host-marketplace |
 | Plugin = `marketplace.json` + `plugin.json` + `skills/<name>/SKILL.md` | ✅ Matches Matt's repo (`source: "./"`, explicit `skills` list) | create-marketplace docs; mattpocock/skills `.claude-plugin/` |
-| The same plugin works on Windows | ⚠️ **Probe (#8), native Windows 10, Claude Code 2.1.296, Git Bash for the Bash tool:** `marketplace add` and `install` from the private repo work, with no auth step. Loaded 4 of 5 skills: `flag-decision`'s description had an unquoted `: `, invalid YAML, and Windows dropped it without a warning (the Mac loaded it without its description). Fixed in 0.7.3, and the ZIP build now rejects it. `python3` there is the Microsoft Store stub (exit 126); `python` works. Still to check: 0.7.3 loads all five, and `capture` runs end to end as a skill | #8 run on the PC |
+| The same plugin works on Windows | ✅ **Probe (#8), native Windows 10, Claude Code 2.1.296, Git Bash for the Bash tool:** `marketplace add` and `install` from the private repo work, with no auth step, and 0.7.3 loads all five skills. `dev-flow:capture` ran end to end as a skill (duplicate search, draft, path). Differences: 0.7.2 dropped `flag-decision` because its description had an unquoted `: ` (the Mac loaded it without its description), fixed in 0.7.3 (#23), and the ZIP build now rejects invalid frontmatter. `python3` there is the Microsoft Store stub (exit 126), so the scripts run with `python`. WSL not tested: it's a separate home directory and would need its own install | #8 run on the PC |
 | Cloud sessions load repo-committed skills | ✅ **Probe:** `dev-flow-probe` loaded live from the checked-out branch, after a short delay, no restart | Phone probe, PR #3 comment |
 | Cloud sessions load claude.ai account skills | ✅ **Probe:** 15 account skills synced to `~/.claude/skills/synced/` | Phone probe |
 | Cloud sessions load plugins | ⚠️ **Probe:** account-synced plugins load (`~/.claude/plugins/synced/`: engineering, design, …). The docs say machine-installed marketplace plugins don't. Not tested: adding a personal GitHub-marketplace plugin to the account. Nothing depends on this: D5 routes the phone through account skills (✅ above). | Phone probe; cloud-environments "what carries over" |
