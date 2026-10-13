@@ -1,6 +1,6 @@
 # Idea → tickets flow (#1): proposal
 
-Status: **decided**. Ready to merge, then slice into tickets.
+Status: **decided, 1 fact unchecked**. The Windows install (D5) is checked by #8. The tickets (#5–#12) were sliced by hand before this status grammar existed.
 
 ## Problem
 
@@ -89,7 +89,7 @@ dev-flow/
 | The same plugin works on Windows | ⚠️ Native and WSL are both supported, but the docs don't say install is identical. WSL is a separate home directory, so a separate install | code.claude.com/docs/en/setup |
 | Cloud sessions load repo-committed skills | ✅ **Probe:** `dev-flow-probe` loaded live from the checked-out branch, after a short delay, no restart | Phone probe, PR #3 comment |
 | Cloud sessions load claude.ai account skills | ✅ **Probe:** 15 account skills synced to `~/.claude/skills/synced/` | Phone probe |
-| Cloud sessions load plugins | ⚠️ **Probe:** account-synced plugins load (`~/.claude/plugins/synced/`: engineering, design, …). The docs say machine-installed marketplace plugins don't. Not tested: adding a personal GitHub-marketplace plugin to the account | Phone probe; cloud-environments "what carries over" |
+| Cloud sessions load plugins | ⚠️ **Probe:** account-synced plugins load (`~/.claude/plugins/synced/`: engineering, design, …). The docs say machine-installed marketplace plugins don't. Not tested: adding a personal GitHub-marketplace plugin to the account. Nothing depends on this: D5 routes the phone through account skills (✅ above). | Phone probe; cloud-environments "what carries over" |
 | Cloud sessions can write to a private repo | ✅ **Probe:** posted a comment on #1 and pushed a branch. The docs say `gh issue`/`gh pr` fail (GraphQL blocked), so the skills use `gh api` | Phone probe; cloud-environments "github-proxy" |
 | A phone session starts on the requested branch | ❌ **Probe:** it started on a fresh `claude/…` branch from `main` and needed `git checkout` | Phone probe |
 | The Android chat app loads account skills | Not tested, undocumented. Out of v1 | support article 11869629 |

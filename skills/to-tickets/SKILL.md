@@ -17,8 +17,8 @@ gh api --paginate repos/OWNER/REPO/issues/N/comments --jq '.[].body'
 ```
 
 Only slice something decided:
-- **Proposal doc:** its Status line must read exactly `**decided**`. Anything else (`N open`, `M facts unchecked`) means stop: say what's open and that `proposal` needs to finish first.
-- **Short-path issue:** it must have a `## Decisions` section with `### D<n>:` headings, and nothing left under Open questions or To check.
+- **Proposal doc:** its Status line must read exactly `**decided**`. Anything else means stop, including `decided, M facts unchecked` (it starts with "decided" but isn't), `N open` and `N open, M facts unchecked`. Say what's open and that `proposal` needs to finish first.
+- **Short-path issue:** it must have a `## Decisions` section with `### D<n>:` headings, and nothing left under Open questions or To check. If it already carries `ready-for-agent` and fits in one ticket, it **is** the ticket: say so and stop, because slicing it would put the same work up twice. Slice it only if it needs more than one ticket; step 5 then takes the label off the source issue.
 
 Tickets built on undecided work end up rebuilt. That's the failure this check prevents.
 
@@ -78,24 +78,44 @@ Parent: #N
 - `Blocked by:` lists real issue numbers, or `None (can start immediately)`.
 - Avoid file paths and code snippets in the body: they go stale fast. The exception is a snippet a prototype produced that states a decision more precisely than prose (a schema, a state machine); trim it to the decision-rich part and say it came from a prototype.
 
-Write through `gh api` (not `gh issue`, which uses GraphQL and fails in cloud sessions). Create the label once, then each ticket, then link it to the source issue as a sub-issue:
+**Labels.** `ready-for-agent` means an agent can start it now, so only tickets with **no** open blockers get it. A blocked ticket gets the label when its blockers close; the report lists which.
+
+Write through `gh api` (not `gh issue`, which uses GraphQL and fails in cloud sessions).
+
+**Before the first ticket**, make sure the label exists, and check what's already published, so a re-run after a failure doesn't duplicate anything:
 
 ```bash
-gh api repos/OWNER/REPO/labels --method POST -f name=ready-for-agent 2>/dev/null || true   # once; ignore "already exists"
+gh api repos/OWNER/REPO/labels/ready-for-agent --silent \
+  || gh api repos/OWNER/REPO/labels --method POST -f name=ready-for-agent   # create only if missing; a real error stops here
+gh api --paginate repos/OWNER/REPO/issues/N/sub_issues --jq '.[] | "#\(.number) \(.title)"'   # children already published
+```
 
+A ticket whose title is already a child of `#N` was published by an earlier run: reuse its number, don't create it again.
+
+**Then, for each ticket in dependency order**, create it, link it, and record `T<n> → #<number>` before moving on:
+
+```bash
 TITLE=$(cat <<'TITLE'
 <ticket title>
 TITLE
 )
-gh api repos/OWNER/REPO/issues --method POST -f title="$TITLE" -f 'labels[]=ready-for-agent' -F body=@- --jq '"\(.number) \(.id)"' <<'BODY'
-<ticket body>
+gh api repos/OWNER/REPO/issues --method POST -f title="$TITLE" -F body=@- --jq '"\(.number) \(.id)"' <<'BODY'
+<ticket body, with each Blocked by T<n> replaced by its recorded #number>
 BODY
+# only if this ticket has no open blockers:
+gh api repos/OWNER/REPO/issues/<number>/labels --method POST -f 'labels[]=ready-for-agent'
 # link it under the source issue: sub_issue_id is the new issue's id (not its number)
 gh api repos/OWNER/REPO/issues/N/sub_issues --method POST -F sub_issue_id=<id>
 ```
 
-If the sub-issue link fails (the repo may not have sub-issues enabled), keep the `Parent: #N` line and say the link failed. Don't close or edit the source issue.
+If any call fails, **stop**: report the `T<n> → #<number>` mapping so far and the error. A re-run picks up from the existing children. If only the sub-issue link fails (the repo may not have sub-issues enabled), keep the `Parent: #N` line, say the link failed, and carry on.
+
+**The source issue** isn't closed or rewritten. If it's a short-path issue carrying `ready-for-agent`, remove the label once the children are published, so the work can't be picked up twice:
+
+```bash
+gh api repos/OWNER/REPO/issues/N/labels/ready-for-agent --method DELETE
+```
 
 ## 6. Report
 
-List the published tickets with their numbers, what each implements and what blocks it, and which can start now (no blockers). Name any decision no ticket implements.
+List the published tickets with their numbers, what each implements and what blocks it, and which can start now (labelled `ready-for-agent`). For each blocked ticket, say it gets the label when its blockers close. Name any decision no ticket implements.

@@ -19,7 +19,7 @@ My notes CLI has no way to think an idea through.
 The command is `notes grill <idea>`.
 
 ### D2: Questions
-Status: reopened — consistency: D2 and D3 disagree on where answers go.
+Status: reopened — fact-check: `questions.md` doesn't exist yet and no decision says what creates it or what goes in it.
 
 The questions come from a fixed list in `questions.md`, asked in order.
 

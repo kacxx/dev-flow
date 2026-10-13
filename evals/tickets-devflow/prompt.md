@@ -3,7 +3,7 @@ max_turns: 15
 allowed_tools: [Skill]
 ---
 
-This session can't reach GitHub, so here is the decided proposal `docs/proposals/idea-to-tickets.md` from my repo kacxx/dev-flow. Its source issue is #1. Slice it into tickets. Don't publish anything.
+This session can't reach GitHub, so here is a decided version of the proposal `docs/proposals/idea-to-tickets.md` from my repo kacxx/dev-flow. Its source issue is #1. Slice it into tickets. Don't publish anything.
 
 <doc>
 # Idea → tickets flow (#1): proposal

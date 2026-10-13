@@ -66,30 +66,30 @@ This is #9's "catches the D6 error" test: fed the same false claim in an unrelat
 
 Not exercised: commit, push and the REST PR calls (the eval sandbox can't grant Bash on this machine). The `Refs #N` PR lookup was checked live against this repo.
 
-## to-tickets — 13 Oct 2026 (plugin 0.4.0)
+## to-tickets — 13 Oct 2026 (plugin 0.4.0, after the #17 review)
 
-3 runs per case, no-plugin baseline.
+3 runs per case, no-plugin baseline. Regexes were self-tested against good and bad documents before use.
 
 | Case | Check (grader type) | With | Without |
 |---|---|---|---|
-| tickets-devflow (dev-flow's own decided proposal) | ≥6 tickets with `Implements: D<n>` (regex) | 3/3 | 3/3 |
+| tickets-devflow (a decided version of dev-flow's proposal) | ≥6 tickets with `Implements: D<n>` (regex) | 3/3 | 3/3 |
 | | ≥6 `Blocked by:` (regex) | 3/3 | 3/3 |
 | | covers ≥7 of the 8 pieces #5–#12 were (llm) | 3/3 | 3/3 |
-| | breakdown shown for approval, nothing published (llm) | 3/3 | 3/3 |
+| | breakdown shown for approval, nothing published (llm) | 3/3 | 2/3 |
 | tickets-neutral (kacxx/notes-cli, D1–D3) | `Implements: D<n>` on the tickets (regex) | 3/3 | 0/3 |
-| | vertical slices; every decision covered (llm) | 3/3 | 0/3 |
-| | no `Blocked by: #n` before publishing; uses T-numbers (regex) | 3/3 | 3/3 |
+| | vertical slices; every decision covered (llm) | 2/3 | 0/3 |
+| | `Blocked by` uses T-numbers, never `#n` (regex) | 2/3 | 0/3 |
 | | approval first, nothing published (llm) | 3/3 | 3/3 |
-| tickets-undecided (Status `1 open`, D2 reopened) | no tickets drafted (regex) | 3/3 | 3/3 |
+| tickets-undecided (Status `1 open`, D2 reopened by fact-check) | no ticket drafted in any format (regex) | 3/3 | 2/3 |
 | | names the open D2 and declines (llm) | 3/3 | 0/3 |
 
-Scores: devflow 1.00 (1.00), neutral 1.00 (0.33), undecided 1.00 (0.75).
+Scores: devflow 1.00 (0.94), neutral 0.83 (0.17), undecided 1.00 (0.44).
 
-The devflow case meets #10's "reproduces #5–#12" test but doesn't discriminate: the doc itself describes the `Implements:` header and the ticket set, so a model with no skill reproduces it too. The neutral case is the real test.
+The devflow case meets #10's "reproduces #5–#12" test but barely discriminates: the doc itself describes the `Implements:` header and the ticket set. The neutral case is the real test.
 
 Found while testing:
-- The first slice was horizontal ("ask the questions, save nothing yet"). The skill now requires the first ticket to be the thinnest path through every layer ("ask one question and save the answer").
-- The breakdown wrote "Blocked by: #1" before anything was published, which reads as an existing issue. It now uses T1, T2 … until real numbers exist.
-- dev-flow's own proposal had a status line (`decided (D1–D6). …`) that predates the exact grammar, so to-tickets would refuse it. Fixed to `**decided**`.
+- The first slice was horizontal ("ask the questions, save nothing yet"); the first ticket must now be the thinnest path through every layer.
+- "Blocked by: #1" before publishing read as an existing issue; the breakdown uses T1, T2 ….
+- dev-flow's own proposal status was hand-edited to `decided`, but D5 depends on an unchecked fact (the Windows install, #8). It now reads `decided, 1 fact unchecked`, so the devflow case uses a decided variant of the doc as its fixture.
 
-Not exercised: the publish step (`gh api` issue creation, label, sub-issue link); the eval sandbox can't grant Bash here. The same calls were used by hand to publish #5–#12.
+Not exercised: the publish step (`gh api` issue creation, labels, sub-issue link, partial-publish recovery); the eval sandbox can't grant Bash here. The label-exists and list-children calls were checked live against this repo.
