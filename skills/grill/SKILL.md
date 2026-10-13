@@ -92,15 +92,23 @@ BODY
 
 **Full path, once the proposal doc exists:** decisions live in the doc, so edit the `### D<n>:` headings there (on a branch, through a PR), never in a new comment. Two records of the same ID is the failure this rule prevents.
 
-Then give the next step: `proposal` (full path, no doc yet), "ready to implement" (short path, nothing open), or the re-slice below (a reopened decision).
+Then give the next step: `proposal` (full path, no doc yet), "ready to implement" (short path, nothing open), or, for a reopened decision, the next step in the section below.
 
-## Reopening a decision (from `flag-decision`)
+## Reopening a decision
 
-A ticket labelled `needs-decision`, with an evidence comment headed `## Decision flagged: D<n>`, says decision `D<n>` is wrong. The label and that comment are the reopen marker: nothing is written into the doc or issue until the decision is revised.
+A decision is reopened in one of two ways, each with its own marker:
+- **During implementation, by `flag-decision`:** a ticket is labelled `needs-decision` and has an evidence comment headed `## Decision flagged: D<n>`. Nothing is written into the doc or issue until the decision is revised.
+- **While a proposal is drafted, by `proposal`'s fact-check or consistency pass:** the doc has `Status: reopened — <fact-check | consistency>: <reason>` under the decision's heading, with the options for settling it.
 
-1. Read the ticket's evidence comment, then grill **that decision alone**.
-2. Revise it **where it lives** (the proposal doc, or the issue body on the short path). The new text keeps the **same ID**, and the old text moves into a superseded block, the same format `proposal` uses: `<details><summary>Superseded (YYYY-MM-DD)</summary>` + the old text + `Reason: <what the ticket found> (#<ticket>)` + `</details>`.
-3. Find the open tickets built on it, and propose for each one whether it is updated, closed or split, including the flagged ticket itself. Change nothing until the owner approves the list:
+Either way:
+
+1. Read the evidence (the ticket's comment, or the `Status: reopened` line and the fact-check rows it points to), then grill **that decision alone**.
+2. **Fact-check the revised text before writing it.** An answer can bring in a new claim about the code or a platform ("the hook already parses the path", "nothing else reads this field"). Check each one the way `proposal` step 3 does: a probe or the source first; a fact the owner states as checked counts as ✅ with the source "owner, <where they said it>". Ask again if one turns out wrong. Record each check where the decision's facts live: a row in the doc's `## Fact-check` table, or, on the short path, a line in the issue's Problem or Idea with its source.
+3. Revise it **where it lives**. For a proposal doc that isn't merged yet, that's the open doc PR's branch (find it as `proposal` step 1 does: `Refs #N` in its body), checked out with `git fetch origin pull/P/head:<branch> && git switch <branch>`, never a fresh branch from `main`. A merged doc is edited on a new branch, through a PR. On the short path, it's the issue body.
+   - The heading keeps the **same ID** and gets ` (revised YYYY-MM-DD)`, as `proposal`'s template does.
+   - The old text moves into a superseded block, the same format `proposal` uses: `<details><summary>Superseded (YYYY-MM-DD)</summary>` + the old text + `Reason: <what was found> (#<ticket>, fact-check or consistency)` + `</details>`.
+   - Remove the `Status: reopened` line. In a proposal doc, recount its Status line (`proposal`'s grammar) and update any part of Shape the revision changes.
+4. **Check for tickets built on the decision**, every time, including after a draft-proposal reopen: tickets can be written by hand from a draft. If the search finds none, say so and skip the re-slice. Otherwise propose for each one whether it is updated, closed or split, including the flagged ticket itself. Change nothing until the owner approves the list:
    ```bash
    gh api -X GET search/issues -f q='repo:OWNER/REPO is:issue is:open "Implements:" D<n>' --jq '.items[] | "#\(.number) \(.title)"'
    ```
@@ -109,8 +117,9 @@ A ticket labelled `needs-decision`, with an evidence comment headed `## Decision
    gh api --paginate 'repos/OWNER/REPO/issues?state=open&per_page=100' --jq '.[] | select(.pull_request | not) | select(.body // "" | test("Implements:[^\\n]*\\bD<n>\\b[^\\n]*(docs/proposals/<name>\\.md|#N\\b)")) | "#\(.number) \(.title)"'
    ```
    Read each body to confirm its `Implements:` line names `D<n>` **and** this decision's source. Search matches loosely: a decision mentioned only in a comment matches, and so does the same `D<n>` from another proposal.
-4. Once the owner approves, apply the changes. Then take the flagged ticket off hold: remove `needs-decision`, and if the ticket is still valid and has no open blockers, put `ready-for-agent` back so an agent picks it up again (a ticket left with neither label is stranded):
+5. Once the owner approves, apply the changes. Then, for a `flag-decision` reopen, take the flagged ticket off hold: remove `needs-decision`, and if the ticket is still valid and has no open blockers, put `ready-for-agent` back so an agent picks it up again (a ticket left with neither label is stranded):
    ```bash
    gh api repos/OWNER/REPO/issues/TICKET/labels/needs-decision --method DELETE
    gh api repos/OWNER/REPO/issues/TICKET/labels --method POST -f 'labels[]=ready-for-agent'   # only if still valid and unblocked
    ```
+6. **Next step.** For a proposal doc, push the revision to its PR and refresh the PR description, then hand back to `proposal` to re-run its fact-check and consistency pass on the revised doc and mark the PR ready if it's now `decided`. On the short path, the issue is "ready to implement" once nothing is open.
