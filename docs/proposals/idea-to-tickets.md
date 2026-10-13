@@ -17,7 +17,7 @@ GitHub issues only for v1. Tickets are described in neutral fields (title, probl
 - **Open questions answerable in one sitting:** grill them in the issue and write the decisions into the issue body. No proposal doc.
 - **Needs design** (a new interface or command, a cross-cutting change, or more than about three tickets): the full path, ending in a proposal doc.
 
-The three-ticket cut-off gets tuned after the pilots. A change to it is a revision of D2 through `grill` (same ID, old text superseded); the evidence (which ideas took which path, and whether that was right) goes in the pilot ticket's retro comment.
+The three-ticket cut-off gets tuned after the pilots. A change to it is a revision of D2 through `grill` (same ID, old text superseded); the evidence (which ideas took which path, and whether that was right) is appended to `docs/path-tuning.md` after each pilot, one entry per idea, so all pilots feed one record.
 
 <details><summary>Superseded (2026-10-13)</summary>
 
@@ -37,7 +37,7 @@ On the short path there's no doc, so the header points at the issue holding the 
 ### D4: Way back (revised 2026-10-13)
 1. The implementing agent stops and flags with the **`flag-decision`** skill: it comments on the ticket with the evidence and the decision it breaks (`## Decision flagged: D<n>`), swaps `ready-for-agent` for `needs-decision`, and doesn't redesign inside the ticket.
 2. **The `needs-decision` label plus that comment are the reopen marker.** Nothing is written into the doc or issue until the decision is revised: `grill` settles it alone, and the revision keeps the same ID with the old text in a superseded block.
-3. `grill` proposes a re-slice of the open tickets that say `Implements: D<n>`, the owner approves it, and the flagged ticket gets `ready-for-agent` back if it's still valid and unblocked. Until then, `to-tickets` won't slice the source again.
+3. `grill` proposes a re-slice of the open tickets that say `Implements: D<n>`, and the owner approves it. Then `grill` removes `needs-decision` from the flagged ticket, and puts `ready-for-agent` back if the ticket is still valid and unblocked. Until then, `to-tickets` won't slice the source again.
 
 A decision reopened **while a proposal is still being drafted** (by its fact-check or consistency pass) is marked differently: `proposal` writes `Status: reopened — <fact-check | consistency>: <one line>` under its heading in the draft doc. Two moments, two markers, each with one owner.
 

@@ -20,7 +20,7 @@ Only slice something decided:
 - **Proposal doc:** its Status line must read exactly `**decided**`. Anything else means stop, including `decided, M facts unchecked` (it starts with "decided" but isn't), `N open` and `N open, M facts unchecked`. Say what's open and that `proposal` needs to finish first.
 - **Short-path issue:** it must have a `## Decisions` section with `### D<n>:` headings, and nothing left under Open questions or To check. If it already carries `ready-for-agent` and fits in one ticket, it **is** the ticket: say so and stop, because slicing it would put the same work up twice. Slice it only if it needs more than one ticket; step 5 then takes the label off the source issue.
 
-Also stop if a decision is flagged: any open issue labelled `needs-decision` whose body has `Parent: #N` means a decision behind this source has been reopened by `flag-decision`, even though the doc's Status still says `decided`. Name it and point to `grill`.
+Also stop if a decision is flagged: the source issue itself carries `needs-decision` (a short-path issue that was its own ticket), or any open issue labelled `needs-decision` has `Parent: #N` in its body. Either means a decision behind this source has been reopened by `flag-decision`, even though the doc's Status still says `decided`. Name it and point to `grill`.
 
 ```bash
 gh api -X GET search/issues -f q='repo:OWNER/REPO is:issue is:open label:needs-decision "Parent: #N"' --jq '.items[] | "#\(.number) \(.title)"'
@@ -124,11 +124,27 @@ gh api repos/OWNER/REPO/issues/N/labels/ready-for-agent --method DELETE
 
 ## 6. Report
 
-Check the target repo's `CLAUDE.md` for the `flag-decision` pointer line (see `skills/flag-decision/SKILL.md`). If it's missing, say so in the report and offer the line: it's the only thing that tells a flow-2 agent (Superpowers, Matt Pocock's skills, or none) to stop and flag rather than redesign.
+Check the target repo's `CLAUDE.md` (root and `.claude/`) for the `flag-decision` pointer line (see `skills/flag-decision/SKILL.md`). It's the main bridge into flow 2: the skill's own description can trigger it too, but the line makes a Superpowers or Matt Pocock flow-2 agent stop and flag rather than redesign. The check tells apart *present*, *missing line*, *no file* and *couldn't check*, so an error isn't mistaken for a missing pointer:
 
 ```bash
-gh api repos/OWNER/REPO/contents/CLAUDE.md --jq .content 2>/dev/null | base64 -d | grep -q flag-decision || echo "CLAUDE.md has no flag-decision pointer"
+repo_out=$(gh api "repos/OWNER/REPO" --silent 2>&1) || { echo "could not check: repo OWNER/REPO: $repo_out"; exit 0; }
+found=""; missing=0; err=""
+for f in CLAUDE.md .claude/CLAUDE.md; do
+  if out=$(gh api "repos/OWNER/REPO/contents/$f" --jq '.content | @base64d' 2>&1); then
+    printf '%s' "$out" | grep -qF 'run the `flag-decision` skill and stop' && found="$f"
+  elif printf '%s' "$out" | grep -q 'HTTP 404'; then
+    missing=$((missing+1))
+  else
+    err="$f: $out"
+  fi
+done
+if [ -n "$found" ]; then echo "pointer present in $found"
+elif [ -n "$err" ]; then echo "could not check: $err"
+elif [ "$missing" -eq 2 ]; then echo "no CLAUDE.md: offer to create one with the pointer"
+else echo "CLAUDE.md has no flag-decision pointer: offer the line"; fi
 ```
+
+Act on the result: present, say nothing; missing line, offer it; no file, offer to create `CLAUDE.md` with it; couldn't check, report the error. If the repo might pull the line in another way (an `@import`, or a branch not yet merged), ask before offering a duplicate.
 
 
 List the published tickets with their numbers, what each implements and what blocks it, and which can start now (labelled `ready-for-agent`). For each blocked ticket, say it gets the label when its blockers close. Name any decision no ticket implements.
