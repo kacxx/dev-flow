@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for build_account_skills.py. Run: python3 -I scripts/test_build_account_skills.py"""
+"""Tests for build_account_skills.py. Run: python3 -I scripts/test_build_account_skills.py (or `python` on Windows)"""
 import os
 import shutil
 import sys
@@ -10,15 +10,29 @@ import zipfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build_account_skills as b  # noqa: E402
 
+# Each frontmatter case runs against both parsers: PyYAML (when installed) and the strict fallback.
+PARSERS = [False] + ([True] if b.yaml is not None else [])
+
+
+def write(path, text, encoding="utf-8"):
+    with open(path, "w", encoding=encoding) as f:
+        f.write(text)
+
 
 def skill(root, name, fm_name=None, desc="Use when testing.", extra=None):
     d = os.path.join(root, name)
     os.makedirs(d)
-    with open(os.path.join(d, "SKILL.md"), "w") as f:
-        f.write(f"---\nname: {fm_name or name}\ndescription: {desc}\n---\n\n# body\n")
+    write(os.path.join(d, "SKILL.md"), f"---\nname: {fm_name or name}\ndescription: {desc}\n---\n\n# body\n")
     for rel, text in (extra or {}).items():
         os.makedirs(os.path.dirname(os.path.join(d, rel)) or d, exist_ok=True)
-        open(os.path.join(d, rel), "w").write(text)
+        write(os.path.join(d, rel), text)
+    return d
+
+
+def raw(root, name, frontmatter_text, encoding="utf-8"):
+    d = os.path.join(root, name)
+    os.makedirs(d, exist_ok=True)
+    write(os.path.join(d, "SKILL.md"), frontmatter_text, encoding)
     return d
 
 
@@ -27,26 +41,40 @@ class Build(unittest.TestCase):
         self.tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.tmp, True)
         self.notice = os.path.join(self.tmp, "NOTICE")
-        open(self.notice, "w").write("MIT")
+        write(self.notice, "MIT")
+
+    def each_parser(self, d):
+        """check() under every available parser, as (parser, problems) pairs."""
+        return [("yaml" if y else "strict", b.check(d, use_yaml=y)) for y in PARSERS]
+
+    def assertValid(self, d):
+        for parser, problems in self.each_parser(d):
+            self.assertEqual(problems, [], parser)
+
+    def assertProblem(self, d, text):
+        for parser, problems in self.each_parser(d):
+            self.assertTrue(any(text in p for p in problems), f"{parser}: {problems}")
 
     def test_valid_skill_has_no_problems(self):
-        self.assertEqual(b.check(skill(self.tmp, "capture")), [])
+        self.assertValid(skill(self.tmp, "capture"))
 
     def test_name_mismatch(self):
-        self.assertIn("doesn't match", b.check(skill(self.tmp, "capture", fm_name="capturer"))[0])
+        self.assertProblem(skill(self.tmp, "capture", fm_name="capturer"), "doesn't match")
 
     def test_description_too_long(self):
-        self.assertIn("201 characters", b.check(skill(self.tmp, "grill", desc="x" * 201))[0])
+        self.assertProblem(skill(self.tmp, "grill", desc="x" * 201), "201 characters")
 
     def test_no_frontmatter(self):
-        d = os.path.join(self.tmp, "x"); os.makedirs(d); open(os.path.join(d, "SKILL.md"), "w").write("# no fm")
-        self.assertIn("no frontmatter", b.check(d)[0])
+        self.assertProblem(raw(self.tmp, "x", "# no fm"), "no frontmatter")
+
+    def test_no_final_newline(self):
+        self.assertValid(raw(self.tmp, "grill", "---\nname: grill\ndescription: Use when x.\n---"))
 
     def test_zip_has_folder_at_root_and_notice(self):
         d = skill(self.tmp, "grill", extra={"scripts/x.py": "print(1)"})
         out = b.build(d, os.path.join(self.tmp, "out"), self.notice)
-        names = sorted(zipfile.ZipFile(out).namelist())
-        self.assertEqual(names, ["grill/NOTICE", "grill/SKILL.md", "grill/scripts/x.py"])
+        with zipfile.ZipFile(out) as z:
+            self.assertEqual(sorted(z.namelist()), ["grill/NOTICE", "grill/SKILL.md", "grill/scripts/x.py"])
 
     def test_missing_notice_fails(self):
         d = skill(self.tmp, "capture")
@@ -56,32 +84,100 @@ class Build(unittest.TestCase):
     def test_own_notice_not_duplicated(self):
         d = skill(self.tmp, "grill", extra={"NOTICE": "own"})
         out = b.build(d, os.path.join(self.tmp, "out"), self.notice)
-        names = zipfile.ZipFile(out).namelist()
-        self.assertEqual(sorted(names), ["grill/NOTICE", "grill/NOTICE.dev-flow", "grill/SKILL.md"])
+        with zipfile.ZipFile(out) as z:
+            self.assertEqual(sorted(z.namelist()), ["grill/NOTICE", "grill/NOTICE.dev-flow", "grill/SKILL.md"])
 
     def test_folded_description_measured_in_full(self):
-        d = os.path.join(self.tmp, "grill"); os.makedirs(d)
-        open(os.path.join(d, "SKILL.md"), "w").write("---\nname: grill\ndescription: >-\n  " + "word " * 50 + "\n  more\n---\n")
-        self.assertTrue(any("characters" in p for p in b.check(d)), b.check(d))
+        d = raw(self.tmp, "grill", "---\nname: grill\ndescription: >-\n  " + "word " * 50 + "\n  more\n---\n")
+        self.assertProblem(d, "characters")
+
+    def test_block_header_with_indent_and_comment(self):
+        for header in (">2", "|-2", ">- # folded"):
+            d = raw(self.tmp, "grill", f"---\nname: grill\ndescription: {header}\n  " + "word " * 50 + "\n---\n")
+            self.assertProblem(d, "characters")
+
+    def test_plain_continuation_measured_in_full(self):
+        d = raw(self.tmp, "grill", "---\nname: grill\ndescription: short\n  " + "word " * 50 + "\n---\n")
+        self.assertProblem(d, "characters")
+
+    def test_value_on_next_line(self):
+        self.assertValid(raw(self.tmp, "grill", "---\nname: grill\ndescription:\n  Use when x.\n---\n"))
 
     def test_quoted_name(self):
-        self.assertEqual(b.check(skill(self.tmp, "grill", fm_name='"grill"')), [])
+        self.assertValid(skill(self.tmp, "grill", fm_name='"grill"'))
+
+    def test_inline_comment_dropped(self):
+        self.assertValid(skill(self.tmp, "grill", fm_name="grill  # phone set"))
+
+    def test_single_quote_escape(self):
+        self.assertValid(skill(self.tmp, "grill", desc="'Use when it''s time.'"))
 
     def test_bad_name_characters(self):
-        self.assertTrue(any("lowercase" in p for p in b.check(skill(self.tmp, "Flag_Decision"))))
+        self.assertProblem(skill(self.tmp, "Flag_Decision"), "lowercase")
 
     def test_reserved_word(self):
-        self.assertTrue(any("reserved" in p for p in b.check(skill(self.tmp, "claude-helper"))))
+        self.assertProblem(skill(self.tmp, "claude-helper"), "reserved")
 
     def test_bom_is_accepted(self):
-        d = os.path.join(self.tmp, "capture"); os.makedirs(d)
-        open(os.path.join(d, "SKILL.md"), "w", encoding="utf-8-sig").write("---\nname: capture\ndescription: Use when x.\n---\n")
-        self.assertEqual(b.check(d), [])
+        self.assertValid(raw(self.tmp, "capture", "---\nname: capture\ndescription: Use when x.\n---\n", "utf-8-sig"))
 
-    def test_real_phone_set_passes_checks(self):
+    def test_quoted_colon_space_accepted(self):
+        self.assertValid(skill(self.tmp, "flag-decision", desc='"Use when the Implements: line is wrong."'))
+
+    def test_invalid_yaml_rejected(self):
+        # each of these fails yaml.safe_load; the strict parser must reject it too
+        bad = {
+            "unquoted colon-space": "Use when the Implements: line is wrong.",
+            "colon-space on a continuation line": "Use when x\n  and the Implements: line is wrong.",
+            "unescaped apostrophe in single quotes": "'the ticket's Implements: line'",
+            "text after the closing quote": '"a" b: c',
+            "leading backtick": "`code` first",
+            "leading flow indicator": "[a] b",
+            "trailing colon": "Use when ready:",
+        }
+        for case, desc in bad.items():
+            with self.subTest(case):
+                d = skill(os.path.join(self.tmp, case.replace(" ", "-")), "grill", desc=desc)
+                for parser, problems in self.each_parser(d):
+                    self.assertTrue(problems, f"{parser} accepted {desc!r}")
+
+    def test_strict_parser_agrees_with_yaml_on_real_skills(self):
+        if b.yaml is None:
+            self.skipTest("PyYAML not installed")
         root = os.path.join(b.ROOT, "skills")
-        for n in b.PHONE_SET:
-            self.assertEqual(b.check(os.path.join(root, n)), [], n)
+        for n in real_skills():
+            with open(os.path.join(root, n, "SKILL.md"), encoding="utf-8-sig") as f:
+                text = f.read()
+            strict, yml = b.frontmatter(text, use_yaml=False)[0], b.frontmatter(text)[0]
+            self.assertEqual(strict, yml, n)
+
+    def test_unsafe_key_name_is_just_a_key(self):
+        d = raw(self.tmp, "grill", "---\nname: grill\ndescription: Use when x.\n_unsafe: abc\n---\n")
+        self.assertValid(d)
+
+    def test_every_real_skill_passes_checks(self):
+        # all of them, not just the phone set: the plugin loads every skill
+        root = os.path.join(b.ROOT, "skills")
+        for n in real_skills():
+            for parser, problems in self.each_parser(os.path.join(root, n)):
+                self.assertEqual(problems, [], f"{n} ({parser})")
+
+    def test_named_build_keeps_other_zips(self):
+        out = os.path.join(b.ROOT, "dist", "account-skills")
+        os.makedirs(out, exist_ok=True)
+        keep = os.path.join(out, "capture.zip")
+        existed = os.path.exists(keep)
+        if not existed:
+            write(keep, "placeholder")
+            self.addCleanup(lambda: os.path.exists(keep) and os.remove(keep))
+        self.assertEqual(b.main(["build", "grill"]), 0)
+        self.assertTrue(os.path.exists(keep))
+
+
+def real_skills():
+    """Skill folders under skills/: directories only, skipping dotfiles such as .DS_Store."""
+    root = os.path.join(b.ROOT, "skills")
+    return sorted(n for n in os.listdir(root) if not n.startswith(".") and os.path.isdir(os.path.join(root, n)))
 
 
 if __name__ == "__main__":
