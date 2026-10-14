@@ -28,16 +28,16 @@ Every step that writes to GitHub shows you the draft first and waits for your ye
 
 ## Running the skills
 
-Each skill takes plain text: name the repo and the issue, doc or idea it should work on. Run it as a slash command, `/dev-flow:<skill> <what to work on>`, or just ask ("grill kacxx/dev-flow#25"); the descriptions are written so Claude picks the right skill. On the phone, where the skills are account skills, ask for them by name: "use the `capture` skill on …".
+Each skill takes plain text: name the repo and the issue, doc or idea it should work on. Run it as a slash command, `/dev-flow:<skill> <what to work on>`, or just ask ("grill owner/repo#12"); the descriptions are written so Claude picks the right skill. On the phone, where the skills are account skills, ask for them by name: "use the `capture` skill on …".
 
 | Skill | Give it | Example |
 |---|---|---|
-| `capture` | the repo and the idea, in a sentence or two | `/dev-flow:capture kacxx/dev-flow: add a CI workflow that runs the unit tests on every PR` |
-| `grill` | the issue (or doc) with the open questions | `/dev-flow:grill kacxx/dev-flow#25` |
-| `grill` (reopen) | the decision and where it lives | `/dev-flow:grill D3 in kacxx/aside-jot#79` |
-| `proposal` | the source issue, or the doc PR to review | `/dev-flow:proposal kacxx/aside-jot#78` |
-| `to-tickets` | the repo and the decided doc, or a short-path issue | `/dev-flow:to-tickets kacxx/aside-jot docs/proposals/jot-status-check.md` |
-| `flag-decision` | usually nothing: the agent implementing a ticket runs it, prompted by the `CLAUDE.md` pointer (see Install) | `/dev-flow:flag-decision kacxx/aside-jot#84: D3 says Codex jots have no transcript, but the hook payload has transcript_path` |
+| `capture` | the repo and the idea, in a sentence or two | `/dev-flow:capture owner/repo: let users export their data as CSV` |
+| `grill` | the issue (or doc) with the open questions | `/dev-flow:grill owner/repo#12` |
+| `grill` (reopen) | the decision and where it lives | `/dev-flow:grill D3 in docs/proposals/csv-export.md` |
+| `proposal` | the source issue, or the doc PR to review | `/dev-flow:proposal owner/repo#12` |
+| `to-tickets` | the repo and the decided doc, or a short-path issue | `/dev-flow:to-tickets owner/repo docs/proposals/csv-export.md` |
+| `flag-decision` | usually nothing: the agent implementing a ticket runs it, prompted by the `CLAUDE.md` pointer (see Install) | `/dev-flow:flag-decision owner/repo#15: D2 says exports stream from the database, but the ORM loads the whole table` |
 
 What you answer back:
 - **`capture`** shows the draft and the path it picked. Reply "yes" to post it, or "ready", "short" or "full" to change the path.
