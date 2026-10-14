@@ -6,26 +6,19 @@ It covers the part before the code: deciding what to build. Implementing the tic
 
 ## The flow
 
-```mermaid
-flowchart LR
-    idea([idea]) --> capture
-    capture -->|ready| ticket[issue is the ticket]
-    capture -->|short| grillS[grill]
-    capture -->|full| grillF[grill]
-    grillS -->|decisions in the issue| ticket
-    grillS -.->|needs more than one ticket| tickets
-    grillF -->|decisions| proposal
-    proposal -->|decided doc| tickets[to-tickets]
-    tickets --> impl[implement]
-    ticket --> impl
-    impl -.->|a decision is wrong| flag[flag-decision]
-    flag -.->|reopen that decision| grillF
-```
+Every idea starts with `capture`, which picks one of three paths:
 
-1. **`capture`** turns the idea into one GitHub issue (Problem, Idea, Open questions) and picks the lightest path that fits:
-   - **ready:** no open questions and no design needed, so the issue *is* the ticket;
-   - **short:** a few questions to settle, so the decisions go straight into the issue;
-   - **full:** a new interface, a cross-cutting change, or more than about three tickets, so it gets a design doc.
+| Path | When `capture` picks it | Steps |
+|---|---|---|
+| **ready** | no open questions, no design needed | `capture` → implement (the issue is the ticket) |
+| **short** | a few questions to settle, no design doc | `capture` → `grill` → implement, or → `to-tickets` if it needs several tickets |
+| **full** | a new interface, a cross-cutting change, or more than about three tickets | `capture` → `grill` → `proposal` → `to-tickets` → implement |
+
+On any path, if implementing a ticket shows a decision is wrong: `flag-decision` → `grill` on that decision → the affected tickets are updated.
+
+What each skill does:
+
+1. **`capture`** turns the idea into one GitHub issue (Problem, Idea, Open questions), looks up the facts itself, and picks the path. The path is recorded in the issue, so later sessions know it.
 2. **`grill`** settles the open questions with you in rounds. Each round asks every question that can be asked now, each with a recommended answer, so "yes" accepts them all. Each answer becomes a numbered decision, `### D1: …`.
 3. **`proposal`** (full path only) writes the decisions up as `docs/proposals/<name>.md` and **fact-checks every claim** in it against the code, the docs or a live probe. A wrong claim reopens the decision it supports, and the doc can't merge until its status is exactly `decided`. Use it instead of `/code-review` on a design-doc PR.
 4. **`to-tickets`** slices a decided doc, or a short-path issue that needs more than one ticket, into vertical, tracer-bullet tickets. Each ticket names the decisions it implements and the tickets that block it. Nothing is published until you approve the breakdown.
