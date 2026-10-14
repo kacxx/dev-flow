@@ -92,7 +92,7 @@ Found while testing:
 - "Blocked by: #1" before publishing read as an existing issue; the breakdown uses T1, T2 ….
 - dev-flow's own proposal status was hand-edited to `decided`, but D5 depends on an unchecked fact (the Windows install, #8). It now reads `decided, 1 fact unchecked`, so the devflow case uses a decided variant of the doc as its fixture.
 
-Not exercised: the publish step (`gh api` issue creation, labels, sub-issue link, partial-publish recovery); the eval sandbox can't grant Bash here. The label-exists and list-children calls were checked live against this repo.
+The eval sandbox can't grant Bash here, so the publish step is checked live instead. **Live (kacxx/aside-jot#78, 2026-10-14):** issue creation, `ready-for-agent` on the unblocked tickets and the sub-issue links all worked; the label-exists and list-children calls were also checked against this repo. Not exercised: partial-publish recovery. Not built: adding `ready-for-agent` when a blocker closes. The skill only lists it in the report (see `docs/path-tuning.md`).
 
 ## flag-decision — 13 Oct 2026 (plugin 0.5.0, after the #18 review)
 
