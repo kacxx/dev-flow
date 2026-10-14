@@ -1,6 +1,6 @@
 # Know where an idea is, and what's next (#35): proposal
 
-Status: **2 open**. Don't merge yet: D4 is reopened by the consistency pass (no stage covers decisions recorded in a comment before a proposal exists), and one question is open (whether `status` joins the phone set).
+Status: **decided**. Ready to merge, then slice into tickets.
 Source: #35
 
 ## Problem
@@ -31,7 +31,7 @@ Each skill also ends with its own "next step" wording, so the hand-off reads dif
 
 ## Decisions
 
-From the grill record on #35 (2026-10-15).
+From the grill record on #35 (2026-10-15). D4 was revised and D9 added on the same day, after the consistency pass.
 
 ### D1: A skill that calls a bundled script
 A skill that calls a bundled script. The script reads the GitHub state deterministically, so it can be tested in CI against recorded fixtures. The skill turns the result into the hand-off and asks the owner.
@@ -48,8 +48,19 @@ In this order:
 
 It's written into each skill's hand-off section in the same words, with a test that checks every SKILL.md has it. The skills can't share a file, because the phone skills are separate ZIPs.
 
-### D4: Stages and their markers
-Status: reopened — consistency: no stage covers the full path after `grill` and before `proposal`. `grill` records full-path decisions in a `## Decisions (grill, …)` comment, which isn't "no decisions record" (questions open), and there's no PR or doc yet (proposal drafted). #35 itself is in that state.
+### D4: Stages and their markers (revised 2026-10-15)
+| Stage | Marker |
+|---|---|
+| questions open | an issue with a `Path:` line and no decisions record (covers both "captured" and "grilling", which look the same) |
+| decided, short path | `## Decisions` in the body, and nothing left open |
+| decided, awaiting proposal | a `## Decisions (grill, …)` comment on the issue, and no doc or doc PR for it. Next action: `proposal` |
+| proposal drafted | an open PR that says `Refs #N`, or a doc on `main` that isn't `decided` |
+| decided, full path | the doc on `main` says `decided`, and there are no sub-issues |
+| in progress | sub-issues exist and some are open |
+| done | every sub-issue is closed, or the ready issue itself is closed |
+| reopened | a `needs-decision` child, or a `Status: reopened` line in the doc |
+
+<details><summary>Superseded (2026-10-15)</summary>
 
 | Stage | Marker |
 |---|---|
@@ -61,9 +72,8 @@ Status: reopened — consistency: no stage covers the full path after `grill` an
 | done | every sub-issue is closed, or the ready issue itself is closed |
 | reopened | a `needs-decision` child, or a `Status: reopened` line in the doc |
 
-To settle it, choose one:
-- (a) Add a stage, **decided, awaiting proposal**: a `## Decisions (grill, …)` comment on the issue, and no doc or doc PR for it. Next action: `proposal`.
-- (b) Count it as **proposal drafted**, with the next action `proposal` either way.
+Reason: no stage covered the full path after `grill` and before `proposal`, where the decisions are in a `## Decisions (grill, …)` comment and there's no doc yet; #35 itself was in that state (consistency). Settled by grill on D4 alone: option (a), add the stage.
+</details>
 
 ### D5: Named `status`
 `status`, run as `/dev-flow:status owner/repo#12`. It says what it does, and doesn't clash with the other five.
@@ -77,11 +87,11 @@ CI tests for the script, run on recorded `gh` JSON fixtures, one per stage, incl
 ### D8: #35 absorbs #31
 D2 covers relabelling unblocked tickets, so #31 closes as covered by #35, with a link, and there's no second set of decisions for the same thing.
 
-## Open questions
-
-1. Does `status` join the phone's account-skill set? The phone set is a recorded decision (`docs/proposals/idea-to-tickets.md` D5: `capture`, `grill` and `flag-decision`), so adding it changes that. If it does, its ZIP carries `scripts/state.py` (✅ below).
+### D9: No separate phone set
+The owner's Windows Claude Code and the phone are the same account, so `status` is available wherever the other skills are.
 
 ## Shape
+
 
 1. **`skills/status/SKILL.md`** (D1, D5). Given a source issue (`owner/repo#N`), it runs the script, then writes the hand-off in the D3 shape. It offers the owner's pending approvals and mechanical fixes as one batch (D2, D6), then runs the skills that carry them out.
 2. **`skills/status/scripts/state.py`** (D1, D4). It reads the issue, its comments, its sub-issues and their labels and bodies, the open PRs that say `Refs #N`, and the proposal doc found by its `Source: #N` line. Everything goes through `gh api`, read-only. It prints one JSON object with these fields:
@@ -91,14 +101,14 @@ D2 covers relabelling unblocked tickets, so #31 closes as covered by #35, with a
    - `fixes`: mechanical fixes, such as a ticket whose `Blocked by:` issues are all closed but which has no `ready-for-agent`.
 
    Defaults the decisions don't settle:
-   - When several stages match (aside-jot#95 has a ready Path line, a decided doc and open sub-issues), the stage is the **first** match in this order: reopened, done, in progress, decided full path, proposal drafted, decided short path, questions open.
+   - When several stages match (aside-jot#95 has a ready Path line, a decided doc and open sub-issues), the stage is the **first** match in this order: reopened, done, in progress, decided full path, proposal drafted, decided awaiting proposal, decided short path, questions open.
    - An issue with `## Open questions` but no `Path:` line (one captured by hand, like aside-jot#78) counts as questions open.
    - Blockers come from the `Blocked by:` lines `to-tickets` writes, not from GitHub's native issue dependencies.
 3. **The D3 shape in every skill's hand-off** (D3). The same four-part wording goes into the hand-off section of all five skills and of `status`. A test (`scripts/test_handoff_shape.py`) checks that every `skills/*/SKILL.md` contains it word for word.
 4. **Tests** (D7):
    - `skills/status/scripts/test_state.py` runs `state.py` against recorded `gh api` JSON under `skills/status/scripts/fixtures/`, one fixture per stage, including the aside-jot#95 state as recorded on 2026-10-15. `scripts/run_tests.py` picks it up, so CI runs it.
    - An eval case, `evals/status-next-action/`, puts a recorded `state.py` output in the prompt. It's graded on the next action, who takes it, and the four-part shape.
-5. **The phone:** depends on open question 1.
+5. **Where it's available** (D9): wherever the other skills are. Changing the phone set in `docs/proposals/idea-to-tickets.md` (its D5) and `build_account_skills.py`'s default is a separate change, not this one.
 6. **README.** The Status section's known-gap line about #31 is replaced, and `status` is added to the skills list and the usage table.
 
 ## Fact-check
@@ -106,14 +116,15 @@ D2 covers relabelling unblocked tickets, so #31 closes as covered by #35, with a
 | Claim | Result | Source |
 |---|---|---|
 | Every D4 marker can be read through `gh api` | ✅ issue body and `Path:` line, comments (`## Decisions (grill, …)`), sub-issues with state and labels, open PRs filtered on `Refs #N`, and a doc's Status and `Source:` lines through the contents API | probe on kacxx/aside-jot#95 (body, sub-issues #97–#99, PR #100 `Refs #95`, `follow-up-jots.md` `Source: #95`, Status `decided`) and #78 |
-| A bundled script travels in the account-skill ZIP (D1, D3, Shape 5) | ✅ the ZIP holds the whole skill folder | probe: `build()` on a `status/scripts/state.py` folder gave `status/SKILL.md`, `status/scripts/state.py`, `status/NOTICE`; `scripts/build_account_skills.py` |
+| A bundled script travels in the account-skill ZIP (D1, D3) | ✅ the ZIP holds the whole skill folder | probe: `build()` on a `status/scripts/state.py` folder gave `status/SKILL.md`, `status/scripts/state.py`, `status/NOTICE`; `scripts/build_account_skills.py` |
 | The phone skills are separate ZIPs and can't share a file (D3) | ✅ each skill is built into its own ZIP, holding only its own folder plus NOTICE | `scripts/build_account_skills.py` `build()` |
-| Cloud sessions have Python to run the script (D1 on the phone) | ✅ "Python 3.x with pip, …" is listed under installed tools | https://code.claude.com/docs/en/cloud-environments#installed-tools |
+| Cloud sessions have Python to run the script (D1 in cloud sessions) | ✅ "Python 3.x with pip, …" is listed under installed tools | https://code.claude.com/docs/en/cloud-environments#installed-tools |
 | An eval case can be graded without Bash or `gh` (D7) | ✅ the existing `proposal` and `tickets` cases put their inputs in the prompt and run with no Bash | `evals/RESULTS.md`; `evals/proposal-*/prompt.md` |
 | A multi-select question is available (D6) | ⚠️ `AskUserQuestion` has `multiSelect` on the desktop and in the terminal, but the docs don't say whether cloud or mobile sessions have it. Nothing blocks: on the phone, the same batch can go as a numbered list answered with shorthand ("1, 3"), which `grill` already accepts | this session's tool list; https://code.claude.com/docs/en/tools-reference |
 | The name `status` is free (D5) | ✅ no skill, script or eval uses it | `skills/`, `evals/` |
 | `to-tickets` writes blockers only as `Blocked by:` lines (Shape 2) | ✅ | `skills/to-tickets/SKILL.md` step 5 |
 | Ticket blockers exist only in the ticket body (issue #35's facts) | ❌ GitHub has native issue dependencies (`issues/N/dependencies/blocked_by`), but `to-tickets` doesn't set them, so they're empty on every dev-flow ticket. Nothing depends on this: Shape reads the `Blocked by:` lines | probe: `gh api repos/kacxx/aside-jot/issues/97/dependencies/blocked_by` → `[]`, `issue_dependencies_summary` all zero |
+| `grill` records full-path decisions in a `## Decisions (grill, …)` comment before a doc exists (revised D4) | ✅ | `skills/grill/SKILL.md` step 5; #35's comment of 2026-10-15 |
 | aside-jot#95 matches several D4 stages at once | ✅ a `Path: ready` line and `## Decisions` in the body, a decided doc on `main`, and three open sub-issues. That's why Shape 2 sets an order | probe of #95 |
 | Issues captured by hand have no `Path:` line | ✅ aside-jot#78 has none | probe of #78's body |
 
@@ -125,4 +136,4 @@ D2 covers relabelling unblocked tickets, so #31 closes as covered by #35, with a
 ## Risks
 - **Stage precedence:** a mixed issue like aside-jot#95 needs the order in Shape 2. A wrong order would name the wrong next action. The fixtures cover #95's state.
 - **The shape test is word for word:** any rewording of the shared shape must change all six skills at once. That's the point of the test, but it makes small edits noisier.
-- **Account-skill ZIPs:** adding `status` to the phone set means one more ZIP to re-upload whenever it changes.
+- **Account-skill ZIPs:** while skills reach cloud sessions as account-skill ZIPs, `status` is one more ZIP to re-upload whenever it changes (D9; the separate change to the phone set may remove this).
