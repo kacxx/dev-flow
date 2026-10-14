@@ -26,6 +26,26 @@ What each skill does:
 
 Every step that writes to GitHub shows you the draft first and waits for your yes.
 
+## Running the skills
+
+Each skill takes plain text: name the repo and the issue, doc or idea it should work on. Run it as a slash command, `/dev-flow:<skill> <what to work on>`, or just ask ("grill kacxx/dev-flow#25"); the descriptions are written so Claude picks the right skill. On the phone, where the skills are account skills, ask for them by name: "use the `capture` skill on …".
+
+| Skill | Give it | Example |
+|---|---|---|
+| `capture` | the repo and the idea, in a sentence or two | `/dev-flow:capture kacxx/dev-flow: add a CI workflow that runs the unit tests on every PR` |
+| `grill` | the issue (or doc) with the open questions | `/dev-flow:grill kacxx/dev-flow#25` |
+| `grill` (reopen) | the decision and where it lives | `/dev-flow:grill D3 in kacxx/aside-jot#79` |
+| `proposal` | the source issue, or the doc PR to review | `/dev-flow:proposal kacxx/aside-jot#78` |
+| `to-tickets` | the repo and the decided doc, or a short-path issue | `/dev-flow:to-tickets kacxx/aside-jot docs/proposals/jot-status-check.md` |
+| `flag-decision` | usually nothing: the agent implementing a ticket runs it, prompted by the `CLAUDE.md` pointer (see Install) | `/dev-flow:flag-decision kacxx/aside-jot#84: D3 says Codex jots have no transcript, but the hook payload has transcript_path` |
+
+What you answer back:
+- **`capture`** shows the draft and the path it picked. Reply "yes" to post it, or "ready", "short" or "full" to change the path.
+- **`grill`** asks a round of numbered questions, each with a recommendation. Reply "yes" to accept them all, or per question, for example `1 yes, 2 no: use labels, 3 skip`. "Skip" leaves that question open. It then shows the decisions record and writes it after your yes.
+- **`proposal`** pushes the doc to a draft PR, then shows you the status, what changed and the full fact-check table. Reply "yes" when you're happy; it marks the PR ready only once the status is `decided`.
+- **`to-tickets`** shows the breakdown as T1, T2 …, with what each implements and what blocks it. Ask for merges or splits, or reply "yes" to publish.
+- **`flag-decision`** stops on its own. Your part is the next step it names: `grill` on that decision.
+
 ## What the artefacts look like
 
 **Decisions** are headings with IDs that never change once given: `### D3: Codex jots get "can't tell" in v1`. When one is revised, it keeps its ID, and the old text moves into a `<details>` "Superseded" block with the reason.
