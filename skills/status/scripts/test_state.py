@@ -11,6 +11,7 @@ import copy
 import glob
 import json
 import os
+import re
 import sys
 import unittest
 
@@ -50,6 +51,17 @@ class Fixtures(unittest.TestCase):
                 self.assertTrue(out["steps"])
                 for step in out["steps"]:
                     self.assertIn(step["who"], ("owner", "agent"))
+
+    def test_eval_prompt_matches_the_script(self):
+        """The status eval pastes state.py's output for the #95 fixture; it must match what the script prints today."""
+        prompt = os.path.join(HERE, "..", "..", "..", "evals", "status-next-action", "prompt.md")
+        if not os.path.exists(prompt):
+            self.skipTest("eval case not present (installed plugin copy)")
+        with open(prompt, encoding="utf-8") as f:
+            m = re.search(r"<state>\n(.*?)\n</state>", f.read(), re.S)
+        self.assertIsNotNone(m, "no <state> block in the eval prompt")
+        self.assertEqual(json.loads(m.group(1)), replay(load("revision-in-progress-aside-jot-95")),
+                         "regenerate the eval's <state> from the fixture (state.compute)")
 
     def test_every_stage_has_a_fixture(self):
         stages = set()

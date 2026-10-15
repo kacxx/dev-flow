@@ -148,3 +148,16 @@ Score: status-next-action 1.00 (0.48).
 The baseline gets the next action right because the script's `steps` already carry it, with `who`. What the skill adds is the four-part shape.
 
 Found while testing: asked in plain words ("Where's kacxx/aside-jot#95 at, and what's next?") with the state pasted, the skill didn't trigger in 3/3 runs, and the plugin arm scored the same as the baseline (0.57). With the script's output already in hand the model answers directly. The case uses the documented `/dev-flow:status owner/repo#N` form instead, so plain-words triggering is untested.
+
+### Re-run on 0.10.0 — 15 Oct 2026 (after #48 and #50)
+
+The pasted `<state>` was regenerated from `main`'s `state.py`. It now has `last_write`, `review_comments: []`, `fixes: []` and the doc PR's `created_at`. A new test in `skills/status/scripts/test_state.py` fails if the pasted state stops matching what the script prints for the fixture. Two graders were fixed: `shape-order` accepts a `pull/100` link, and `shape-empty-parts` only fails a numbered or bulleted **Your decisions** or **Later** item, not a passing mention. Both were self-tested on six good and bad answers.
+
+| Check (grader type) | With | Without |
+|---|---|---|
+| next action (regex) | 3/3 | 3/3 |
+| who (llm) | 3/3 | 3/3 |
+| shape order (regex) | 3/3 | 0/3 |
+| shape: empty parts left out (regex) | 3/3 | 0/3 |
+
+Score: status-next-action 1.00 (0.57), Δ +0.43.
