@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build claude.ai account-skill ZIPs from this plugin's skill folders.
 
-  python3 -I scripts/build_account_skills.py [skill ...]   # default: the phone set (D5)
+  python3 -I scripts/build_account_skills.py [skill ...]   # default: the account-skill set
   (on Windows, use `python` if `python3` is the Microsoft Store stub)
 
 Writes dist/account-skills/<name>.zip for each skill and checks what claude.ai
@@ -13,7 +13,8 @@ without it, a strict parser accepts only the forms it can verify (one-line plain
 or quoted values, plain continuation lines, `>`/`|` block scalars) and rejects
 anything else, so a skill is never passed unchecked. Each ZIP also carries the
 repo's NOTICE, because some skills adapt MIT-licensed text that must travel with
-every copy. Exits non-zero, building nothing, if any skill fails a check.
+every copy. Test files (`test_*.py`) and `scripts/fixtures/` stay out of the
+ZIPs: they're for CI, and status's fixtures alone are about 664 KB. Exits non-zero, building nothing, if any skill fails a check.
 """
 import os
 import re
@@ -26,7 +27,8 @@ except ImportError:  # stdlib-only machines (e.g. a fresh Windows Python): stric
     yaml = None
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PHONE_SET = ["capture", "grill", "flag-decision"]  # D5
+# idea-to-tickets.md D5's phone set, plus status wherever the other account skills are (status.md D9)
+DEFAULT_SET = ["capture", "grill", "flag-decision", "status"]
 MAX_NAME, MAX_DESC = 64, 200
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 RESERVED = ("anthropic", "claude")
@@ -134,6 +136,16 @@ def check(skill_dir, use_yaml=True):
     return problems
 
 
+def is_test(filename):
+    """A unit test file, which runs in CI from the repo and is left out of the ZIP."""
+    return filename.startswith("test_") and filename.endswith(".py")
+
+
+def is_fixtures(path):
+    """A `scripts/fixtures/` folder: recorded test data, left out of the ZIP."""
+    return os.path.basename(path) == "fixtures" and os.path.basename(os.path.dirname(path)) == "scripts"
+
+
 def build(skill_dir, out_dir, notice):
     """ZIP one skill. `notice` is required: the MIT notice must travel with every copy."""
     name = os.path.basename(skill_dir.rstrip("/\\"))
@@ -143,9 +155,10 @@ def build(skill_dir, out_dir, notice):
     out = os.path.join(out_dir, f"{name}.zip")
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
         for base, dirs, files in os.walk(skill_dir):
-            dirs[:] = sorted(d for d in dirs if d not in ("__pycache__",) and not d.startswith("."))
+            dirs[:] = sorted(d for d in dirs if d not in ("__pycache__",) and not d.startswith(".")
+                             and not is_fixtures(os.path.join(base, d)))
             for f in sorted(files):
-                if f.startswith(".") or f.endswith(".pyc"):
+                if f.startswith(".") or f.endswith(".pyc") or is_test(f):
                     continue
                 full = os.path.join(base, f)
                 z.write(full, os.path.join(name, os.path.relpath(full, skill_dir)))
@@ -155,7 +168,7 @@ def build(skill_dir, out_dir, notice):
 
 
 def main(argv):
-    names = argv[1:] or PHONE_SET
+    names = argv[1:] or DEFAULT_SET
     dirs = [os.path.join(ROOT, "skills", n) for n in names]
     problems = [p for d in dirs for p in check(d)]
     if problems:
