@@ -9,7 +9,7 @@
     {
       "name": "dev-flow",
       "source": "./",
-      "description": "Idea \u2192 tickets workflow skills: capture, grill, proposal, to-tickets, flag-decision."
+      "description": "Idea \u2192 tickets workflow skills: capture, grill, proposal, to-tickets, flag-decision, status."
     }
   ]
 }
