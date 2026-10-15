@@ -76,6 +76,34 @@ class Build(unittest.TestCase):
         with zipfile.ZipFile(out) as z:
             self.assertEqual(sorted(z.namelist()), ["grill/NOTICE", "grill/SKILL.md", "grill/scripts/x.py"])
 
+    def test_zip_leaves_out_tests_and_fixtures(self):
+        d = skill(self.tmp, "status", extra={
+            "scripts/state.py": "print(1)",
+            "scripts/test_state.py": "import unittest",
+            "scripts/fixtures/done.json": "{}",
+            "scripts/fixtures/nested/x.json": "{}",
+            "test_top.py": "import unittest",
+            "fixtures/keep.json": "{}",  # only scripts/fixtures/ is test data
+            "scripts/testing_notes.py": "print(2)",
+        })
+        out = b.build(d, os.path.join(self.tmp, "out"), self.notice)
+        with zipfile.ZipFile(out) as z:
+            self.assertEqual(sorted(z.namelist()), ["status/NOTICE", "status/SKILL.md", "status/fixtures/keep.json",
+                                                    "status/scripts/state.py", "status/scripts/testing_notes.py"])
+
+    def test_real_zips_carry_no_tests_or_fixtures(self):
+        out = os.path.join(self.tmp, "out")
+        for n in real_skills():
+            with zipfile.ZipFile(b.build(os.path.join(b.ROOT, "skills", n), out, self.notice)) as z:
+                for name in z.namelist():
+                    self.assertFalse(os.path.basename(name).startswith("test_"), name)
+                    self.assertNotIn("/scripts/fixtures/", name)
+
+    def test_default_set_includes_status(self):
+        self.assertEqual(b.DEFAULT_SET, ["capture", "grill", "flag-decision", "status"])
+        for n in b.DEFAULT_SET:
+            self.assertIn(n, real_skills())
+
     def test_missing_notice_fails(self):
         d = skill(self.tmp, "capture")
         with self.assertRaises(FileNotFoundError):

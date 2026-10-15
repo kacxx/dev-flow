@@ -5,7 +5,7 @@ allowed_tools: [Skill]
 
 /dev-flow:status kacxx/aside-jot#95
 
-This session can't run commands or reach GitHub, so here is what `state.py kacxx/aside-jot#95` printed, recorded on 2026-10-15. Use it as the script's output.
+This session can't run commands or reach GitHub, so here is what `state.py kacxx/aside-jot#95` printed, recorded on 2026-10-15 (fixture `revision-in-progress-aside-jot-95`). Use it as the script's output.
 
 <state>
 {
@@ -29,7 +29,11 @@ This session can't run commands or reach GitHub, so here is what `state.py kacxx
     },
     {
       "who": "agent",
-      "do": "update #97–#99"
+      "do": "update #97–#99",
+      "writes": [
+        "edits to the bodies of #97–#99 to match the merged doc"
+      ],
+      "shows_draft": true
     }
   ],
   "later": [],
@@ -81,6 +85,16 @@ This session can't run commands or reach GitHub, so here is what `state.py kacxx
     "what": "doc PR aside-jot#100 opened"
   },
   "review_comments": [],
-  "fixes": []
+  "fixes": [],
+  "batch": [
+    {
+      "from": "step",
+      "do": "update #97–#99",
+      "writes": [
+        "edits to the bodies of #97–#99 to match the merged doc"
+      ],
+      "shows_draft": true
+    }
+  ]
 }
 </state>

@@ -161,3 +161,24 @@ The pasted `<state>` was regenerated from `main`'s `state.py`. It now has `last_
 | shape: empty parts left out (regex) | 3/3 | 0/3 |
 
 Score: status-next-action 1.00 (0.57), Δ +0.43.
+
+## status batch — 15 Oct 2026 (plugin 0.11.0, #39)
+
+Three new cases, plus `status-next-action` re-run. 3 runs each, no-plugin baseline, judge sonnet. Each prompt pastes `state.py`'s output for a fixture; `test_state.py` fails if a pasted state drifts from what the script prints.
+
+| Case | With | Without | What it checks |
+|---|---|---|---|
+| status-batch | 1.00 | 0.29 | the batch as a numbered list, every write named, the shorthand offered, and no "pick a ticket" step contradicting the relabel offer |
+| status-batch-shorthand | 1.00 | 1.00 | "1, 3" carries out exactly items 1 and 3 |
+| status-batch-draft | 1.00 | 1.00 | choosing a content-producing item ("update #97–#99") still shows its draft first |
+| status-next-action | 0.90 | 0.48 | next action, who takes it, the four-part shape |
+
+`status-batch-shorthand` and `status-batch-draft` state the rule in the prompt, so the baseline passes too: they're regression checks, not evidence that the skill adds anything.
+
+Found on the first run, before these fixes (0.90, 0.83, 1.00, 0.90 with the plugin):
+- `state.py` gave the owner "pick the next ticket: none of #38–#41 is ready-for-agent" while the batch offered the labels that would make them ready, so answers contradicted themselves. With relabel fixes pending and no ticket ready, there's now no owner step; the next action is the relabelling.
+- `shape-order` still expected #97–#99 under **Then**; the batch now puts them under **Your decisions**, so it accepts either.
+- The `only-chosen` and `who` judges failed correct answers: one for adding a remark that wrote nothing, one for reading "which of these should I do?" as handing the work to the owner. Both graders now say what counts.
+- Answers said they would run `to-tickets` to update #97–#99, which `to-tickets` won't do for an issue that already has tickets (#46). The skill now says to draft those edits directly and show them.
+
+The remaining `status-next-action` failure (1 of 3) is fair: that run said it couldn't reach GitHub and would hand the owner the drafted edits to apply, giving the write to the owner.

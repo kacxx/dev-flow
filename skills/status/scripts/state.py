@@ -7,13 +7,14 @@ Prints one JSON object: the stage, the evidence for it, the other stages that
 also matched, the tickets, the doc PRs, the proposal doc, the next action as
 steps, each with who takes it (owner or agent), the review comments posted
 since dev-flow last wrote on the issue, and the mechanical fixes to offer the
-owner, each with the write it would make. Read-only: GET requests through
+owner, each with the write it would make, and the batch: the agent's steps and
+the fixes offered together for the owner's yes, each naming its writes. Read-only: GET requests through
 `gh api` only; the fixes are applied by the skill after the owner's yes. --record also writes every response it read to FILE,
 keyed by API path, which is the fixture format test_state.py replays.
 
 Stages and markers are D4 of docs/proposals/status.md (dev-flow). When several
 match, the first in PRECEDENCE wins (the proposal's Shape 2). Review comments
-are D4's last paragraph; the relabelling fix is D2.
+are D4's last paragraph; the relabelling fix is D2; the batch is D6.
 """
 import base64
 import json
@@ -237,19 +238,23 @@ def compute(fetch, repo, n):
     tickets = [{"number": s["number"], "title": s["title"], "state": s["state"],
                 "labels": [lb["name"] for lb in s.get("labels", [])], "blocked_by": blocked_by(s.get("body"))}
                for s in sorted(subs, key=lambda s: s["number"])]
-    steps, later = next_steps(stage, n, name, issue, labels, tickets, doc_prs, doc, needs)
-    last_write = latest_write(issue, records, doc_prs, merged_docs, subs, name)
     blocker_state = {s["number"]: s["state"] for s in subs}
     for b in sorted({b for t in tickets for b in t["blocked_by"]} - set(blocker_state)):
         other = fetch(f"repos/{repo}/issues/{b}")  # a blocker outside the sub-issues
         blocker_state[b] = other["state"] if other else None
+    fixes = relabel_fixes(repo, stage, tickets, blocker_state)
+    steps, later = next_steps(stage, n, name, issue, labels, tickets, doc_prs, doc, needs,
+                              relabelled={f["ticket"] for f in fixes})
+    last_write = latest_write(issue, records, doc_prs, merged_docs, subs, name)
     return {
         "issue": f"{repo}#{n}",
         "title": issue["title"],
         "stage": stage,
         "evidence": ev.get(stage, [no_stage(body)]),
         "also_matched": matched[1:],
-        "next_action": ", then ".join(s["do"] for s in steps) or None,
+        # With no step left, the relabelling fixes in the batch are the next action.
+        "next_action": (", then ".join(s["do"] for s in steps)
+                        or (f"add {READY} to {numbers(f['ticket'] for f in fixes)}" if fixes else None)),
         "steps": steps,
         "later": later,
         "tickets": tickets,
@@ -257,7 +262,8 @@ def compute(fetch, repo, n):
         "doc": doc,
         "last_write": last_write,
         "review_comments": review_comments(comments, last_write),
-        "fixes": relabel_fixes(repo, stage, tickets, blocker_state),
+        "fixes": fixes,
+        "batch": batch(steps, fixes),
     }
 
 
@@ -297,6 +303,20 @@ def review_comments(comments, last_write):
     return out
 
 
+def batch(steps, fixes):
+    """D6: the owner's pending approvals, offered together: the agent's steps, then the fixes.
+
+    Owner steps (merging a PR, closing an issue) are never in it: status doesn't do them.
+    Each item names every write it would make. `shows_draft` items still show their
+    draft and wait for the owner's yes before writing; the selection is the yes for the rest.
+    """
+    items = [{"from": "step", "do": s["do"], "writes": s["writes"], "shows_draft": s["shows_draft"]}
+             for s in steps if s["who"] == "agent"]
+    items += [{"from": "fix", "do": f["write"], "why": f["why"], "writes": [f["write"]], "shows_draft": False,
+               "command": f["command"]} for f in fixes]
+    return items
+
+
 def relabel_fixes(repo, stage, tickets, blocker_state):
     """D2: add ready-for-agent to an open ticket whose `Blocked by:` names issues that are all closed.
 
@@ -328,9 +348,16 @@ def no_stage(body):
     return "no D4 marker matched"
 
 
-def next_steps(stage, n, name, issue, labels, tickets, doc_prs, doc, needs):
+def next_steps(stage, n, name, issue, labels, tickets, doc_prs, doc, needs, relabelled=frozenset()):
     owner = lambda do: {"who": "owner", "do": do}  # noqa: E731
-    agent = lambda do: {"who": "agent", "do": do}  # noqa: E731
+
+    def agent(do, writes, shows_draft):
+        """An agent step names every write it would make (D6), and whether its skill shows a draft first."""
+        return {"who": "agent", "do": do, "writes": writes, "shows_draft": shows_draft}
+
+    def tickets_writes():
+        return [f"new issues for the tickets, as sub-issues of #{n}",
+                f"the {READY} label on the tickets with no open blockers"]
     open_t = [t for t in tickets if t["state"] == "open"]
     prs = ", ".join(f"{name}#{p['number']}" for p in doc_prs)
     later = []
@@ -338,20 +365,26 @@ def next_steps(stage, n, name, issue, labels, tickets, doc_prs, doc, needs):
         where = numbers(needs) if needs else (doc["path"] if doc and doc["reopened"] else f"#{n}")
         steps = [owner(f"settle the reopened decision in {where} with `grill`")]
     elif stage == "revision in progress":
-        steps = [owner(f"merge {prs}")] + ([agent(f"update {numbers(t['number'] for t in open_t)}")] if open_t else [])
+        nums = numbers(t["number"] for t in open_t)
+        steps = [owner(f"merge {prs}")] + ([agent(f"update {nums}", [f"edits to the bodies of {nums} to match the merged doc"],
+                                                  True)] if open_t else [])
     elif stage == "done":
         steps = [owner(f"close #{n}")] if issue["state"] == "open" else []
     elif stage == "in progress":
         ready = [t["number"] for t in open_t if READY in t["labels"]]
         closed = {t["number"] for t in tickets if t["state"] == "closed"}
-        steps = ([agent(f"implement {numbers(ready)}")] if ready
-                 else [owner(f"pick the next ticket: none of {numbers(t['number'] for t in open_t)} is {READY}")])
+        if ready:
+            steps = [agent(f"implement {numbers(ready)}", [f"a branch and a pull request for #{r}" for r in ready], False)]
+        elif relabelled:
+            steps = []  # the relabelling fixes in the batch are the decision; "pick a ticket" would contradict them
+        else:
+            steps = [owner(f"pick the next ticket: none of {numbers(t['number'] for t in open_t)} is {READY}")]
         for t in open_t:
             waiting = [b for b in t["blocked_by"] if b not in closed]
             if t["number"] not in ready and waiting:
                 later.append(f"#{t['number']} waits on {numbers(waiting)}")
     elif stage == "decided, full path":
-        steps = [agent(f"run `to-tickets` on {doc['path']}")]
+        steps = [agent(f"run `to-tickets` on {doc['path']}", tickets_writes(), True)]
     elif stage == "proposal drafted":
         ready_prs = [p for p in doc_prs if all(s == "decided" for s in p["docs"].values())]
         reopened_prs = [p for p in doc_prs if p["reopened"]]
@@ -361,13 +394,16 @@ def next_steps(stage, n, name, issue, labels, tickets, doc_prs, doc, needs):
         elif ready_prs:
             steps = [owner("review and merge " + ", ".join(f"{name}#{p['number']}" for p in ready_prs))]
         elif doc_prs:
-            steps = [agent(f"finish {prs} with `proposal`")]
+            steps = [agent(f"finish {prs} with `proposal`", [f"commits to the doc on {prs}'s branch"], True)]
         else:
-            steps = [agent(f"finish {doc['path']} with `proposal`")]
+            steps = [agent(f"finish {doc['path']} with `proposal`", [f"a branch and a draft doc PR updating {doc['path']}"],
+                           True)]
     elif stage == "decided, awaiting proposal":
-        steps = [agent(f"write the proposal for #{n} with `proposal`")]
+        steps = [agent(f"write the proposal for #{n} with `proposal`",
+                       [f"a branch and a draft doc PR adding a doc under {PROPOSALS}/"], True)]
     elif stage == "decided, short path":
-        steps = [agent(f"implement #{n}")] if READY in labels else [agent(f"slice #{n} with `to-tickets`")]
+        steps = ([agent(f"implement #{n}", [f"a branch and a pull request for #{n}"], False)] if READY in labels
+                 else [agent(f"slice #{n} with `to-tickets`", tickets_writes(), True)])
     elif stage == "questions open":
         steps = [owner(f"answer #{n}'s open questions with `grill`")]
     else:
