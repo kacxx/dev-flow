@@ -9,7 +9,7 @@ Tell the owner where an idea is and what happens next. A bundled script reads th
 
 ## 1. Read the state
 
-The owner names the source issue as `OWNER/REPO#N` (the issue `capture` wrote, not one of its tickets). Run the bundled script from this skill's base directory:
+The owner names the source issue as `OWNER/REPO#N` or its URL (the issue `capture` wrote, not one of its tickets). Run the bundled script from this skill's base directory:
 
 ```bash
 python3 -I scripts/state.py OWNER/REPO#N

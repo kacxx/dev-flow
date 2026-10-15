@@ -133,6 +133,28 @@ class Markers(unittest.TestCase):
         self.assertEqual(out["stage"], "proposal drafted")
         self.assertEqual(out["steps"], [{"who": "owner", "do": "review and merge r#5"}])
 
+    def test_closes_and_fixes_count_like_refs(self):
+        for word in ("Closes", "Fixes"):
+            pr = {"number": 5, "title": "doc", "body": f"{word} #1", "head": {"sha": "abc"}}
+            out = run(api(prs=[pr], files={5: ["docs/proposals/x.md"]}, docs={"docs/proposals/x.md?ref=abc": DOC}))
+            self.assertEqual(out["stage"], "proposal drafted", word)
+
+    def test_reopened_line_in_doc_pr_goes_to_grill(self):
+        doc = DOC.replace("decided", "1 open") + "\n### D2: x\nStatus: reopened — consistency: no stage\n"
+        pr = {"number": 5, "title": "doc", "body": "Refs #1", "head": {"sha": "abc"}}
+        out = run(api(prs=[pr], files={5: ["docs/proposals/x.md"]}, docs={"docs/proposals/x.md?ref=abc": doc}))
+        self.assertEqual(out["stage"], "proposal drafted")
+        self.assertEqual(out["steps"], [{"who": "owner", "do": "settle the reopened decision in r#5 with `grill`"}])
+
+    def test_doc_pr_that_deletes_the_doc(self):
+        pr = {"number": 5, "title": "doc", "body": "Refs #1", "head": {"sha": "abc"}}
+        a = api(prs=[pr], files={5: ["docs/proposals/x.md"]})
+        a[f"{R}/contents/docs/proposals/x.md?ref=abc"] = None  # 404 at the head: the file is gone there
+        out = run(a)
+        self.assertEqual(out["stage"], "proposal drafted")
+        self.assertEqual(out["doc_prs"][0]["docs"], {"docs/proposals/x.md": None})
+        self.assertEqual(out["next_action"], "finish r#5 with `proposal`")
+
     def test_reopened_line_in_doc(self):
         doc = DOC.replace("decided", "1 open") + "\n### D2: x\nStatus: reopened — fact-check: wrong\n"
         out = run(api(docs={"docs/proposals/x.md": doc}))
@@ -162,6 +184,10 @@ class Markers(unittest.TestCase):
     def test_to_check_keeps_short_path_open(self):
         out = run(api(body="## Decisions\n\n### D1: x\n\n## Open questions\n\nNone.\n\n## To check\n\n- a fact\n"))
         self.assertIsNone(out["stage"])
+
+    def test_superseded_to_check_does_not_count(self):
+        body = "## Decisions\n\n### D1: x\n\n## Open questions\n\nNone.\n\n<details>\n\n## To check\n\n- old fact\n\n</details>\n"
+        self.assertEqual(run(api(body=body))["stage"], "decided, short path")
 
     def test_skipped_in_grill_record(self):
         record = "## Decisions (grill, 2026-10-15)\n\n### D1: x\nyes\n\n### Skipped\n\n- Q3, the name\n"
@@ -200,6 +226,8 @@ class Helpers(unittest.TestCase):
 
     def test_parse_target(self):
         self.assertEqual(state.parse_target("kacxx/aside-jot#95"), ("kacxx/aside-jot", 95))
+        self.assertEqual(state.parse_target("https://github.com/kacxx/aside-jot/issues/95"), ("kacxx/aside-jot", 95))
+        self.assertEqual(state.parse_target("https://github.com/kacxx/aside-jot/pull/100"), (None, None))
         self.assertEqual(state.parse_target("aside-jot#95"), (None, None))
 
     def test_paginated_pages_are_merged(self):

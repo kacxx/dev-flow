@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Read an idea's state on GitHub and name its dev-flow stage and next action.
 
-  python3 state.py OWNER/REPO#N [--record FILE]
+  python3 state.py OWNER/REPO#N [--record FILE]   (or the issue URL instead of OWNER/REPO#N)
 
 Prints one JSON object: the stage, the evidence for it, the other stages that
 also matched, the tickets, the doc PRs, the proposal doc, and the next action
@@ -112,6 +112,11 @@ def doc_status(text):
     return m.group(1) if m else None
 
 
+def reopened_line(text):
+    """A decision reopened in the doc (`Status: reopened — …` under its heading), outside superseded blocks."""
+    return bool(re.search(r"(?m)^Status: reopened\b", strip_details(text)))
+
+
 def decoded(content):
     return base64.b64decode(content["content"]).decode("utf-8") if content and content.get("content") else ""
 
@@ -142,7 +147,7 @@ def read(fetch, repo, n):
     subs = fetch(f"{r}/issues/{n}/sub_issues?per_page=100") or []
     flagged = fetch(f"{r}/issues?state=open&labels={NEEDS_DECISION}&per_page=100") or []
 
-    refs = re.compile(r"(?i)\bRefs #%d\b" % n)
+    refs = re.compile(r"(?i)\b(Refs|Closes|Fixes) #%d\b" % n)  # the forms `proposal` accepts
     doc_prs = []
     for pr in fetch(f"{r}/pulls?state=open&per_page=100") or []:
         if not refs.search(pr.get("body") or ""):
@@ -151,8 +156,10 @@ def read(fetch, repo, n):
         docs = [f for f in files if f.startswith(PROPOSALS + "/") and f.endswith(".md")]
         if not docs:
             continue  # a code PR that mentions the issue isn't a doc PR (D4)
-        statuses = {d: doc_status(decoded(fetch(f"{r}/contents/{d}?ref={pr['head']['sha']}"))) for d in docs}
-        doc_prs.append({"number": pr["number"], "title": pr["title"], "docs": statuses})
+        texts = {d: decoded(fetch(f"{r}/contents/{d}?ref={pr['head']['sha']}")) for d in docs}  # "" if deleted
+        doc_prs.append({"number": pr["number"], "title": pr["title"],
+                        "docs": {d: doc_status(t) for d, t in texts.items()},
+                        "reopened": any(reopened_line(t) for t in texts.values())})
 
     doc = None
     source = re.compile(r"(?m)^Source: #%d\b" % n)
@@ -161,9 +168,7 @@ def read(fetch, repo, n):
             continue
         text = decoded(fetch(f"{r}/contents/{entry['path']}"))
         if source.search(text):
-            live = strip_details(text)
-            doc = {"path": entry["path"], "status": doc_status(text),
-                   "reopened": bool(re.search(r"(?m)^Status: reopened\b", live))}
+            doc = {"path": entry["path"], "status": doc_status(text), "reopened": reopened_line(text)}
             break
     return issue, comments, subs, flagged, doc_prs, doc
 
@@ -186,7 +191,7 @@ def compute(fetch, repo, n):
     decided_doc = doc is not None and doc["status"] == "decided"
 
     open_questions = is_open(section(strip_details(body), r"open questions"))
-    to_check = is_open(section(body, r"to check"))
+    to_check = is_open(section(strip_details(body), r"to check"))
     short_decisions = re.search(r"(?m)^## Decisions\s*$", body) is not None
 
     ev = {}
@@ -268,7 +273,11 @@ def next_steps(stage, n, name, issue, labels, tickets, doc_prs, doc, needs):
         steps = [agent(f"run `to-tickets` on {doc['path']}")]
     elif stage == "proposal drafted":
         ready_prs = [p for p in doc_prs if all(s == "decided" for s in p["docs"].values())]
-        if ready_prs:
+        reopened_prs = [p for p in doc_prs if p["reopened"]]
+        if reopened_prs:  # grill settles a reopened decision before proposal re-checks the doc
+            steps = [owner("settle the reopened decision in " + ", ".join(f"{name}#{p['number']}" for p in reopened_prs)
+                           + " with `grill`")]
+        elif ready_prs:
             steps = [owner("review and merge " + ", ".join(f"{name}#{p['number']}" for p in ready_prs))]
         elif doc_prs:
             steps = [agent(f"finish {prs} with `proposal`")]
@@ -286,7 +295,9 @@ def next_steps(stage, n, name, issue, labels, tickets, doc_prs, doc, needs):
 
 
 def parse_target(arg):
-    m = re.fullmatch(r"([\w.-]+/[\w.-]+)#(\d+)", arg or "")
+    """OWNER/REPO#N, or the issue's URL."""
+    m = (re.fullmatch(r"([\w.-]+/[\w.-]+)#(\d+)", arg or "")
+         or re.fullmatch(r"https://github\.com/([\w.-]+/[\w.-]+)/issues/(\d+)/?", arg or ""))
     return (m.group(1), int(m.group(2))) if m else (None, None)
 
 
