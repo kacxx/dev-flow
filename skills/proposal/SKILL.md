@@ -173,7 +173,7 @@ Give what's next right after the status (step 6), so what's open comes before th
 
 Leave out a part with nothing in it.
 
-- **Blocking now:** the unchecked facts that block the merge (step 5), with what to check and how; the owner's yes to the draft; and, in a cloud session, the **Ready for review** click on a `decided` PR.
+- **Blocking now:** the unchecked facts that block the merge (step 5), with what to check and how; the owner running `/code-review` on the doc PR before saying yes (the fact-check checks what the doc says; a fresh review finds what happens when the design meets real use), with its findings answered as `settle` questions or wording fixes; the owner's yes to the draft; and, in a cloud session, the **Ready for review** click on a `decided` PR.
 - **Your decisions:** each reopened decision with its options, and the open questions.
 - **Then:** while the doc isn't `decided`, `settle` on each reopened decision or open question, then this skill's fact-check and consistency pass again. Once it is `decided`, the `Next step: slice` line from step 5, and nothing else.
 - **Later:** ⚠️ rows nothing depends on, one line each.
