@@ -156,14 +156,14 @@ Refs #N
 BODY
 ```
 
-3. **Show the owner** what matters, in this order: the status; what you changed or corrected; the **full fact-check table**, so they can see the evidence behind every ✅ before approving; the PR link; then what's next (step 7), which carries what's open. Paste the whole doc if they ask. Wait for their yes. If they ask for changes, edit, commit and push again, refresh the PR description so its status matches the doc, then show what changed.
+3. **Show the owner** what matters, in this order: the status; what's next (step 7), which carries what's open; what you changed or corrected; the **full fact-check table**, so they can see the evidence behind every ✅ before approving; then the PR link. Paste the whole doc if they ask. Wait for their yes. If they ask for changes, edit, commit and push again, refresh the PR description so its status matches the doc, then show what changed.
 4. **Once they say yes:** push to the PR's branch if the draft was on a `-proposal-draft` branch, and refresh the description. If the status is `decided`, mark the PR ready for review; while it isn't, the PR stays a draft.
 
 A PR's draft state can't be changed through REST (`draft` in a PATCH is ignored). Mark it ready with `gh pr ready P` (GraphQL, which works locally). In a cloud session, where GraphQL fails, ask the owner to click **Ready for review**.
 
 ## 7. Hand off
 
-End your reply to the owner with what's next.
+Give what's next right after the status (step 6), so what's open comes before the fact-check table, not after it.
 
 **What's next**, in this order:
 1. **Blocking now:** what's blocking, and who acts.

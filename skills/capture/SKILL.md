@@ -125,5 +125,5 @@ Leave out a part with nothing in it.
 
 A new issue has nothing blocking it, and its open questions are `grill`'s to ask, so a hand-off from `capture` is usually **Then** and **Later** only:
 - **Ready:** **Then:** "ready to implement".
-- **Short or full:** **Then:** run `grill` on the issue. If the `grill` skill isn't installed yet, settle the open questions by hand in the issue instead, under **Your decisions**: ask them as one numbered list with a recommendation each, and write each answer into the issue body under `## Decisions` as `### D1: <title>` headings.
-- **Full:** **Later:** after the decisions, a proposal doc (`proposal`) and then tickets (`to-tickets`). If those skills aren't installed yet, say so and stop at the decisions.
+- **Short:** **Then:** run `grill` on the issue. If the `grill` skill isn't installed yet, settle the open questions by hand in the issue instead, under **Your decisions**: ask them as one numbered list with a recommendation each, and write each answer into the issue body under `## Decisions` as `### D1: <title>` headings.
+- **Full:** **Then:** run `grill`, as on the short path. **Later:** after the decisions, a proposal doc (`proposal`) and then tickets (`to-tickets`). If those skills aren't installed yet, say so and stop at the decisions.

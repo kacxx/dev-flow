@@ -23,7 +23,20 @@ SHAPE = """\
 Leave out a part with nothing in it.
 """
 
-HEADING = re.compile(r"^## (.*)$", re.M)
+PARTS = ("Blocking now", "Your decisions", "Then", "Later")
+PART_REF = re.compile(r"\*\*(?:%s)(?::\*\*|\*\*)" % "|".join(PARTS))
+
+
+def headings(text):
+    """(offset, title) of each `## ` heading, skipping lines inside ``` fences (templates)."""
+    found, fenced, offset = [], False, 0
+    for line in text.splitlines(keepends=True):
+        if line.startswith("```"):
+            fenced = not fenced
+        elif not fenced and line.startswith("## "):
+            found.append((offset, line[3:].strip()))
+        offset += len(line)
+    return found
 
 
 def skill_files():
@@ -38,9 +51,14 @@ def problem(text):
     count = text.count(SHAPE)
     if count != 1:
         return f"shared shape found {count} times, expected once (missing or reworded?)"
-    headings = [m for m in HEADING.finditer(text) if m.start() < text.index(SHAPE)]
-    if not headings or "hand off" not in headings[-1].group(1).lower():
+    start = text.index(SHAPE)
+    before = [title for offset, title in headings(text) if offset < start]
+    if not before or "hand off" not in before[-1].lower():
         return "shared shape isn't under a '## … Hand off' heading"
+    after = [offset for offset, _ in headings(text) if offset > start]
+    rest = text[start + len(SHAPE):after[0] if after else len(text)]
+    if not PART_REF.search(rest):
+        return "nothing after the shared shape says what goes in which part"
     return None
 
 
@@ -54,7 +72,7 @@ class HandoffShape(unittest.TestCase):
                     self.assertIsNone(problem(f.read()))
 
     def test_rewording_fails(self):
-        good = "## 6. Hand off\n\n" + SHAPE
+        good = "## 6. Hand off\n\n" + SHAPE + "\n- **Then:** run `grill`.\n"
         self.assertIsNone(problem(good))
         self.assertIsNone(problem(good.replace("\n", "\r\n")))
         for old, new in [("asked together", "asked at once"),
@@ -64,10 +82,19 @@ class HandoffShape(unittest.TestCase):
                 self.assertIsNotNone(problem(good.replace(old, new)))
 
     def test_missing_or_misplaced_fails(self):
+        mapping = "\n- **Then:** run `grill`.\n"
         self.assertIsNotNone(problem("## 6. Hand off\n\nGive the issue link.\n"))
-        self.assertIsNotNone(problem("## 2. Draft\n\n" + SHAPE))
-        self.assertIsNotNone(problem("## 6. Hand off\n\n" + SHAPE + "\n" + SHAPE))
+        self.assertIsNotNone(problem("## 2. Draft\n\n" + SHAPE + mapping))
+        self.assertIsNotNone(problem("## 6. Hand off\n\n" + SHAPE + "\n" + SHAPE + mapping))
 
+    def test_needs_a_mapping_in_its_own_section(self):
+        self.assertIsNotNone(problem("## 6. Hand off\n\n" + SHAPE + "\nGive the link.\n"))
+        self.assertIsNotNone(problem("## 6. Hand off\n\n" + SHAPE + "\n## 7. Other\n\n- **Then:** x\n"))
+        self.assertIsNone(problem("## 6. Hand off\n\n" + SHAPE + "\nAgent steps go under **Then**.\n"))
+
+    def test_headings_in_fences_are_ignored(self):
+        text = "## 6. Hand off\n\n```markdown\n## Problem\n```\n\n" + SHAPE + "\n- **Later:** x\n"
+        self.assertIsNone(problem(text))
 
 if __name__ == "__main__":
     unittest.main()
