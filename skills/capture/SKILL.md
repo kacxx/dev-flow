@@ -113,7 +113,17 @@ Edit the body rather than adding a comment: detail left in comments is how decis
 
 ## 6. Hand off
 
-Give the issue link and the next step:
-- **Ready:** "ready to implement".
-- **Short or full:** run `grill` on the issue. If the `grill` skill isn't installed yet, settle the open questions by hand in the issue instead: ask them as one numbered list with a recommendation each, and write each answer into the issue body under `## Decisions` as `### D1: <title>` headings.
-- **Full:** after the decisions, a proposal doc (`proposal`) and then tickets (`to-tickets`). If those skills aren't installed yet, say so and stop at the decisions.
+Give the issue link, then what's next.
+
+**What's next**, in this order:
+1. **Blocking now:** what's blocking, and who acts.
+2. **Your decisions:** the owner's decisions, asked together.
+3. **Then:** what the agent does once they're answered.
+4. **Later:** later items, one line each.
+
+Leave out a part with nothing in it.
+
+A new issue has nothing blocking it, and its open questions are `grill`'s to ask, so a hand-off from `capture` is usually **Then** and **Later** only:
+- **Ready:** **Then:** "ready to implement".
+- **Short or full:** **Then:** run `grill` on the issue. If the `grill` skill isn't installed yet, settle the open questions by hand in the issue instead, under **Your decisions**: ask them as one numbered list with a recommendation each, and write each answer into the issue body under `## Decisions` as `### D1: <title>` headings.
+- **Full:** **Later:** after the decisions, a proposal doc (`proposal`) and then tickets (`to-tickets`). If those skills aren't installed yet, say so and stop at the decisions.

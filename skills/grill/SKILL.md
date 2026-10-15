@@ -92,7 +92,21 @@ BODY
 
 **Full path, once the proposal doc exists:** decisions live in the doc, so edit the `### D<n>:` headings there (on a branch, through a PR), never in a new comment. Two records of the same ID is the failure this rule prevents.
 
-Then give the next step: `proposal` (full path, no doc yet), "ready to implement" (short path, nothing open), or, for a reopened decision, the next step in the section below.
+## 6. Hand off
+
+Once the record is written, say what's next.
+
+**What's next**, in this order:
+1. **Blocking now:** what's blocking, and who acts.
+2. **Your decisions:** the owner's decisions, asked together.
+3. **Then:** what the agent does once they're answered.
+4. **Later:** later items, one line each.
+
+Leave out a part with nothing in it.
+
+- **Your decisions:** the questions the owner skipped, if they want another round now.
+- **Then:** `proposal` (full path, no doc yet), "ready to implement" (short path, nothing open), or, for a reopened decision, the next step in the section below.
+- **Later:** on the full path, `to-tickets` once the proposal is decided.
 
 ## Reopening a decision
 
@@ -122,4 +136,4 @@ Either way:
    gh api repos/OWNER/REPO/issues/TICKET/labels/needs-decision --method DELETE
    gh api repos/OWNER/REPO/issues/TICKET/labels --method POST -f 'labels[]=ready-for-agent'   # only if still valid and unblocked
    ```
-6. **Next step.** For a proposal doc, push the revision to its PR and refresh the PR description, then hand back to `proposal` to re-run its fact-check and consistency pass on the revised doc and mark the PR ready if it's now `decided`. On the short path, the issue is "ready to implement" once nothing is open.
+6. **Next step**, handed off in the shape under Hand off above. For a proposal doc, push the revision to its PR and refresh the PR description, then hand back to `proposal` to re-run its fact-check and consistency pass on the revised doc and mark the PR ready if it's now `decided`. On the short path, the issue is "ready to implement" once nothing is open.

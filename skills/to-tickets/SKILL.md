@@ -128,7 +128,7 @@ If any call fails, **stop**: report the `T<n> → #<number>` mapping so far and 
 gh api repos/OWNER/REPO/issues/N/labels/ready-for-agent --method DELETE
 ```
 
-## 6. Report
+## 6. Report and hand off
 
 Check the target repo's agent instructions for the `flag-decision` pointer line (the one copy is in `skills/flag-decision/SKILL.md`). It's the main bridge into flow 2: the skill's own description can trigger it too, but the line makes a Superpowers or Matt Pocock flow-2 agent (or Codex, via its fallback sentence) stop and flag rather than redesign. Run the bundled script from this skill's base directory:
 
@@ -145,4 +145,16 @@ It reads `CLAUDE.md`, `.claude/CLAUDE.md` and `AGENTS.md`, follows their `@….m
 - `no instruction file`: offer to create `CLAUDE.md` with it.
 - `could not check: …`: report the files and reasons it gives. Don't offer a line.
 
-List the published tickets with their numbers, what each implements and what blocks it, and which can start now (labelled `ready-for-agent`). For each blocked ticket, say it gets the label when its blockers close. Name any decision no ticket implements.
+List the published tickets with their numbers, what each implements and what blocks it. Then say what's next.
+
+**What's next**, in this order:
+1. **Blocking now:** what's blocking, and who acts.
+2. **Your decisions:** the owner's decisions, asked together.
+3. **Then:** what the agent does once they're answered.
+4. **Later:** later items, one line each.
+
+Leave out a part with nothing in it.
+
+- **Your decisions:** any decision no ticket implements, named, and the pointer line or file offered above.
+- **Then:** the tickets that can start now (labelled `ready-for-agent`), for an agent to implement, and writing the pointer once the owner says yes.
+- **Later:** each blocked ticket, one line each, saying it gets the label when its blockers close.

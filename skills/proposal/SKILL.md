@@ -127,7 +127,7 @@ To reopen a decision, add `Status: reopened — <fact-check | consistency>: <one
 
 **Unchecked facts also block the merge.** A ⚠️ row a decision depends on, still unverified (no access in this session, say), counts toward `M facts unchecked`; list what to check and how. An implementer would otherwise build on an unchecked assumption. A ⚠️ row nothing depends on can stay ⚠️ without blocking; say so in that row.
 
-While the status isn't `decided`, the PR is a draft and the doc says plainly not to merge yet. When it is `decided`, end your reply to the owner with this line:
+While the status isn't `decided`, the PR is a draft and the doc says plainly not to merge yet. When it is `decided`, the **Then** part of the hand-off (step 7) is this line:
 
 `Next step: to-tickets`
 
@@ -156,7 +156,24 @@ Refs #N
 BODY
 ```
 
-3. **Show the owner** what matters, in this order: the status; what's open (each reopened decision with its options, open questions, unchecked facts); what you changed or corrected; the **full fact-check table**, so they can see the evidence behind every ✅ before approving; then the PR link. Paste the whole doc if they ask. Wait for their yes. If they ask for changes, edit, commit and push again, refresh the PR description so its status matches the doc, then show what changed.
+3. **Show the owner** what matters, in this order: the status; what you changed or corrected; the **full fact-check table**, so they can see the evidence behind every ✅ before approving; the PR link; then what's next (step 7), which carries what's open. Paste the whole doc if they ask. Wait for their yes. If they ask for changes, edit, commit and push again, refresh the PR description so its status matches the doc, then show what changed.
 4. **Once they say yes:** push to the PR's branch if the draft was on a `-proposal-draft` branch, and refresh the description. If the status is `decided`, mark the PR ready for review; while it isn't, the PR stays a draft.
 
 A PR's draft state can't be changed through REST (`draft` in a PATCH is ignored). Mark it ready with `gh pr ready P` (GraphQL, which works locally). In a cloud session, where GraphQL fails, ask the owner to click **Ready for review**.
+
+## 7. Hand off
+
+End your reply to the owner with what's next.
+
+**What's next**, in this order:
+1. **Blocking now:** what's blocking, and who acts.
+2. **Your decisions:** the owner's decisions, asked together.
+3. **Then:** what the agent does once they're answered.
+4. **Later:** later items, one line each.
+
+Leave out a part with nothing in it.
+
+- **Blocking now:** the unchecked facts that block the merge (step 5), with what to check and how; the owner's yes to the draft; and, in a cloud session, the **Ready for review** click on a `decided` PR.
+- **Your decisions:** each reopened decision with its options, and the open questions.
+- **Then:** while the doc isn't `decided`, `grill` on each reopened decision or open question, then this skill's fact-check and consistency pass again. Once it is `decided`, the `Next step: to-tickets` line from step 5, and nothing else.
+- **Later:** ⚠️ rows nothing depends on, one line each.
