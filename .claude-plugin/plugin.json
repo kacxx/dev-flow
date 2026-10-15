@@ -1,7 +1,7 @@
 {
   "name": "dev-flow",
-  "version": "0.7.5",
-  "description": "Idea \u2192 tickets workflow skills: capture (idea \u2192 issue, picks the path), grill (settle open questions as D<n> decisions), proposal (decided, fact-checked design doc), to-tickets (vertical tickets linked to decisions), flag-decision (stop and flag a wrong decision mid-implementation).",
+  "version": "0.8.0",
+  "description": "Idea \u2192 tickets workflow skills: capture (idea \u2192 issue, picks the path), grill (settle open questions as D<n> decisions), proposal (decided, fact-checked design doc), to-tickets (vertical tickets linked to decisions), flag-decision (stop and flag a wrong decision mid-implementation), status (where an idea is, and the next action).",
   "author": {
     "name": "kacxx",
     "url": "https://github.com/kacxx"
@@ -12,7 +12,8 @@
     "./skills/grill",
     "./skills/proposal",
     "./skills/to-tickets",
-    "./skills/flag-decision"
+    "./skills/flag-decision",
+    "./skills/status"
   ],
   "license": "MIT"
 }
