@@ -46,7 +46,7 @@ What you answer back:
 - **`grill`** asks a round of numbered questions, each with a recommendation. Reply "yes" to accept them all, or per question, for example `1 yes, 2 no: use labels, 3 skip`. "Skip" leaves that question open. It then shows the decisions record and writes it after your yes.
 - **`proposal`** pushes the doc to a draft PR, then shows you the status, what changed and the full fact-check table. Reply "yes" when you're happy; it marks the PR ready only once the status is `decided`.
 - **`to-tickets`** shows the breakdown as T1, T2 …, with what each implements and what blocks it. Ask for merges or splits, or reply "yes" to publish.
-- **`status`** gives the stage, then what's next. If it offers fixes, reply "yes" or name the ones you want; it writes nothing else.
+- **`status`** gives the stage, then what's next. If it offers fixes, reply "yes" or name the ones you want. It writes only the fixes you pick, and runs the agent's next step only if you say yes.
 - **`flag-decision`** stops on its own. Your part is the next step it names: `grill` on that decision.
 
 ## What the artefacts look like
@@ -90,7 +90,7 @@ To update after a new version (the version is in `.claude-plugin/plugin.json`), 
 
 **In each project that uses it:** add the one-line pointer from [`skills/flag-decision/SKILL.md`](skills/flag-decision/SKILL.md#the-claudemd-pointer) to the project's `CLAUDE.md` (or the `AGENTS.md` it imports). It makes an implementing agent stop and flag a wrong decision instead of redesigning around it, even an agent without the plugin. `to-tickets` checks for the line and offers it if it's missing.
 
-**Phone (Claude Code cloud sessions from the Code tab):** these don't load plugins, but they do load claude.ai account skills. The account-skill set is `capture`, `grill`, `flag-decision` and `status` (`status` joins the default build in #39; until then, build it by name with `… build_account_skills.py status`):
+**Phone (Claude Code cloud sessions from the Code tab):** these don't load plugins, but they do load claude.ai account skills. The account-skill set is `capture`, `grill`, `flag-decision` and `status` (`status` joins the default build in #39, which also stops ZIPs carrying test files and fixtures; build it by name before then and its ZIP includes about 664 KB of test fixtures):
 1. Build the ZIPs with `python3 -I scripts/build_account_skills.py` (use `python` on Windows, where `python3` is often the Microsoft Store stub). This writes `dist/account-skills/<name>.zip` after checking each skill's name, description and frontmatter.
 2. Upload each ZIP on claude.ai under **Customize → Skills** (code execution must be on).
 3. Re-upload after a skill changes: account skills don't follow plugin versions.
@@ -101,7 +101,7 @@ The skills use `gh api` (REST) everywhere, because `gh issue` and `gh pr` go thr
 
 ## Status
 
-Beta. All six skills are built and have been run for real: on dev-flow itself, on aside-jot, natively on Windows, and from the phone (`status` on dev-flow#35 and aside-jot#95). Not tried live yet: `flag-decision` in a real implementation run, and WSL. Known gaps in `status`: it doesn't see open code PRs for its tickets ([#51](https://github.com/kacxx/dev-flow/issues/51)), and it may not start when asked in plain words ([#52](https://github.com/kacxx/dev-flow/issues/52)). Nothing yet updates open tickets after a revision merges ([#46](https://github.com/kacxx/dev-flow/issues/46)), or closes the source issue when its tickets are done ([#47](https://github.com/kacxx/dev-flow/issues/47)).
+Beta. All six skills are built. `capture`, `grill`, `proposal`, `to-tickets` and `flag-decision` have been run for real: on dev-flow itself, on aside-jot, natively on Windows, and from the phone. `status` has so far been run only on this Mac, on dev-flow#35 and aside-jot#95. Not tried live yet: `flag-decision` in a real implementation run, and WSL. Known gaps in `status`: it doesn't see open code PRs for its tickets ([#51](https://github.com/kacxx/dev-flow/issues/51)), and it may not start when asked in plain words ([#52](https://github.com/kacxx/dev-flow/issues/52)). Nothing yet updates open tickets after a revision merges ([#46](https://github.com/kacxx/dev-flow/issues/46)), or closes the source issue when its tickets are done ([#47](https://github.com/kacxx/dev-flow/issues/47)).
 
 ## Developing
 
@@ -111,7 +111,7 @@ Beta. All six skills are built and have been run for real: on dev-flow itself, o
   - `scripts/` for the ZIP builder and the test runner;
   - `docs/` for the proposal and the path-tuning log.
 - **Tests:** `python3 -I scripts/run_tests.py` (`python` on Windows) runs every `test_*.py`. That includes a frontmatter check on every skill, and the jq filters in the skills' search fallbacks, run as written. CI runs the same command on every PR and on pushes to `main`, on Ubuntu and Windows, with and without PyYAML.
-- **Releases:** bump `version` in `.claude-plugin/plugin.json` on every change, because installed plugins only update when it changes. If `capture`, `grill` or `flag-decision` changed, rebuild and re-upload their ZIPs.
+- **Releases:** bump `version` in `.claude-plugin/plugin.json` on every change, because installed plugins only update when it changes. If `capture`, `grill`, `flag-decision` or `status` changed, rebuild and re-upload their ZIPs.
 - **After each real run:** add a row to [`docs/path-tuning.md`](docs/path-tuning.md), and turn what was clumsy into an issue (`capture` works for that too).
 
 ## Credits
