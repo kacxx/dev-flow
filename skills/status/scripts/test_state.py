@@ -44,6 +44,8 @@ class Fixtures(unittest.TestCase):
                 out = replay(fx)
                 self.assertEqual(out["stage"], fx["expect"]["stage"])
                 self.assertEqual(out["next_action"], fx["expect"]["next_action"])
+                self.assertEqual([c["created_at"] for c in out["review_comments"]], fx["expect"]["review_comments"])
+                self.assertEqual([f["ticket"] for f in out["fixes"]], fx["expect"]["fixes"])
                 self.assertTrue(out["evidence"])
                 self.assertTrue(out["steps"])
                 for step in out["steps"]:
@@ -65,10 +67,57 @@ class Fixtures(unittest.TestCase):
         # it matches several stages; precedence picks the first
         self.assertIn("in progress", out["also_matched"])
         self.assertIn("decided, short path", out["also_matched"])
+        # the review comment came before aside-jot#100, which answers it
+        self.assertEqual(out["review_comments"], [])
+        self.assertEqual(out["last_write"]["what"], "doc PR aside-jot#100 opened")
+
+    def test_blockers_closed_offers_the_relabel(self):
+        """dev-flow#35 once #37 closed: #38, #40 and #41 had no label (proposal D2)."""
+        out = replay(load("in-progress-blockers-closed"))
+        self.assertEqual([f["ticket"] for f in out["fixes"]], [38, 40, 41])
+        self.assertEqual(out["fixes"][0]["command"],
+                         'gh api repos/kacxx/dev-flow/issues/38/labels --method POST -f "labels[]=ready-for-agent"')
+        self.assertEqual(out["later"], ["#39 waits on #38"])
+
+    def test_aside_jot_97_pause_is_left_alone(self):
+        """#97 says `Blocked by: None` and its label was removed on purpose (proposal D2)."""
+        out = replay(load("in-progress-aside-jot-97-pause"))
+        self.assertEqual(out["stage"], "in progress")
+        self.assertEqual(out["fixes"], [])
+
+    def test_only_get_requests(self):
+        """Nothing is written without the owner's yes: the script never sends a method but GET."""
+        calls = []
+
+        class P:
+            returncode, stdout, stderr = 0, "[]", ""
+        real = state.subprocess.run
+        state.subprocess.run = lambda args, **k: calls.append(args) or P()
+        try:
+            for path in FIXTURES:
+                with open(path, encoding="utf-8") as f:
+                    fx = json.load(f)
+                fetched = []
+                state.compute(lambda p: fetched.append(p) or copy.deepcopy(fx["api"][p]), fx["repo"], fx["number"])
+                for p in fetched:
+                    state.gh_fetch(p)
+        finally:
+            state.subprocess.run = real
+        self.assertTrue(calls)
+        for args in calls:
+            self.assertEqual(args[:3], ["gh", "api", "--paginate"])
+            self.assertFalse({"--method", "-X", "-f", "-F", "--field", "--raw-field", "--input"} & set(args), args)
 
 
-def issue(number, body="", state_="open", labels=(), title="t"):
-    return {"number": number, "title": title, "state": state_, "body": body, "labels": [{"name": n} for n in labels]}
+def issue(number, body="", state_="open", labels=(), title="t", created_at=None):
+    i = {"number": number, "title": title, "state": state_, "body": body, "labels": [{"name": n} for n in labels]}
+    if created_at:
+        i["created_at"] = created_at
+    return i
+
+
+def comment(body, at, login="someone"):
+    return {"body": body, "created_at": at, "user": {"login": login}, "html_url": f"https://github.com/o/r/issues/1#{at}"}
 
 
 def content(path, text):
@@ -76,16 +125,18 @@ def content(path, text):
 
 
 R = "repos/o/r"
+READY = state.READY
 
 
-def api(body="", state_="open", labels=(), comments=(), subs=(), flagged=(), prs=(), files=None, docs=None):
+def api(body="", state_="open", labels=(), comments=(), subs=(), flagged=(), prs=(), files=None, docs=None, closed=()):
     """A minimal recorded state for o/r#1."""
     a = {
         f"{R}/issues/1": issue(1, body, state_, labels),
-        f"{R}/issues/1/comments?per_page=100": [{"body": c} for c in comments],
+        f"{R}/issues/1/comments?per_page=100": [c if isinstance(c, dict) else {"body": c} for c in comments],
         f"{R}/issues/1/sub_issues?per_page=100": list(subs),
         f"{R}/issues?state=open&labels=needs-decision&per_page=100": list(flagged),
         f"{R}/pulls?state=open&per_page=100": list(prs),
+        f"{R}/pulls?state=closed&per_page=100": list(closed),
         f"{R}/contents/docs/proposals": None,
     }
     for number, names in (files or {}).items():
@@ -216,6 +267,81 @@ class Markers(unittest.TestCase):
         out = run(api(body="Implements: D1 — docs/proposals/x.md\nBlocked by: None\nParent: #7\n"))
         self.assertIsNone(out["stage"])
         self.assertIn("run status on #7", out["evidence"][0])
+
+
+RECORD = "## Decisions (grill, 2026-10-15)\n\n### D1: x\nyes\n"
+
+
+class ReviewComments(unittest.TestCase):
+    def test_comments_after_the_decisions_record_are_listed(self):
+        out = run(api(comments=[comment("before", "2026-10-15T08:00:00Z"), comment(RECORD, "2026-10-15T09:00:00Z"),
+                                comment("Review: D1 misses the Windows case.\n\nmore", "2026-10-15T10:00:00Z", "rev")]))
+        self.assertEqual(out["last_write"], {"at": "2026-10-15T09:00:00Z", "what": "the decisions record"})
+        self.assertEqual([(c["author"], c["first_line"]) for c in out["review_comments"]],
+                         [("rev", "Review: D1 misses the Windows case.")])
+
+    def test_published_tickets_answer_earlier_comments(self):
+        subs = [issue(2, created_at="2026-10-15T11:00:00Z")]
+        out = run(api(subs=subs, comments=[comment(RECORD, "2026-10-15T09:00:00Z"), comment("x", "2026-10-15T10:00:00Z"),
+                                           comment("after", "2026-10-15T12:00:00Z")]))
+        self.assertEqual(out["last_write"]["what"], "ticket #2 published")
+        self.assertEqual([c["first_line"] for c in out["review_comments"]], ["after"])
+
+    def test_merged_doc_pr_is_a_write(self):
+        merged = {"number": 5, "title": "doc", "body": "Refs #1", "merged_at": "2026-10-15T11:00:00Z"}
+        code = {"number": 6, "title": "code", "body": "Refs #1", "merged_at": "2026-10-15T13:00:00Z"}
+        out = run(api(closed=[merged, code], files={5: ["docs/proposals/x.md"], 6: ["main.go"]},
+                      docs={"docs/proposals/x.md": DOC},
+                      comments=[comment("x", "2026-10-15T10:00:00Z"), comment("y", "2026-10-15T12:00:00Z")]))
+        self.assertEqual(out["last_write"]["what"], "doc PR r#5 merged")
+        self.assertEqual([c["first_line"] for c in out["review_comments"]], ["y"])
+
+    def test_without_a_write_every_comment_counts(self):
+        a = api(body="## Open questions\n\n1. Which?\n", comments=[comment("x", "2026-10-15T10:00:00Z")])
+        a[f"{R}/issues/1"]["created_at"] = "2026-10-15T09:00:00Z"
+        out = run(a)
+        self.assertEqual(out["last_write"]["what"], "the issue opened")
+        self.assertEqual(len(out["review_comments"]), 1)
+
+    def test_flag_decision_pointer_is_not_a_review_comment(self):
+        out = run(api(comments=[comment(RECORD, "2026-10-15T09:00:00Z"),
+                                comment("D1 flagged by #4: wrong. See #4 for the evidence.", "2026-10-15T10:00:00Z")]))
+        self.assertEqual(out["review_comments"], [])
+
+
+class Relabel(unittest.TestCase):
+    def fixes(self, subs, **kw):
+        return [f["ticket"] for f in run(api(subs=subs, **kw))["fixes"]]
+
+    def test_all_blockers_closed(self):
+        subs = [issue(2, "Blocked by: None", "closed"), issue(3, "Blocked by: #2", "closed"),
+                issue(4, "Blocked by: #2, #3"), issue(5, "Blocked by: #2, #4")]
+        self.assertEqual(self.fixes(subs), [4])
+
+    def test_blocked_by_none_without_label_is_a_pause(self):
+        self.assertEqual(self.fixes([issue(2, "Blocked by: None (can start immediately)"), issue(3, "x", "closed")]), [])
+
+    def test_already_labelled(self):
+        self.assertEqual(self.fixes([issue(2, "Blocked by: None", "closed"), issue(3, "Blocked by: #2", labels=[READY])]), [])
+
+    def test_needs_decision_ticket_waits_on_grill(self):
+        subs = [issue(2, "Blocked by: None", "closed"), issue(3, "Blocked by: #2", labels=["needs-decision"])]
+        self.assertEqual(self.fixes(subs), [])
+
+    def test_not_while_a_revision_is_in_progress(self):
+        subs = [issue(2, "Blocked by: None", "closed"), issue(3, "Blocked by: #2")]
+        pr = {"number": 5, "title": "doc", "body": "Refs #1", "head": {"sha": "abc"}}
+        out = run(api(subs=subs, prs=[pr], files={5: ["docs/proposals/x.md"]}, docs={"docs/proposals/x.md?ref=abc": DOC}))
+        self.assertEqual(out["stage"], "revision in progress")
+        self.assertEqual(out["fixes"], [])
+        self.assertEqual(self.fixes(subs), [3])  # the same tickets, with no revision open
+
+    def test_blocker_outside_the_sub_issues(self):
+        a = api(subs=[issue(2, "Blocked by: #9")])
+        a[f"{R}/issues/9"] = issue(9, state_="closed")
+        self.assertEqual([f["ticket"] for f in run(a)["fixes"]], [2])
+        a[f"{R}/issues/9"] = None  # not found: can't say it's closed
+        self.assertEqual(run(a)["fixes"], [])
 
 
 class Helpers(unittest.TestCase):

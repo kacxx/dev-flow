@@ -4,13 +4,16 @@
   python3 state.py OWNER/REPO#N [--record FILE]   (or the issue URL instead of OWNER/REPO#N)
 
 Prints one JSON object: the stage, the evidence for it, the other stages that
-also matched, the tickets, the doc PRs, the proposal doc, and the next action
-as steps, each with who takes it (owner or agent). Read-only: GET requests
-through `gh api` only. --record also writes every response it read to FILE,
+also matched, the tickets, the doc PRs, the proposal doc, the next action as
+steps, each with who takes it (owner or agent), the review comments posted
+since dev-flow last wrote on the issue, and the mechanical fixes to offer the
+owner, each with the write it would make. Read-only: GET requests through
+`gh api` only; the fixes are applied by the skill after the owner's yes. --record also writes every response it read to FILE,
 keyed by API path, which is the fixture format test_state.py replays.
 
 Stages and markers are D4 of docs/proposals/status.md (dev-flow). When several
-match, the first in PRECEDENCE wins (the proposal's Shape 2).
+match, the first in PRECEDENCE wins (the proposal's Shape 2). Review comments
+are D4's last paragraph; the relabelling fix is D2.
 """
 import base64
 import json
@@ -148,18 +151,28 @@ def read(fetch, repo, n):
     flagged = fetch(f"{r}/issues?state=open&labels={NEEDS_DECISION}&per_page=100") or []
 
     refs = re.compile(r"(?i)\b(Refs|Closes|Fixes) #%d\b" % n)  # the forms `proposal` accepts
+
+    def doc_files(pr):
+        """The proposal docs a PR that names this issue changes; none for a code PR (D4)."""
+        if not refs.search(pr.get("body") or ""):
+            return []
+        files = [f["filename"] for f in fetch(f"{r}/pulls/{pr['number']}/files?per_page=100") or []]
+        return [f for f in files if f.startswith(PROPOSALS + "/") and f.endswith(".md")]
+
     doc_prs = []
     for pr in fetch(f"{r}/pulls?state=open&per_page=100") or []:
-        if not refs.search(pr.get("body") or ""):
-            continue
-        files = [f["filename"] for f in fetch(f"{r}/pulls/{pr['number']}/files?per_page=100") or []]
-        docs = [f for f in files if f.startswith(PROPOSALS + "/") and f.endswith(".md")]
+        docs = doc_files(pr)
         if not docs:
-            continue  # a code PR that mentions the issue isn't a doc PR (D4)
+            continue
         texts = {d: decoded(fetch(f"{r}/contents/{d}?ref={pr['head']['sha']}")) for d in docs}  # "" if deleted
-        doc_prs.append({"number": pr["number"], "title": pr["title"],
+        doc_prs.append({"number": pr["number"], "title": pr["title"], "created_at": pr.get("created_at"),
                         "docs": {d: doc_status(t) for d, t in texts.items()},
                         "reopened": any(reopened_line(t) for t in texts.values())})
+    # Merged doc PRs don't set a stage, but each is a dev-flow write: what the
+    # issue said before it merged was answered by it (D4, review comments).
+    merged_docs = [{"number": pr["number"], "merged_at": pr["merged_at"]}
+                   for pr in fetch(f"{r}/pulls?state=closed&per_page=100") or []
+                   if pr.get("merged_at") and doc_files(pr)]
 
     doc = None
     source = re.compile(r"(?m)^Source: #%d\b" % n)
@@ -170,13 +183,13 @@ def read(fetch, repo, n):
         if source.search(text):
             doc = {"path": entry["path"], "status": doc_status(text), "reopened": reopened_line(text)}
             break
-    return issue, comments, subs, flagged, doc_prs, doc
+    return issue, comments, subs, flagged, doc_prs, merged_docs, doc
 
 
 # --- naming the stage -------------------------------------------------------
 
 def compute(fetch, repo, n):
-    issue, comments, subs, flagged, doc_prs, doc = read(fetch, repo, n)
+    issue, comments, subs, flagged, doc_prs, merged_docs, doc = read(fetch, repo, n)
     name = repo.split("/")[1]
     body = issue.get("body") or ""
     labels = [lb["name"] for lb in issue.get("labels", [])]
@@ -225,6 +238,11 @@ def compute(fetch, repo, n):
                 "labels": [lb["name"] for lb in s.get("labels", [])], "blocked_by": blocked_by(s.get("body"))}
                for s in sorted(subs, key=lambda s: s["number"])]
     steps, later = next_steps(stage, n, name, issue, labels, tickets, doc_prs, doc, needs)
+    last_write = latest_write(issue, records, doc_prs, merged_docs, subs, name)
+    blocker_state = {s["number"]: s["state"] for s in subs}
+    for b in sorted({b for t in tickets for b in t["blocked_by"]} - set(blocker_state)):
+        other = fetch(f"repos/{repo}/issues/{b}")  # a blocker outside the sub-issues
+        blocker_state[b] = other["state"] if other else None
     return {
         "issue": f"{repo}#{n}",
         "title": issue["title"],
@@ -237,7 +255,70 @@ def compute(fetch, repo, n):
         "tickets": tickets,
         "doc_prs": doc_prs,
         "doc": doc,
+        "last_write": last_write,
+        "review_comments": review_comments(comments, last_write),
+        "fixes": relabel_fixes(repo, stage, tickets, blocker_state),
     }
+
+
+def latest_write(issue, records, doc_prs, merged_docs, subs, name):
+    """dev-flow's last write on the issue (D4): the latest decisions record, doc PR or published tickets.
+
+    An open doc PR counts from when it opened, a merged one from when it merged, and
+    the tickets from the newest. With none of those, `capture` opening the issue is the write.
+    """
+    writes = ([(c.get("created_at"), "the decisions record") for c in records]
+              + [(p.get("created_at"), f"doc PR {name}#{p['number']} opened") for p in doc_prs]
+              + [(p.get("merged_at"), f"doc PR {name}#{p['number']} merged") for p in merged_docs]
+              + [(s.get("created_at"), f"ticket #{s['number']} published") for s in subs])
+    writes = [w for w in writes if w[0]]
+    if not writes:
+        return {"at": issue.get("created_at"), "what": "the issue opened"} if issue.get("created_at") else None
+    at, what = max(writes)  # ISO 8601 UTC timestamps sort as text
+    return {"at": at, "what": what}
+
+
+def is_devflow_comment(body):
+    """A comment dev-flow itself posts: grill's decisions record, or flag-decision's pointer."""
+    return body.startswith("## Decisions (grill") or re.match(r"D\d+ flagged by #\d+", body) is not None
+
+
+def review_comments(comments, last_write):
+    """Comments posted since dev-flow's last write, whoever wrote them (D4). They go first under "blocking now"."""
+    since = last_write["at"] if last_write else None
+    out = []
+    for c in comments:
+        body = (c.get("body") or "").strip()
+        if is_devflow_comment(body) or not c.get("created_at") or (since and c["created_at"] <= since):
+            continue
+        first = next((ln.strip() for ln in body.splitlines() if ln.strip()), "")
+        out.append({"author": (c.get("user") or {}).get("login"), "created_at": c["created_at"],
+                    "url": c.get("html_url"), "first_line": first[:200]})
+    return out
+
+
+def relabel_fixes(repo, stage, tickets, blocker_state):
+    """D2: add ready-for-agent to an open ticket whose `Blocked by:` names issues that are all closed.
+
+    Never while a revision is in progress. A ticket that names no blocker (`Blocked by: None`)
+    and has no label was paused on purpose, and a needs-decision ticket waits on `grill`:
+    both are left alone. Each fix names the write it would make; nothing here makes it.
+    """
+    if stage == "revision in progress":
+        return []
+    fixes = []
+    for t in tickets:
+        if (t["state"] != "open" or not t["blocked_by"] or READY in t["labels"] or NEEDS_DECISION in t["labels"]
+                or any(blocker_state.get(b) != "closed" for b in t["blocked_by"])):
+            continue
+        fixes.append({
+            "fix": "relabel",
+            "ticket": t["number"],
+            "why": f"#{t['number']}'s blockers have all closed: {numbers(t['blocked_by'])}",
+            "write": f"add the {READY} label to #{t['number']}",
+            "command": f"gh api repos/{repo}/issues/{t['number']}/labels --method POST -f \"labels[]={READY}\"",
+        })
+    return fixes
 
 
 def no_stage(body):
