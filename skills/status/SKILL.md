@@ -75,7 +75,8 @@ Read the answer strictly: "1, 3" chooses items 1 and 3 only, "all" every item, "
 The selection is the yes only for writes named in full up front. Carry out the chosen items in the batch's order:
 - **A fix:** run its `command`. Never offer a fix the script didn't list, and don't add `ready-for-agent` by hand to a ticket it left out: a `Blocked by: None` ticket with no label was paused on purpose.
 - **An agent step without `shows_draft`** (implementing a `ready-for-agent` ticket): carry it out.
-- **An agent step with `shows_draft`** (`to-tickets`' ticket bodies, `proposal`'s doc, edits to tickets after a revision): run the skill that carries it out. It still shows its draft and waits for the owner's yes before it writes; choosing the item isn't that yes.
+- **An agent step with `shows_draft`** (`to-tickets`' ticket bodies, `proposal`'s doc): run the skill that carries it out. It still shows its draft and waits for the owner's yes before it writes; choosing the item isn't that yes.
+- **Updating tickets after a revision** ("update #97–#99"): no skill does this yet (dev-flow#46), and `to-tickets` won't re-slice an issue that already has tickets, so don't hand it to `to-tickets`. Draft the edits to each ticket's body yourself from the merged doc, show them, and write them only after the owner's yes.
 - A skill that needs the owner's answers, like `grill`'s questions, still asks them.
 
 Don't carry out an item that isn't chosen, or a step whose owner step hasn't happened yet: say what it waits on. Tell the owner what you wrote (which labels you added, which PRs you opened); if a command fails, say which and why.

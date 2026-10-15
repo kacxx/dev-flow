@@ -48,7 +48,7 @@ class Fixtures(unittest.TestCase):
                 self.assertEqual([c["created_at"] for c in out["review_comments"]], fx["expect"]["review_comments"])
                 self.assertEqual([f["ticket"] for f in out["fixes"]], fx["expect"]["fixes"])
                 self.assertTrue(out["evidence"])
-                self.assertTrue(out["steps"])
+                self.assertTrue(out["steps"] or out["fixes"], "no next step and nothing to offer")
                 for step in out["steps"]:
                     self.assertIn(step["who"], ("owner", "agent"))
 

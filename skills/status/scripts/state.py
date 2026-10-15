@@ -238,20 +238,23 @@ def compute(fetch, repo, n):
     tickets = [{"number": s["number"], "title": s["title"], "state": s["state"],
                 "labels": [lb["name"] for lb in s.get("labels", [])], "blocked_by": blocked_by(s.get("body"))}
                for s in sorted(subs, key=lambda s: s["number"])]
-    steps, later = next_steps(stage, n, name, issue, labels, tickets, doc_prs, doc, needs)
-    last_write = latest_write(issue, records, doc_prs, merged_docs, subs, name)
     blocker_state = {s["number"]: s["state"] for s in subs}
     for b in sorted({b for t in tickets for b in t["blocked_by"]} - set(blocker_state)):
         other = fetch(f"repos/{repo}/issues/{b}")  # a blocker outside the sub-issues
         blocker_state[b] = other["state"] if other else None
     fixes = relabel_fixes(repo, stage, tickets, blocker_state)
+    steps, later = next_steps(stage, n, name, issue, labels, tickets, doc_prs, doc, needs,
+                              relabelled={f["ticket"] for f in fixes})
+    last_write = latest_write(issue, records, doc_prs, merged_docs, subs, name)
     return {
         "issue": f"{repo}#{n}",
         "title": issue["title"],
         "stage": stage,
         "evidence": ev.get(stage, [no_stage(body)]),
         "also_matched": matched[1:],
-        "next_action": ", then ".join(s["do"] for s in steps) or None,
+        # With no step left, the relabelling fixes in the batch are the next action.
+        "next_action": (", then ".join(s["do"] for s in steps)
+                        or (f"add {READY} to {numbers(f['ticket'] for f in fixes)}" if fixes else None)),
         "steps": steps,
         "later": later,
         "tickets": tickets,
@@ -345,7 +348,7 @@ def no_stage(body):
     return "no D4 marker matched"
 
 
-def next_steps(stage, n, name, issue, labels, tickets, doc_prs, doc, needs):
+def next_steps(stage, n, name, issue, labels, tickets, doc_prs, doc, needs, relabelled=frozenset()):
     owner = lambda do: {"who": "owner", "do": do}  # noqa: E731
 
     def agent(do, writes, shows_draft):
@@ -370,9 +373,12 @@ def next_steps(stage, n, name, issue, labels, tickets, doc_prs, doc, needs):
     elif stage == "in progress":
         ready = [t["number"] for t in open_t if READY in t["labels"]]
         closed = {t["number"] for t in tickets if t["state"] == "closed"}
-        steps = ([agent(f"implement {numbers(ready)}", [f"a branch and a pull request for #{r}" for r in ready], False)]
-                 if ready
-                 else [owner(f"pick the next ticket: none of {numbers(t['number'] for t in open_t)} is {READY}")])
+        if ready:
+            steps = [agent(f"implement {numbers(ready)}", [f"a branch and a pull request for #{r}" for r in ready], False)]
+        elif relabelled:
+            steps = []  # the relabelling fixes in the batch are the decision; "pick a ticket" would contradict them
+        else:
+            steps = [owner(f"pick the next ticket: none of {numbers(t['number'] for t in open_t)} is {READY}")]
         for t in open_t:
             waiting = [b for b in t["blocked_by"] if b not in closed]
             if t["number"] not in ready and waiting:

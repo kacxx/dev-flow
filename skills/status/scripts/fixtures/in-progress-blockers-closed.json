@@ -4,7 +4,7 @@
  "note": "kacxx/dev-flow#35 recorded 2026-10-15, rewound to 03:35: #37 closed (PR #43 merged 01:21), before ready-for-agent was added to #38, #40 and #41 by hand at 03:35. The gap #38 fixes: three tickets whose only blocker has closed, with no label.",
  "expect": {
   "stage": "in progress",
-  "next_action": "pick the next ticket: none of #38–#41 is ready-for-agent",
+  "next_action": "add ready-for-agent to #38, #40, #41",
   "review_comments": [],
   "fixes": [
    38,

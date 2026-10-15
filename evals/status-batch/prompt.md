@@ -16,13 +16,8 @@ This session can't run commands or reach GitHub, so here is what `state.py kacxx
     "4 of 5 sub-issues are open: #38–#41"
   ],
   "also_matched": [],
-  "next_action": "pick the next ticket: none of #38–#41 is ready-for-agent",
-  "steps": [
-    {
-      "who": "owner",
-      "do": "pick the next ticket: none of #38–#41 is ready-for-agent"
-    }
-  ],
+  "next_action": "add ready-for-agent to #38, #40, #41",
+  "steps": [],
   "later": [
     "#39 waits on #38"
   ],
