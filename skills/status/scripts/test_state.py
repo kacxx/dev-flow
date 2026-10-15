@@ -48,20 +48,26 @@ class Fixtures(unittest.TestCase):
                 self.assertEqual([c["created_at"] for c in out["review_comments"]], fx["expect"]["review_comments"])
                 self.assertEqual([f["ticket"] for f in out["fixes"]], fx["expect"]["fixes"])
                 self.assertTrue(out["evidence"])
-                self.assertTrue(out["steps"])
+                self.assertTrue(out["steps"] or out["fixes"], "no next step and nothing to offer")
                 for step in out["steps"]:
                     self.assertIn(step["who"], ("owner", "agent"))
 
-    def test_eval_prompt_matches_the_script(self):
-        """The status eval pastes state.py's output for the #95 fixture; it must match what the script prints today."""
-        prompt = os.path.join(HERE, "..", "..", "..", "evals", "status-next-action", "prompt.md")
-        if not os.path.exists(prompt):
-            self.skipTest("eval case not present (installed plugin copy)")
-        with open(prompt, encoding="utf-8") as f:
-            m = re.search(r"<state>\n(.*?)\n</state>", f.read(), re.S)
-        self.assertIsNotNone(m, "no <state> block in the eval prompt")
-        self.assertEqual(json.loads(m.group(1)), replay(load("revision-in-progress-aside-jot-95")),
-                         "regenerate the eval's <state> from the fixture (state.compute)")
+    def test_eval_prompts_match_the_script(self):
+        """Each status eval pastes state.py's output for a fixture; it must match what the script prints today."""
+        prompts = sorted(glob.glob(os.path.join(HERE, "..", "..", "..", "evals", "status-*", "prompt.md")))
+        if not prompts:
+            self.skipTest("eval cases not present (installed plugin copy)")
+        for prompt in prompts:
+            with self.subTest(os.path.basename(os.path.dirname(prompt))):
+                with open(prompt, encoding="utf-8") as f:
+                    text = f.read()
+                m = re.search(r"<state>\n(.*?)\n</state>", text, re.S)
+                self.assertIsNotNone(m, "no <state> block in the eval prompt")
+                fx = re.search(r"\(fixture `([\w-]+)`\)", text)
+                self.assertIsNotNone(fx, "the prompt doesn't name its fixture: (fixture `name`)")
+                name = fx.group(1)
+                self.assertEqual(json.loads(m.group(1)), replay(load(name)),
+                                 f"regenerate the eval's <state> from fixture {name} (state.compute)")
 
     def test_every_stage_has_a_fixture(self):
         stages = set()
@@ -90,6 +96,39 @@ class Fixtures(unittest.TestCase):
         self.assertEqual(out["fixes"][0]["command"],
                          'gh api repos/kacxx/dev-flow/issues/38/labels --method POST -f "labels[]=ready-for-agent"')
         self.assertEqual(out["later"], ["#39 waits on #38"])
+
+    def test_batch_names_every_write_and_leaves_out_owner_steps(self):
+        """D6: every fixture's batch is its agent steps then its fixes, each naming its writes."""
+        for path in FIXTURES:
+            with self.subTest(os.path.basename(path)):
+                with open(path, encoding="utf-8") as f:
+                    out = replay(json.load(f))
+                agent = [s["do"] for s in out["steps"] if s["who"] == "agent"]
+                self.assertEqual([i["do"] for i in out["batch"]], agent + [f["write"] for f in out["fixes"]])
+                owner = {s["do"] for s in out["steps"] if s["who"] == "owner"}
+                self.assertFalse(owner & {i["do"] for i in out["batch"]}, "an owner step is in the batch")
+                for item in out["batch"]:
+                    self.assertTrue(item["writes"] and all(w.strip() for w in item["writes"]), item)
+                    self.assertIsInstance(item["shows_draft"], bool)
+                for item in [i for i in out["batch"] if i["from"] == "fix"]:
+                    self.assertFalse(item["shows_draft"])  # named in full up front: the selection is the yes
+                    self.assertTrue(item["command"])
+
+    def test_batch_for_the_blockers_closed_case(self):
+        out = replay(load("in-progress-blockers-closed"))
+        self.assertEqual([i["writes"] for i in out["batch"] if i["from"] == "fix"],
+                         [["add the ready-for-agent label to #38"], ["add the ready-for-agent label to #40"],
+                          ["add the ready-for-agent label to #41"]])
+
+    def test_content_producing_steps_show_a_draft(self):
+        """Updating tickets after a revision, to-tickets and proposal write content the owner sees first."""
+        out = replay(load("revision-in-progress-aside-jot-95"))
+        self.assertEqual(out["batch"], [{"from": "step", "do": "update #97–#99",
+                                         "writes": ["edits to the bodies of #97–#99 to match the merged doc"],
+                                         "shows_draft": True}])
+        for name in ("decided-full-path", "decided-awaiting-proposal"):
+            with self.subTest(name):
+                self.assertEqual([i["shows_draft"] for i in replay(load(name))["batch"]], [True])
 
     def test_aside_jot_97_pause_is_left_alone(self):
         """#97 says `Blocked by: None` and its label was removed on purpose (proposal D2)."""
@@ -268,7 +307,7 @@ class Markers(unittest.TestCase):
                 issue(3, "Blocked by: #2", labels=["ready-for-agent"]),
                 issue(4, "Blocked by: #2, #3")]
         out = run(api(subs=subs))
-        self.assertEqual(out["steps"], [{"who": "agent", "do": "implement #3"}])
+        self.assertEqual([(s["who"], s["do"]) for s in out["steps"]], [("agent", "implement #3")])
         self.assertEqual(out["later"], ["#4 waits on #3"])
 
     def test_no_ready_ticket_goes_to_the_owner(self):
