@@ -26,4 +26,4 @@ The design is in the proposal PR (docs/proposals/jot-status-check.md), with open
 - Command name: `activity`, `since` or `transcript`.
 </issue>
 
-Grill me on its open questions. Don't post anything.
+Settle its open questions with me. Don't post anything.

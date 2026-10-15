@@ -37,7 +37,7 @@ One comment, written so the owner can decide without re-investigating:
 
 **Options, not chosen:** <one line each, if any are obvious; the owner decides>
 
-Stopped here; nothing was redesigned. Next: `grill` on D<n>.
+Stopped here; nothing was redesigned. Next: `settle` on D<n>.
 ```
 
 ## 3. Label the ticket
@@ -67,7 +67,7 @@ D<n> flagged by #T: <one line>. See #T for the evidence.
 
 ## 5. Hand off and stop
 
-Tell the owner what you flagged and why, then what's next. The next steps belong to `grill` and the owner, not to you. The `needs-decision` label and your comment are the reopen marker; don't edit the doc or the decision yourself.
+Tell the owner what you flagged and why, then what's next. The next steps belong to `settle` and the owner, not to you. The `needs-decision` label and your comment are the reopen marker; don't edit the doc or the decision yourself.
 
 **What's next**, in this order:
 1. **Blocking now:** what's blocking, and who acts.
@@ -77,12 +77,12 @@ Tell the owner what you flagged and why, then what's next. The next steps belong
 
 Leave out a part with nothing in it.
 
-- **Blocking now:** #T is on hold until D<n> is settled; the owner acts, by running `grill` on D<n> alone. It revises the decision where it lives, keeping the **same ID** and the old text as superseded.
-- **Then:** `grill` proposes a re-slice of the open tickets that say `Implements: D<n>`, including #T, for the owner to approve. It then removes `needs-decision` from #T and puts `ready-for-agent` back if #T is still valid and unblocked.
+- **Blocking now:** #T is on hold until D<n> is settled; the owner acts, by running `settle` on D<n> alone. It revises the decision where it lives, keeping the **same ID** and the old text as superseded.
+- **Then:** `settle` proposes a re-slice of the open tickets that say `Implements: D<n>`, including #T, for the owner to approve. It then removes `needs-decision` from #T and puts `ready-for-agent` back if #T is still valid and unblocked.
 
-The questions on D<n> are `grill`'s to ask, so leave out **Your decisions**.
+The questions on D<n> are `settle`'s to ask, so leave out **Your decisions**.
 
-Until then, `to-tickets` won't slice the source again.
+Until then, `slice` won't slice the source again.
 
 Then stop working on the ticket.
 

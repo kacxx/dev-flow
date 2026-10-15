@@ -35,6 +35,8 @@ PRECEDENCE = [
 ]
 PROPOSALS = "docs/proposals"
 READY, NEEDS_DECISION = "ready-for-agent", "needs-decision"
+# settle's decisions record; records from before the rename are headed (grill, …) (#56 D1)
+RECORD_HEADINGS = ("## Decisions (settle", "## Decisions (grill")
 
 
 class GhError(Exception):
@@ -98,7 +100,7 @@ def is_open(content):
 
 
 def skipped_in_record(record):
-    """Questions a grill record lists as skipped or still open (any heading naming them)."""
+    """Questions a settle record lists as skipped or still open (any heading naming them)."""
     for level in (2, 3):
         for title in (r"open questions.*", r"skipped.*"):
             if is_open(section(record, title, level)):
@@ -200,7 +202,7 @@ def compute(fetch, repo, n):
     needs = sorted({i["number"] for i in flagged if not i.get("pull_request")
                     and (i["number"] in sub_numbers or parent.search(i.get("body") or ""))}
                    | {s["number"] for s in open_subs if NEEDS_DECISION in [lb["name"] for lb in s.get("labels", [])]})
-    records = [c for c in comments if (c.get("body") or "").startswith("## Decisions (grill")]
+    records = [c for c in comments if (c.get("body") or "").startswith(RECORD_HEADINGS)]
     record = records[-1]["body"] if records else None
     decided_doc = doc is not None and doc["status"] == "decided"
 
@@ -225,12 +227,12 @@ def compute(fetch, repo, n):
         ev["proposal drafted"] = ([f"doc PR {name}#{p['number']} is open" for p in doc_prs]
                                   + ([f"{doc['path']} on main says {doc['status']}"] if doc and not decided_doc else []))
     if record and not doc and not doc_prs:
-        ev["decided, awaiting proposal"] = ["a ## Decisions (grill, …) comment", "no proposal doc or doc PR"]
+        ev["decided, awaiting proposal"] = ["a ## Decisions (settle, …) comment", "no proposal doc or doc PR"]
     if short_decisions and not open_questions and not to_check:
         ev["decided, short path"] = ["## Decisions in the body", "nothing under Open questions or To check"]
     if (open_questions or (record and skipped_in_record(record))) and not doc and not doc_prs:
         ev["questions open"] = ((["questions listed under Open questions"] if open_questions else [])
-                                + (["questions skipped in the latest grill record"] if record and skipped_in_record(record) else []))
+                                + (["questions skipped in the latest settle record"] if record and skipped_in_record(record) else []))
 
     matched = [s for s in PRECEDENCE if s in ev]
     stage = matched[0] if matched else None
@@ -285,8 +287,8 @@ def latest_write(issue, records, doc_prs, merged_docs, subs, name):
 
 
 def is_devflow_comment(body):
-    """A comment dev-flow itself posts: grill's decisions record, or flag-decision's pointer."""
-    return body.startswith("## Decisions (grill") or re.match(r"D\d+ flagged by #\d+", body) is not None
+    """A comment dev-flow itself posts: settle's decisions record, or flag-decision's pointer."""
+    return body.startswith(RECORD_HEADINGS) or re.match(r"D\d+ flagged by #\d+", body) is not None
 
 
 def review_comments(comments, last_write):
@@ -321,7 +323,7 @@ def relabel_fixes(repo, stage, tickets, blocker_state):
     """D2: add ready-for-agent to an open ticket whose `Blocked by:` names issues that are all closed.
 
     Never while a revision is in progress. A ticket that names no blocker (`Blocked by: None`)
-    and has no label was paused on purpose, and a needs-decision ticket waits on `grill`:
+    and has no label was paused on purpose, and a needs-decision ticket waits on `settle`:
     both are left alone. Each fix names the write it would make; nothing here makes it.
     """
     if stage == "revision in progress":
@@ -363,7 +365,7 @@ def next_steps(stage, n, name, issue, labels, tickets, doc_prs, doc, needs, rela
     later = []
     if stage == "reopened":
         where = numbers(needs) if needs else (doc["path"] if doc and doc["reopened"] else f"#{n}")
-        steps = [owner(f"settle the reopened decision in {where} with `grill`")]
+        steps = [owner(f"run `settle` on the reopened decision in {where}")]
     elif stage == "revision in progress":
         nums = numbers(t["number"] for t in open_t)
         steps = [owner(f"merge {prs}")] + ([agent(f"update {nums}", [f"edits to the bodies of {nums} to match the merged doc"],
@@ -384,13 +386,12 @@ def next_steps(stage, n, name, issue, labels, tickets, doc_prs, doc, needs, rela
             if t["number"] not in ready and waiting:
                 later.append(f"#{t['number']} waits on {numbers(waiting)}")
     elif stage == "decided, full path":
-        steps = [agent(f"run `to-tickets` on {doc['path']}", tickets_writes(), True)]
+        steps = [agent(f"run `slice` on {doc['path']}", tickets_writes(), True)]
     elif stage == "proposal drafted":
         ready_prs = [p for p in doc_prs if all(s == "decided" for s in p["docs"].values())]
         reopened_prs = [p for p in doc_prs if p["reopened"]]
-        if reopened_prs:  # grill settles a reopened decision before proposal re-checks the doc
-            steps = [owner("settle the reopened decision in " + ", ".join(f"{name}#{p['number']}" for p in reopened_prs)
-                           + " with `grill`")]
+        if reopened_prs:  # settle decides a reopened decision before proposal re-checks the doc
+            steps = [owner("run `settle` on the reopened decision in " + ", ".join(f"{name}#{p['number']}" for p in reopened_prs))]
         elif ready_prs:
             steps = [owner("review and merge " + ", ".join(f"{name}#{p['number']}" for p in ready_prs))]
         elif doc_prs:
@@ -403,9 +404,9 @@ def next_steps(stage, n, name, issue, labels, tickets, doc_prs, doc, needs, rela
                        [f"a branch and a draft doc PR adding a doc under {PROPOSALS}/"], True)]
     elif stage == "decided, short path":
         steps = ([agent(f"implement #{n}", [f"a branch and a pull request for #{n}"], False)] if READY in labels
-                 else [agent(f"slice #{n} with `to-tickets`", tickets_writes(), True)])
+                 else [agent(f"slice #{n} with `slice`", tickets_writes(), True)])
     elif stage == "questions open":
-        steps = [owner(f"answer #{n}'s open questions with `grill`")]
+        steps = [owner(f"answer #{n}'s open questions with `settle`")]
     else:
         steps = []
     return steps, later

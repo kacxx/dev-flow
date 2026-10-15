@@ -5,7 +5,7 @@ description: Use when the owner has a new idea, feature or problem to turn into 
 
 # Capture
 
-Turn an idea into one GitHub issue (problem, idea, open questions) and decide how much process it needs. The issue is the start of the idea → tickets flow; `grill`, `proposal` and `to-tickets` pick it up from here.
+Turn an idea into one GitHub issue (problem, idea, open questions) and decide how much process it needs. The issue is the start of the idea → tickets flow; `settle`, `proposal` and `slice` pick it up from here.
 
 ## 1. Find the repo, and check the idea isn't already captured
 
@@ -27,7 +27,7 @@ Results mix issues and PRs: a PR is the work for an issue, not a duplicate of it
 
 ## 2. Get the idea straight, not the design
 
-If the problem or the idea is unclear, ask one short question. Don't interview: settling the design is `grill`'s job. Look up facts yourself (files, existing behaviour, other issues); never ask the owner for something you can read.
+If the problem or the idea is unclear, ask one short question. Don't interview: settling the design is `settle`'s job. Look up facts yourself (files, existing behaviour, other issues); never ask the owner for something you can read.
 
 ## 3. Draft the issue
 
@@ -58,21 +58,21 @@ The sections always appear in this order (leave out the optional ones that don't
 Path: <ready|short|full> — <one-line reason>
 ```
 
-The last line records the settled path in the issue, so `grill` and `proposal` in a later session can see it. It has no override prompt: that's for the owner in chat, not for the issue.
+The last line records the settled path in the issue, so `settle` and `proposal` in a later session can see it. It has no override prompt: that's for the owner in chat, not for the issue.
 
-Idea says **what** changes, not **how**: restate the outcome the owner asked for and any constraints they gave, and add nothing of your own. Every detail you would add (a behaviour, safeguard, name, mechanism, format, or where something lives) goes into Open questions as a choice, even when the answer seems obvious. Settling it is `grill`'s job, where it gets recorded as a decision.
+Idea says **what** changes, not **how**: restate the outcome the owner asked for and any constraints they gave, and add nothing of your own. Every detail you would add (a behaviour, safeguard, name, mechanism, format, or where something lives) goes into Open questions as a choice, even when the answer seems obvious. Settling it is `settle`'s job, where it gets recorded as a decision.
 
 Open questions are **decisions**, not facts. A fact you can look up goes into Problem or Idea, already looked up. If there are none, write "None."
 
-If a fact matters but you can't look it up in this session (no repo access, no shell), don't turn it into an open question. List it under `## To check`, so `grill` looks it up before asking anything. An issue with anything under To check is never `ready-for-agent`: an implementer would be working on an unchecked assumption.
+If a fact matters but you can't look it up in this session (no repo access, no shell), don't turn it into an open question. List it under `## To check`, so `settle` looks it up before asking anything. An issue with anything under To check is never `ready-for-agent`: an implementer would be working on an unchecked assumption.
 
 ## 4. Pick the path
 
 Check these in order and take the **first** that matches, then state the result and the reason under the draft:
 
-1. **Full** if the idea needs design: a new interface or command, a cross-cutting change, or more than about three tickets. This applies even when there are no open questions; the design questions just haven't been asked yet. Next: `grill`, then `proposal` (a decided doc), then `to-tickets`.
-2. **Short** if there are open questions the owner can answer now. Next: `grill` in the issue; the decisions go into the issue body as `### D<n>:` headings. No proposal doc.
-3. **Ready** only if there are no open questions, nothing under To check, and no design. Add `## Acceptance criteria` and label it `ready-for-agent`: the issue *is* the ticket. If To check is the only thing in the way, it's **short**: `grill` looks the facts up first.
+1. **Full** if the idea needs design: a new interface or command, a cross-cutting change, or more than about three tickets. This applies even when there are no open questions; the design questions just haven't been asked yet. Next: `settle`, then `proposal` (a decided doc), then `slice`.
+2. **Short** if there are open questions the owner can answer now. Next: `settle` in the issue; the decisions go into the issue body as `### D<n>:` headings. No proposal doc.
+3. **Ready** only if there are no open questions, nothing under To check, and no design. Add `## Acceptance criteria` and label it `ready-for-agent`: the issue *is* the ticket. If To check is the only thing in the way, it's **short**: `settle` looks the facts up first.
 
 Tell the owner, in chat (not in the issue): `Path: full, because <reason>. Reply "ready", "short" or "full" to override.`
 
@@ -123,7 +123,7 @@ Give the issue link, then what's next.
 
 Leave out a part with nothing in it.
 
-A new issue has nothing blocking it, and its open questions are `grill`'s to ask, so a hand-off from `capture` is usually **Then** and **Later** only:
+A new issue has nothing blocking it, and its open questions are `settle`'s to ask, so a hand-off from `capture` is usually **Then** and **Later** only:
 - **Ready:** **Then:** "ready to implement".
-- **Short:** **Then:** run `grill` on the issue. If the `grill` skill isn't installed yet, settle the open questions by hand in the issue instead, under **Your decisions**: ask them as one numbered list with a recommendation each, and write each answer into the issue body under `## Decisions` as `### D1: <title>` headings.
-- **Full:** **Then:** run `grill`, as on the short path. **Later:** after the decisions, a proposal doc (`proposal`) and then tickets (`to-tickets`). If those skills aren't installed yet, say so and stop at the decisions.
+- **Short:** **Then:** run `settle` on the issue. If the `settle` skill isn't installed yet, settle the open questions by hand in the issue instead, under **Your decisions**: ask them as one numbered list with a recommendation each, and write each answer into the issue body under `## Decisions` as `### D1: <title>` headings.
+- **Full:** **Then:** run `settle`, as on the short path. **Later:** after the decisions, a proposal doc (`proposal`) and then tickets (`slice`). If those skills aren't installed yet, say so and stop at the decisions.

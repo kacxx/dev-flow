@@ -17,16 +17,16 @@ Superpowers' brainstorming adds process before value. Matt Pocock's grill → sp
 Four small skills, each with a fixed output:
 
 1. `capture`: idea → issue (problem, idea, open questions)
-2. `grill`: one question at a time until every open question is decided, with a reason for each
+2. `settle`: one question at a time until every open question is decided, with a reason for each
 3. `proposal`: write the decided doc and check its factual claims against the code (the review step for doc PRs)
-4. `to-tickets`: slice it into small end-to-end issues that link back to the decision each implements
+4. `slice`: slice it into small end-to-end issues that link back to the decision each implements
 
 Implementation (flow 2) takes over from the tickets. The skills are plain `SKILL.md` files, so they work in Claude Code on the Mac and the Windows PC, and on the Android phone through claude.ai account skills. Piloted on aside-jot and shipledger first.
 
 ## Open questions
 
 1. Ticket target: GitHub issues only for now, or design for Jira from the start?
-2. Short path: how does a one-line idea skip grill and proposal, and who decides it's small?
+2. Short path: how does a one-line idea skip settle and proposal, and who decides it's small?
 3. Linking: what format does a ticket use to point back to its decision?
 4. Way back: when flow 2 finds a decision was wrong, how does it reopen it?
 5. Devices: what can each surface actually load (Claude Code plugin, claude.ai skills on Android, cloud sessions)? Not verified yet.
@@ -41,7 +41,7 @@ Earlier in this session you asked me this round:
 
 ---
 
-❓ **Q2 - Short path**: how does a one-line idea skip grill and proposal, and who decides it's small?
+❓ **Q2 - Short path**: how does a one-line idea skip settle and proposal, and who decides it's small?
 
 ➡️ `capture` decides the path (ready / short / full) and says why; the owner can override in one word. It keeps the decision at the cheapest point.
 
@@ -67,7 +67,7 @@ Earlier in this session you asked me this round:
 
 ❓ **Q6 - Starting point**: adapt Matt's grill-me / to-spec / to-tickets text, or write from scratch?
 
-➡️ Adapt Matt Pocock's skills (MIT) for grill and to-tickets, and write capture and proposal new. His frontier rounds and slicing already work.
+➡️ Adapt Matt Pocock's skills (MIT) for settle and slice, and write capture and proposal new. His frontier rounds and slicing already work.
 
 Answer "yes" to accept all, or per question: "1 yes, 2 no: X, 3 skip".
 

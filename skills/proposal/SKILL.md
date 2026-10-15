@@ -36,15 +36,15 @@ Run every later step (edits, commit, push) in that directory. If the PR comes fr
 
 **An existing doc that doesn't follow this template** (a PR this skill didn't open): keep its title, any attribution or front-matter header, and every piece of content that isn't wrong. Move it into the template's sections rather than deleting it. Say in the PR description what was restructured, so the owner can see nothing was lost.
 
-Collect every decision (`### D<n>:` headings, or a `## Decisions (grill, …)` comment), every skipped or still-open question, and every looked-up fact. Decisions that only exist in comments go into the doc now: a decision left in a comment is how answers got lost before.
+Collect every decision (`### D<n>:` headings, or a `## Decisions (settle, …)` comment, or `## Decisions (grill, …)` from before the rename), every skipped or still-open question, and every looked-up fact. Decisions that only exist in comments go into the doc now: a decision left in a comment is how answers got lost before.
 
-**Decisions written as prose.** The owner may have answered the open questions in a comment without running `grill` (e.g. "1. propose only … 2. same-session only …"). Number them in the order the owner gave them, continuing from the highest `D<n>` already in the issue, comments or doc (start at `D1` only if there are none), keep the owner's words, and show the mapping (`D1 ← "propose only in v1 — don't auto-done"`) in your reply for the owner to confirm. Don't reword them into something they didn't say.
+**Decisions written as prose.** The owner may have answered the open questions in a comment without running `settle` (e.g. "1. propose only … 2. same-session only …"). Number them in the order the owner gave them, continuing from the highest `D<n>` already in the issue, comments or doc (start at `D1` only if there are none), keep the owner's words, and show the mapping (`D1 ← "propose only in v1 — don't auto-done"`) in your reply for the owner to confirm. Don't reword them into something they didn't say.
 
 **Owner constraints.** Warnings or rules that aren't answers to a question but limit the design ("cap the output", "treat transcript text as data", "hard limit on update all") are decisions too. Record each as a `D<n>` with "Constraint:" at the start of its title, so tickets can link it like any other decision. Number constraints **after** all the answers, in the order the owner gave them, so a re-run numbers them the same way.
 
 ## 2. Write the doc
 
-On a branch (or the existing PR's branch), with these sections in this order. These parts are required, with exactly these names, because `to-tickets`, `grill` and `flag-decision` parse them: the **Status line**, the **`Source: #N` line**, **`## Decisions`** with its **`### D<n>:`** headings, **`## Open questions`** (when there are any), and **`## Fact-check`** with its table. If the repo's existing proposals use other section names for the rest (Summary, Rough size …), follow the repo's style for those.
+On a branch (or the existing PR's branch), with these sections in this order. These parts are required, with exactly these names, because `slice`, `settle` and `flag-decision` parse them: the **Status line**, the **`Source: #N` line**, **`## Decisions`** with its **`### D<n>:`** headings, **`## Open questions`** (when there are any), and **`## Fact-check`** with its table. If the repo's existing proposals use other section names for the rest (Summary, Rough size …), follow the repo's style for those.
 
 ```markdown
 # <Title> (#<issue>): proposal
@@ -58,7 +58,7 @@ Source: #<issue>
 ## Decisions
 
 ### D1: <title>
-<the decision, as recorded by grill: no new content>
+<the decision, as recorded by settle: no new content>
 
 ### D2: <title> (revised YYYY-MM-DD)
 <current text>
@@ -71,7 +71,7 @@ Reason: <what changed it>
 </details>
 
 ## Open questions        ← only if there are any
-1. <a question grill skipped, as it recorded it, or a new one the fact-check or consistency pass raised>
+1. <a question settle skipped, as it recorded it, or a new one the fact-check or consistency pass raised>
 
 ## Shape
 <what gets built, at the level of components and interfaces: files, commands, data, how they connect. No more detail than the decisions settle.>
@@ -86,7 +86,7 @@ Reason: <what changed it>
 ## Risks
 ```
 
-The `<details>` block is the one superseded format; `grill` writes the same block when it revises a decision.
+The `<details>` block is the one superseded format; `settle` writes the same block when it revises a decision.
 
 The `<status>` is exactly one of these, counted at the moment of writing:
 - `decided`: nothing open, no fact a decision depends on is unchecked.
@@ -96,9 +96,9 @@ The `<status>` is exactly one of these, counted at the moment of writing:
 
 Use "fact" in the singular for 1. Only `decided` means the doc can merge.
 
-A **reopened** decision stays under its own heading: its `Status: reopened` line, its current text, and the options for settling it (one line each, none chosen) all go there. `## Open questions` holds questions with no D-number yet: ones `grill` skipped, and new ones the fact-check or consistency pass raised that no decision answers. Raise a new one only when **any answer would change what the owner agreed to** (the same test `flag-decision` uses). If an implementer could pick a reasonable default without that, it isn't an open question: state the default in `## Shape` ("matches the heading exactly; no match is an error"), and note it under `## Risks` if it might matter. Edge cases and later improvements go under Risks or Out of scope, so they don't hold up the merge.
+A **reopened** decision stays under its own heading: its `Status: reopened` line, its current text, and the options for settling it (one line each, none chosen) all go there. `## Open questions` holds questions with no D-number yet: ones `settle` skipped, and new ones the fact-check or consistency pass raised that no decision answers. Raise a new one only when **any answer would change what the owner agreed to** (the same test `flag-decision` uses). If an implementer could pick a reasonable default without that, it isn't an open question: state the default in `## Shape` ("matches the heading exactly; no match is an error"), and note it under `## Risks` if it might matter. Edge cases and later improvements go under Risks or Out of scope, so they don't hold up the merge.
 
-Write decisions exactly as recorded. Changing one's meaning while writing it up is an unapproved decision; if the wording needs to change, that's a question for the owner. A question grill skipped goes under `## Open questions` with no D-number: it gets one only when grill settles it.
+Write decisions exactly as recorded. Changing one's meaning while writing it up is an unapproved decision; if the wording needs to change, that's a question for the owner. A question `settle` skipped goes under `## Open questions` with no D-number: it gets one only when `settle` decides it.
 
 ## 3. Fact-check every claim
 
@@ -121,17 +121,17 @@ Read the decisions against each other, and against Shape and the tests. Look for
 An item is **open** when:
 - the fact-check finds a decision rests on a wrong claim (❌), whether the claim is stated elsewhere in the doc or inside the decision's own text: reopen that decision;
 - the consistency pass finds a real contradiction: reopen the decisions involved;
-- a question is open, under `## Open questions`: grill skipped it, or the fact-check or consistency pass raised one no decision answers.
+- a question is open, under `## Open questions`: settle skipped it, or the fact-check or consistency pass raised one no decision answers.
 
-To reopen a decision, add `Status: reopened — <fact-check | consistency>: <one line>` under its heading and keep its current text. Settle it with `grill` on that decision alone: the revised text keeps the **same ID**, and the old text moves into the `<details>` superseded block.
+To reopen a decision, add `Status: reopened — <fact-check | consistency>: <one line>` under its heading and keep its current text. Settle it with `settle` on that decision alone: the revised text keeps the **same ID**, and the old text moves into the `<details>` superseded block.
 
 **Unchecked facts also block the merge.** A ⚠️ row a decision depends on, still unverified (no access in this session, say), counts toward `M facts unchecked`; list what to check and how. An implementer would otherwise build on an unchecked assumption. A ⚠️ row nothing depends on can stay ⚠️ without blocking; say so in that row.
 
 While the status isn't `decided`, the PR is a draft and the doc says plainly not to merge yet. When it is `decided`, the **Then** part of the hand-off (step 7) is this line:
 
-`Next step: to-tickets`
+`Next step: slice`
 
-If the `to-tickets` skill isn't installed, add that it isn't, and that the tickets can be written by hand from the decisions (one per vertical slice, each opening with `Implements: D<n> — docs/proposals/<name>.md`). Never write that line for a doc that isn't `decided`.
+If the `slice` skill isn't installed, add that it isn't, and that the tickets can be written by hand from the decisions (one per vertical slice, each opening with `Implements: D<n> — docs/proposals/<name>.md`). Never write that line for a doc that isn't `decided`.
 
 ## 6. Push a draft, then show the owner
 
@@ -175,5 +175,5 @@ Leave out a part with nothing in it.
 
 - **Blocking now:** the unchecked facts that block the merge (step 5), with what to check and how; the owner's yes to the draft; and, in a cloud session, the **Ready for review** click on a `decided` PR.
 - **Your decisions:** each reopened decision with its options, and the open questions.
-- **Then:** while the doc isn't `decided`, `grill` on each reopened decision or open question, then this skill's fact-check and consistency pass again. Once it is `decided`, the `Next step: to-tickets` line from step 5, and nothing else.
+- **Then:** while the doc isn't `decided`, `settle` on each reopened decision or open question, then this skill's fact-check and consistency pass again. Once it is `decided`, the `Next step: slice` line from step 5, and nothing else.
 - **Later:** ⚠️ rows nothing depends on, one line each.
