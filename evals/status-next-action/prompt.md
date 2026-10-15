@@ -64,6 +64,7 @@ This session can't run commands or reach GitHub, so here is what `state.py kacxx
     {
       "number": 100,
       "title": "docs(proposal): add D10-D15 from the #95 review",
+      "created_at": "2026-10-14T10:30:00Z",
       "docs": {
         "docs/proposals/follow-up-jots.md": "decided"
       },
@@ -74,6 +75,12 @@ This session can't run commands or reach GitHub, so here is what `state.py kacxx
     "path": "docs/proposals/follow-up-jots.md",
     "status": "decided",
     "reopened": false
-  }
+  },
+  "last_write": {
+    "at": "2026-10-14T10:30:00Z",
+    "what": "doc PR aside-jot#100 opened"
+  },
+  "review_comments": [],
+  "fixes": []
 }
 </state>
