@@ -67,10 +67,20 @@ D<n> flagged by #T: <one line>. See #T for the evidence.
 
 ## 5. Hand off and stop
 
-Tell the owner what you flagged and why, and the next steps, which belong to `grill` and the owner, not to you. The `needs-decision` label and your comment are the reopen marker; don't edit the doc or the decision yourself:
-1. Run `grill` on D<n> alone. It revises the decision where it lives, keeping the **same ID** and the old text as superseded.
-2. It proposes a re-slice of the open tickets that say `Implements: D<n>`, including #T, for the owner to approve.
-3. It removes `needs-decision` from #T and puts `ready-for-agent` back if #T is still valid and unblocked.
+Tell the owner what you flagged and why, then what's next. The next steps belong to `grill` and the owner, not to you. The `needs-decision` label and your comment are the reopen marker; don't edit the doc or the decision yourself.
+
+**What's next**, in this order:
+1. **Blocking now:** what's blocking, and who acts.
+2. **Your decisions:** the owner's decisions, asked together.
+3. **Then:** what the agent does once they're answered.
+4. **Later:** later items, one line each.
+
+Leave out a part with nothing in it.
+
+- **Blocking now:** #T is on hold until D<n> is settled; the owner acts, by running `grill` on D<n> alone. It revises the decision where it lives, keeping the **same ID** and the old text as superseded.
+- **Then:** `grill` proposes a re-slice of the open tickets that say `Implements: D<n>`, including #T, for the owner to approve. It then removes `needs-decision` from #T and puts `ready-for-agent` back if #T is still valid and unblocked.
+
+The questions on D<n> are `grill`'s to ask, so leave out **Your decisions**.
 
 Until then, `to-tickets` won't slice the source again.
 
