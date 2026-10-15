@@ -16,7 +16,7 @@ Add a `notes grill <idea>` command that interviews me about an idea and saves th
 </issue>
 
 <comment>
-## Decisions (grill, 2026-10-10)
+## Decisions (settle, 2026-10-10)
 
 ### D1: Command
 The command is `notes grill <idea>`.

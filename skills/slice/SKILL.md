@@ -1,9 +1,9 @@
 ---
-name: to-tickets
+name: slice
 description: Use when a design doc is decided, or a short-path issue's decisions are settled, and the work needs splitting into GitHub issues. Writes vertical tickets linked to their decisions.
 ---
 
-# To Tickets
+# Slice
 
 Break a decided proposal, or a short-path issue's decisions, into **tickets**: tracer-bullet vertical slices, each naming the decisions it implements and the tickets that **block** it. Adapted from Matt Pocock's `to-tickets` (MIT, see `NOTICE`).
 
@@ -20,7 +20,7 @@ Only slice something decided:
 - **Proposal doc:** its Status line must read exactly `**decided**`. Anything else means stop, including `decided, M facts unchecked` (it starts with "decided" but isn't), `N open` and `N open, M facts unchecked`. Say what's open and that `proposal` needs to finish first.
 - **Short-path issue:** it must have a `## Decisions` section with `### D<n>:` headings, and nothing left under Open questions or To check. If it already carries `ready-for-agent` and fits in one ticket, it **is** the ticket: say so and stop, because slicing it would put the same work up twice. Slice it only if it needs more than one ticket; step 5 then takes the label off the source issue.
 
-Also stop if a decision is flagged: the source issue itself carries `needs-decision` (a short-path issue that was its own ticket), or any open issue labelled `needs-decision` has `Parent: #N` in its body. Either means a decision behind this source has been reopened by `flag-decision`, even though the doc's Status still says `decided`. Name it and point to `grill`.
+Also stop if a decision is flagged: the source issue itself carries `needs-decision` (a short-path issue that was its own ticket), or any open issue labelled `needs-decision` has `Parent: #N` in its body. Either means a decision behind this source has been reopened by `flag-decision`, even though the doc's Status still says `decided`. Name it and point to `settle`.
 
 ```bash
 gh api -X GET search/issues -f q='repo:OWNER/REPO is:issue is:open label:needs-decision "Parent: #N"' --jq '.items[] | "#\(.number) \(.title)"'

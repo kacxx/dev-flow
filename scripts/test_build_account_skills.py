@@ -62,19 +62,19 @@ class Build(unittest.TestCase):
         self.assertProblem(skill(self.tmp, "capture", fm_name="capturer"), "doesn't match")
 
     def test_description_too_long(self):
-        self.assertProblem(skill(self.tmp, "grill", desc="x" * 201), "201 characters")
+        self.assertProblem(skill(self.tmp, "settle", desc="x" * 201), "201 characters")
 
     def test_no_frontmatter(self):
         self.assertProblem(raw(self.tmp, "x", "# no fm"), "no frontmatter")
 
     def test_no_final_newline(self):
-        self.assertValid(raw(self.tmp, "grill", "---\nname: grill\ndescription: Use when x.\n---"))
+        self.assertValid(raw(self.tmp, "settle", "---\nname: settle\ndescription: Use when x.\n---"))
 
     def test_zip_has_folder_at_root_and_notice(self):
-        d = skill(self.tmp, "grill", extra={"scripts/x.py": "print(1)"})
+        d = skill(self.tmp, "settle", extra={"scripts/x.py": "print(1)"})
         out = b.build(d, os.path.join(self.tmp, "out"), self.notice)
         with zipfile.ZipFile(out) as z:
-            self.assertEqual(sorted(z.namelist()), ["grill/NOTICE", "grill/SKILL.md", "grill/scripts/x.py"])
+            self.assertEqual(sorted(z.namelist()), ["settle/NOTICE", "settle/SKILL.md", "settle/scripts/x.py"])
 
     def test_zip_leaves_out_tests_and_fixtures(self):
         d = skill(self.tmp, "status", extra={
@@ -100,7 +100,7 @@ class Build(unittest.TestCase):
                     self.assertNotIn("/scripts/fixtures/", name)
 
     def test_default_set_includes_status(self):
-        self.assertEqual(b.DEFAULT_SET, ["capture", "grill", "flag-decision", "status"])
+        self.assertEqual(b.DEFAULT_SET, ["capture", "settle", "flag-decision", "status"])
         for n in b.DEFAULT_SET:
             self.assertIn(n, real_skills())
 
@@ -110,35 +110,35 @@ class Build(unittest.TestCase):
             b.build(d, os.path.join(self.tmp, "out"), os.path.join(self.tmp, "nope"))
 
     def test_own_notice_not_duplicated(self):
-        d = skill(self.tmp, "grill", extra={"NOTICE": "own"})
+        d = skill(self.tmp, "settle", extra={"NOTICE": "own"})
         out = b.build(d, os.path.join(self.tmp, "out"), self.notice)
         with zipfile.ZipFile(out) as z:
-            self.assertEqual(sorted(z.namelist()), ["grill/NOTICE", "grill/NOTICE.dev-flow", "grill/SKILL.md"])
+            self.assertEqual(sorted(z.namelist()), ["settle/NOTICE", "settle/NOTICE.dev-flow", "settle/SKILL.md"])
 
     def test_folded_description_measured_in_full(self):
-        d = raw(self.tmp, "grill", "---\nname: grill\ndescription: >-\n  " + "word " * 50 + "\n  more\n---\n")
+        d = raw(self.tmp, "settle", "---\nname: settle\ndescription: >-\n  " + "word " * 50 + "\n  more\n---\n")
         self.assertProblem(d, "characters")
 
     def test_block_header_with_indent_and_comment(self):
         for header in (">2", "|-2", ">- # folded"):
-            d = raw(self.tmp, "grill", f"---\nname: grill\ndescription: {header}\n  " + "word " * 50 + "\n---\n")
+            d = raw(self.tmp, "settle", f"---\nname: settle\ndescription: {header}\n  " + "word " * 50 + "\n---\n")
             self.assertProblem(d, "characters")
 
     def test_plain_continuation_measured_in_full(self):
-        d = raw(self.tmp, "grill", "---\nname: grill\ndescription: short\n  " + "word " * 50 + "\n---\n")
+        d = raw(self.tmp, "settle", "---\nname: settle\ndescription: short\n  " + "word " * 50 + "\n---\n")
         self.assertProblem(d, "characters")
 
     def test_value_on_next_line(self):
-        self.assertValid(raw(self.tmp, "grill", "---\nname: grill\ndescription:\n  Use when x.\n---\n"))
+        self.assertValid(raw(self.tmp, "settle", "---\nname: settle\ndescription:\n  Use when x.\n---\n"))
 
     def test_quoted_name(self):
-        self.assertValid(skill(self.tmp, "grill", fm_name='"grill"'))
+        self.assertValid(skill(self.tmp, "settle", fm_name='"settle"'))
 
     def test_inline_comment_dropped(self):
-        self.assertValid(skill(self.tmp, "grill", fm_name="grill  # phone set"))
+        self.assertValid(skill(self.tmp, "settle", fm_name="settle  # phone set"))
 
     def test_single_quote_escape(self):
-        self.assertValid(skill(self.tmp, "grill", desc="'Use when it''s time.'"))
+        self.assertValid(skill(self.tmp, "settle", desc="'Use when it''s time.'"))
 
     def test_bad_name_characters(self):
         self.assertProblem(skill(self.tmp, "Flag_Decision"), "lowercase")
@@ -165,7 +165,7 @@ class Build(unittest.TestCase):
         }
         for case, desc in bad.items():
             with self.subTest(case):
-                d = skill(os.path.join(self.tmp, case.replace(" ", "-")), "grill", desc=desc)
+                d = skill(os.path.join(self.tmp, case.replace(" ", "-")), "settle", desc=desc)
                 for parser, problems in self.each_parser(d):
                     self.assertTrue(problems, f"{parser} accepted {desc!r}")
 
@@ -180,7 +180,7 @@ class Build(unittest.TestCase):
             self.assertEqual(strict, yml, n)
 
     def test_unsafe_key_name_is_just_a_key(self):
-        d = raw(self.tmp, "grill", "---\nname: grill\ndescription: Use when x.\n_unsafe: abc\n---\n")
+        d = raw(self.tmp, "settle", "---\nname: settle\ndescription: Use when x.\n_unsafe: abc\n---\n")
         self.assertValid(d)
 
     def test_every_real_skill_passes_checks(self):
@@ -198,7 +198,7 @@ class Build(unittest.TestCase):
         if not existed:
             write(keep, "placeholder")
             self.addCleanup(lambda: os.path.exists(keep) and os.remove(keep))
-        self.assertEqual(b.main(["build", "grill"]), 0)
+        self.assertEqual(b.main(["build", "settle"]), 0)
         self.assertTrue(os.path.exists(keep))
 
 

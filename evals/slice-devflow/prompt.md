@@ -21,11 +21,11 @@ GitHub issues only for v1. Tickets are described in neutral fields (title, probl
 
 ### D2: Short path (revised 2026-10-13)
 `capture` decides the path and says why; the owner can override in one word.
-- **No open questions:** the issue becomes the ticket (acceptance criteria added, labelled `ready-for-agent`, the same label `to-tickets` uses).
-- **Open questions answerable in one sitting:** grill them in the issue and write the decisions into the issue body. No proposal doc.
+- **No open questions:** the issue becomes the ticket (acceptance criteria added, labelled `ready-for-agent`, the same label `slice` uses).
+- **Open questions answerable in one sitting:** settle them in the issue and write the decisions into the issue body. No proposal doc.
 - **Needs design** (a new interface or command, a cross-cutting change, or more than about three tickets): the full path, ending in a proposal doc.
 
-The three-ticket cut-off gets tuned after the pilots. A change to it is a revision of D2 through `grill` (same ID, old text superseded); the evidence (which ideas took which path, and whether that was right) is appended to `docs/path-tuning.md` after each pilot, one entry per idea, so all pilots feed one record.
+The three-ticket cut-off gets tuned after the pilots. A change to it is a revision of D2 through `settle` (same ID, old text superseded); the evidence (which ideas took which path, and whether that was right) is appended to `docs/path-tuning.md` after each pilot, one entry per idea, so all pilots feed one record.
 
 <details><summary>Superseded (2026-10-13)</summary>
 
@@ -44,8 +44,8 @@ On the short path there's no doc, so the header points at the issue holding the 
 
 ### D4: Way back (revised 2026-10-13)
 1. The implementing agent stops and flags with the **`flag-decision`** skill: it comments on the ticket with the evidence and the decision it breaks (`## Decision flagged: D<n>`), swaps `ready-for-agent` for `needs-decision`, and doesn't redesign inside the ticket.
-2. **The `needs-decision` label plus that comment are the reopen marker.** Nothing is written into the doc or issue until the decision is revised: `grill` settles it alone, and the revision keeps the same ID with the old text in a superseded block.
-3. `grill` proposes a re-slice of the open tickets that say `Implements: D<n>`, and the owner approves it. Then `grill` removes `needs-decision` from the flagged ticket, and puts `ready-for-agent` back if the ticket is still valid and unblocked. Until then, `to-tickets` won't slice the source again.
+2. **The `needs-decision` label plus that comment are the reopen marker.** Nothing is written into the doc or issue until the decision is revised: `settle` takes it alone, and the revision keeps the same ID with the old text in a superseded block.
+3. `settle` proposes a re-slice of the open tickets that say `Implements: D<n>`, and the owner approves it. Then `settle` removes `needs-decision` from the flagged ticket, and puts `ready-for-agent` back if the ticket is still valid and unblocked. Until then, `slice` won't slice the source again.
 
 A decision reopened **while a proposal is still being drafted** (by its fact-check or consistency pass) is marked differently: `proposal` writes `Status: reopened — <fact-check | consistency>: <one line>` under its heading in the draft doc. Two moments, two markers, each with one owner.
 
@@ -65,7 +65,7 @@ Reason: the #18 review gave the reopen marker a single owner. During implementat
 ### D5: Devices (revised again 12 Oct, after the phone probe)
 - **Source:** this repo. Skills are written and versioned here.
 - **Mac and Windows:** the Claude Code plugin while the skills are still changing. Mac first; Windows confirmed with one install.
-- **Phone (Claude Code cloud sessions, from the Code tab):** once the skills have settled after the pilots, `capture`, `grill` and `flag-decision` are uploaded as **claude.ai account skills**. `flag-decision` is included because flow 2 also runs from the phone, and an agent implementing a ticket there has no plugin. The probe confirmed that cloud sessions load account skills. Account skills also sync into terminal Claude Code, so they reach every project (aside-jot, shipledger, …) without copying anything into each repo.
+- **Phone (Claude Code cloud sessions, from the Code tab):** once the skills have settled after the pilots, `capture`, `settle` and `flag-decision` are uploaded as **claude.ai account skills**. `flag-decision` is included because flow 2 also runs from the phone, and an agent implementing a ticket there has no plugin. The probe confirmed that cloud sessions load account skills. Account skills also sync into terminal Claude Code, so they reach every project (aside-jot, shipledger, …) without copying anything into each repo.
 - **Not used:** copying the skills into each project's `.claude/skills/`. It works (the probe loaded one live from the branch), but every repo's copy would drift.
 - **The Android chat app:** out of v1.
 
@@ -76,13 +76,13 @@ The first revision rested on the docs. The phone probe found cloud sessions load
 
 <details><summary>Superseded (12 Oct, original): "claude.ai account skills for the Android app"</summary>
 
-The original D5 put `capture` and `grill` in the Android chat app. The docs don't say the chat app loads account skills, while cloud sessions (Code tab) do.
+The original D5 put `capture` and `settle` in the Android chat app. The docs don't say the chat app loads account skills, while cloud sessions (Code tab) do.
 </details>
 
 ### D6: Starting point (revised 12 Oct, after the fact-check reopened it)
 Adapt Matt Pocock's skills (MIT, with the notice in `NOTICE`):
-- **`grill`:** his `grilling` **frontier rounds**, used as they are. (His `grill-me` is a one-line wrapper that calls `grilling`, so there's nothing in it to adapt.) Each round asks every question whose prerequisites are already settled, numbered, each with a recommended answer and worded so "yes" accepts it. The agent looks up facts with sub-agents and never asks the user for them. Additions: shorthand answers for a whole round ("1 yes, 2 no: X, 3 skip"), since a round of six is long to answer on a phone; each answer is recorded under a `D<n>` ID (D3); and the session ends by writing a decisions record, since the manual run showed nothing else captures them.
-- **`to-tickets`:** from his `to-tickets`. Cut the domain-glossary, ADR and `/setup-matt-pocock-skills` tracker references, and target GitHub issues directly (D1). It already has `Blocked by:` and `ready-for-agent`; add only the `Implements:` line (D3). *(Corrected 12 Oct per PR #3: the parts to cut are in `to-tickets`, not `grilling`.)*
+- **`settle`:** his `grilling` **frontier rounds**, used as they are. (His `grill-me` is a one-line wrapper that calls `grilling`, so there's nothing in it to adapt.) Each round asks every question whose prerequisites are already settled, numbered, each with a recommended answer and worded so "yes" accepts it. The agent looks up facts with sub-agents and never asks the user for them. Additions: shorthand answers for a whole round ("1 yes, 2 no: X, 3 skip"), since a round of six is long to answer on a phone; each answer is recorded under a `D<n>` ID (D3); and the session ends by writing a decisions record, since the manual run showed nothing else captures them.
+- **`slice`:** from his `to-tickets`. Cut the domain-glossary, ADR and `/setup-matt-pocock-skills` tracker references, and target GitHub issues directly (D1). It already has `Blocked by:` and `ready-for-agent`; add only the `Implements:` line (D3). *(Corrected 12 Oct per PR #3: the parts to cut are in `to-tickets`, not `grilling`.)*
 - **`capture` and `proposal`:** new.
 
 <details><summary>Superseded (12 Oct): "the one-question-at-a-time core"</summary>
@@ -97,16 +97,16 @@ dev-flow/
   .claude-plugin/marketplace.json   # name, owner, plugins: [{ name: dev-flow, source: ./ }]
   .claude-plugin/plugin.json        # name, version, skills: [...]
   skills/capture/SKILL.md           # idea → issue, picks the path (D2)
-  skills/grill/SKILL.md             # rounds, D<n> IDs, decisions record (D3, D6)
+  skills/settle/SKILL.md             # rounds, D<n> IDs, decisions record (D3, D6)
   skills/proposal/SKILL.md          # decided doc + fact-check of its claims
-  skills/to-tickets/SKILL.md        # vertical slices, Implements:/Blocked by: header (D1, D3)
+  skills/slice/SKILL.md        # vertical slices, Implements:/Blocked by: header (D1, D3)
   skills/flag-decision/SKILL.md     # flow 2's way back: evidence comment, needs-decision label, stop (D4)
   NOTICE                            # Matt Pocock's MIT notice for the adapted skills
 ```
 
 - **GitHub access:** the skills read and write issues with `gh api repos/{owner}/{repo}/issues…`, not `gh issue`/`gh pr`. That works both locally and in cloud sessions, where GraphQL is blocked.
 - **Updates:** bump `version` in `plugin.json` on each change. Installed plugins only update when the version changes.
-- **Tests:** each skill must reproduce issue #1's **outcomes**, not its turn count. `capture` produces #1's shape and path choice on comparable ideas, and, now that #1 exists, finds #1 and offers to continue it when given #1's idea again; `grill` reaches D1–D6 from #1's six open questions (in one or two rounds, where the manual run took six turns); `proposal` produces this doc's sections and catches the D6 error; `to-tickets` produces this ticket set. `flag-decision` has nothing in #1 to reproduce, so it gets its own scenario: a ticket whose work contradicts D3 → an evidence comment, the `needs-decision` label, and a stop with no redesign.
+- **Tests:** each skill must reproduce issue #1's **outcomes**, not its turn count. `capture` produces #1's shape and path choice on comparable ideas, and, now that #1 exists, finds #1 and offers to continue it when given #1's idea again; `settle` reaches D1–D6 from #1's six open questions (in one or two rounds, where the manual run took six turns); `proposal` produces this doc's sections and catches the D6 error; `slice` produces this ticket set. `flag-decision` has nothing in #1 to reproduce, so it gets its own scenario: a ticket whose work contradicts D3 → an evidence comment, the `needs-decision` label, and a stop with no redesign.
 
 ## Fact-check
 

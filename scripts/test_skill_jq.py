@@ -57,7 +57,7 @@ class SkillJq(unittest.TestCase):
         self.assertEqual(run(program, issues), ["#1", "#2", "#4"])
 
     def test_grill_needs_the_decision_and_its_source_on_the_implements_line(self):
-        program = fallback_filter("grill").replace("<n>", "2").replace("<name>", "a").replace("#N", "#1")
+        program = fallback_filter("settle").replace("<n>", "2").replace("<name>", "a").replace("#N", "#1")
         issues = [
             issue(1, "Implements: D2 — docs/proposals/a.md\nParent: #1"),
             issue(2, "Implements: D2 — docs/proposals/b.md"),
@@ -74,7 +74,7 @@ class SkillJq(unittest.TestCase):
         self.assertEqual(run(program, issues), ["#1", "#4", "#7"])
 
     def test_to_tickets_parent_line_matches_the_whole_number(self):
-        program = fallback_filter("to-tickets").replace("#N", "#1")
+        program = fallback_filter("slice").replace("#N", "#1")
         issues = [
             issue(1, "Implements: D1 — docs/proposals/a.md\nParent: #1\n"),
             issue(2, "Parent: #12"),

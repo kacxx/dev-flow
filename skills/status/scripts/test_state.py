@@ -121,7 +121,7 @@ class Fixtures(unittest.TestCase):
                           ["add the ready-for-agent label to #41"]])
 
     def test_content_producing_steps_show_a_draft(self):
-        """Updating tickets after a revision, to-tickets and proposal write content the owner sees first."""
+        """Updating tickets after a revision, slice and proposal write content the owner sees first."""
         out = replay(load("revision-in-progress-aside-jot-95"))
         self.assertEqual(out["batch"], [{"from": "step", "do": "update #97–#99",
                                          "writes": ["edits to the bodies of #97–#99 to match the merged doc"],
@@ -241,12 +241,12 @@ class Markers(unittest.TestCase):
             out = run(api(prs=[pr], files={5: ["docs/proposals/x.md"]}, docs={"docs/proposals/x.md?ref=abc": DOC}))
             self.assertEqual(out["stage"], "proposal drafted", word)
 
-    def test_reopened_line_in_doc_pr_goes_to_grill(self):
+    def test_reopened_line_in_doc_pr_goes_to_settle(self):
         doc = DOC.replace("decided", "1 open") + "\n### D2: x\nStatus: reopened — consistency: no stage\n"
         pr = {"number": 5, "title": "doc", "body": "Refs #1", "head": {"sha": "abc"}}
         out = run(api(prs=[pr], files={5: ["docs/proposals/x.md"]}, docs={"docs/proposals/x.md?ref=abc": doc}))
         self.assertEqual(out["stage"], "proposal drafted")
-        self.assertEqual(out["steps"], [{"who": "owner", "do": "settle the reopened decision in r#5 with `grill`"}])
+        self.assertEqual(out["steps"], [{"who": "owner", "do": "run `settle` on the reopened decision in r#5"}])
 
     def test_doc_pr_that_deletes_the_doc(self):
         pr = {"number": 5, "title": "doc", "body": "Refs #1", "head": {"sha": "abc"}}
@@ -271,7 +271,7 @@ class Markers(unittest.TestCase):
         flagged = [issue(9, "Implements: D1 — #1\nParent: #1\n", labels=["needs-decision"])]
         out = run(api(subs=[issue(2)], flagged=flagged))
         self.assertEqual(out["stage"], "reopened")
-        self.assertEqual(out["next_action"], "settle the reopened decision in #9 with `grill`")
+        self.assertEqual(out["next_action"], "run `settle` on the reopened decision in #9")
 
     def test_needs_decision_elsewhere_does_not_count(self):
         flagged = [issue(9, "Parent: #10\n", labels=["needs-decision"])]
@@ -281,7 +281,7 @@ class Markers(unittest.TestCase):
     def test_open_questions_none_is_not_open(self):
         out = run(api(body="## Decisions\n\n### D1: x\n\n## Open questions\n\nNone.\n"))
         self.assertEqual(out["stage"], "decided, short path")
-        self.assertEqual(out["next_action"], "slice #1 with `to-tickets`")
+        self.assertEqual(out["next_action"], "slice #1 with `slice`")
 
     def test_to_check_keeps_short_path_open(self):
         out = run(api(body="## Decisions\n\n### D1: x\n\n## Open questions\n\nNone.\n\n## To check\n\n- a fact\n"))
@@ -291,10 +291,14 @@ class Markers(unittest.TestCase):
         body = "## Decisions\n\n### D1: x\n\n## Open questions\n\nNone.\n\n<details>\n\n## To check\n\n- old fact\n\n</details>\n"
         self.assertEqual(run(api(body=body))["stage"], "decided, short path")
 
-    def test_skipped_in_grill_record(self):
-        record = "## Decisions (grill, 2026-10-15)\n\n### D1: x\nyes\n\n### Skipped\n\n- Q3, the name\n"
+    def test_skipped_in_settle_record(self):
+        record = "## Decisions (settle, 2026-10-15)\n\n### D1: x\nyes\n\n### Skipped\n\n- Q3, the name\n"
         out = run(api(comments=[record]))
         self.assertEqual(out["also_matched"], ["questions open"])
+        self.assertEqual(out["stage"], "decided, awaiting proposal")
+
+    def test_record_from_before_the_rename_still_counts(self):
+        out = run(api(comments=[OLD_RECORD]))
         self.assertEqual(out["stage"], "decided, awaiting proposal")
 
     def test_closed_issue_is_done_without_a_step(self):
@@ -320,7 +324,8 @@ class Markers(unittest.TestCase):
         self.assertIn("run status on #7", out["evidence"][0])
 
 
-RECORD = "## Decisions (grill, 2026-10-15)\n\n### D1: x\nyes\n"
+RECORD = "## Decisions (settle, 2026-10-15)\n\n### D1: x\nyes\n"
+OLD_RECORD = "## Decisions (grill, 2026-10-15)\n\n### D1: x\nyes\n"
 
 
 class ReviewComments(unittest.TestCase):
@@ -330,6 +335,11 @@ class ReviewComments(unittest.TestCase):
         self.assertEqual(out["last_write"], {"at": "2026-10-15T09:00:00Z", "what": "the decisions record"})
         self.assertEqual([(c["author"], c["first_line"]) for c in out["review_comments"]],
                          [("rev", "Review: D1 misses the Windows case.")])
+
+    def test_a_grill_record_is_dev_flows_own_write(self):
+        out = run(api(comments=[comment(OLD_RECORD, "2026-10-15T09:00:00Z"), comment("Review: x", "2026-10-15T10:00:00Z", "rev")]))
+        self.assertEqual(out["last_write"], {"at": "2026-10-15T09:00:00Z", "what": "the decisions record"})
+        self.assertEqual([c["author"] for c in out["review_comments"]], ["rev"])
 
     def test_published_tickets_answer_earlier_comments(self):
         subs = [issue(2, created_at="2026-10-15T11:00:00Z")]
@@ -375,7 +385,7 @@ class Relabel(unittest.TestCase):
     def test_already_labelled(self):
         self.assertEqual(self.fixes([issue(2, "Blocked by: None", "closed"), issue(3, "Blocked by: #2", labels=[READY])]), [])
 
-    def test_needs_decision_ticket_waits_on_grill(self):
+    def test_needs_decision_ticket_waits_on_settle(self):
         subs = [issue(2, "Blocked by: None", "closed"), issue(3, "Blocked by: #2", labels=["needs-decision"])]
         self.assertEqual(self.fixes(subs), [])
 

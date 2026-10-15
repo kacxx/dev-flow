@@ -4,7 +4,7 @@
  "note": "Derived from the aside-jot#95 fixture: aside-jot#100 merged, and #97 labelled needs-decision as flag-decision leaves it. No real issue was in this state when recorded. For #38: #100 added as merged (times set after the review comment; not recorded).",
  "expect": {
   "stage": "reopened",
-  "next_action": "settle the reopened decision in #97 with `grill`",
+  "next_action": "run `settle` on the reopened decision in #97",
   "review_comments": [],
   "fixes": []
  },
