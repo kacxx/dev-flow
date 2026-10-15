@@ -1,6 +1,6 @@
 ---
 name: status
-description: Use when the owner asks where an idea is or what's next for it (run as /dev-flow:status owner/repo#N). Reads the issue's state on GitHub, names its stage, lists unanswered review comments, says the next action and who takes it, and offers the relabelling fix for the owner's yes.
+description: Use when the owner asks where an idea is or what's next for it (/dev-flow:status owner/repo#N). Names its stage, the next action and who takes it, and offers the relabelling fix.
 ---
 
 # Status
