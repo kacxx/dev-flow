@@ -131,3 +131,20 @@ Found while re-testing:
 - The prompts said "this session can't reach GitHub", and some runs took that literally and never fetched the file, so they left the false claim unchecked. The prompts now say what's actually true.
 - Widening `## Open questions` to cover questions the fact-check raises made `decided` unreachable: runs blocked on implementation details (how `<idea>` matches a heading). The bar is now flag-decision's: an open question only if any answer would change what the owner agreed to; otherwise state the default in Shape.
 - A regex-only case keeps no response text, so `proposal-decided` has a 0.01-weight LLM grader just to keep its output visible.
+
+## status — 15 Oct 2026 (plugin 0.8.0, #41)
+
+New case `status-next-action`: the prompt runs `/dev-flow:status kacxx/aside-jot#95` and holds `state.py`'s output for the `revision-in-progress-aside-jot-95` fixture, so no Bash or `gh` is needed. 3 runs, no-plugin baseline, judge sonnet. Regexes were self-tested against a good hand-off and three bad ones (steps swapped, an empty "Your decisions" part kept, a wrong next action).
+
+| Check (grader type) | With | Without |
+|---|---|---|
+| next action: merge aside-jot#100, then the #97–#99 update (regex) | 3/3 | 3/3 |
+| who: the owner merges, the agent updates the tickets and only offers to (llm) | 3/3 | 2/3 |
+| shape: **Blocking now** holds #100, **Then** holds #97–#99, in that order (regex) | 3/3 | 0/3 |
+| shape: empty parts left out (no **Your decisions**, no **Later**) (regex) | 3/3 | 0/3 |
+
+Score: status-next-action 1.00 (0.48).
+
+The baseline gets the next action right because the script's `steps` already carry it, with `who`. What the skill adds is the four-part shape.
+
+Found while testing: asked in plain words ("Where's kacxx/aside-jot#95 at, and what's next?") with the state pasted, the skill didn't trigger in 3/3 runs, and the plugin arm scored the same as the baseline (0.57). With the script's output already in hand the model answers directly. The case uses the documented `/dev-flow:status owner/repo#N` form instead, so plain-words triggering is untested.
