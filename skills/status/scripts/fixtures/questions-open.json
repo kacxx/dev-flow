@@ -4,7 +4,7 @@
  "note": "kacxx/aside-jot#30 recorded 2026-10-15: questions under Open questions, no decisions record. Closed PRs not recorded (added as empty for #38).",
  "expect": {
   "stage": "questions open",
-  "next_action": "answer #30's open questions with `grill`",
+  "next_action": "answer #30's open questions with `settle`",
   "review_comments": [
    "2026-10-04T07:44:11Z",
    "2026-10-06T09:47:45Z"

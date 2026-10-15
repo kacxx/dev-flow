@@ -4,7 +4,7 @@
  "note": "kacxx/dev-flow#35 rewound to 2026-10-15 00:03, when PR #36 merged (7d8e20a) and before #37-#41 were filed. Closed PRs added 2026-10-15 for #38: those closed by then, #36 among them.",
  "expect": {
   "stage": "decided, full path",
-  "next_action": "run `to-tickets` on docs/proposals/status.md",
+  "next_action": "run `slice` on docs/proposals/status.md",
   "review_comments": [],
   "fixes": []
  },

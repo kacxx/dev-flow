@@ -1,9 +1,9 @@
 ---
-name: grill
+name: settle
 description: Use when an idea, issue or plan has open questions to settle before it can be specified or ticketed. Settles them in rounds with the owner and records each answer as a numbered decision (D1, D2…).
 ---
 
-# Grill
+# Settle
 
 Settle every open question on an idea with the owner, in rounds, and record each answer as a numbered decision (`D1`, `D2` …) that later steps link to. Adapted from Matt Pocock's `grilling` (MIT, see `NOTICE`).
 
@@ -82,7 +82,7 @@ gh api repos/OWNER/REPO/labels --method POST -f name=ready-for-agent 2>/dev/null
 gh api repos/OWNER/REPO/issues/N/labels --method POST -f 'labels[]=ready-for-agent'
 ```
 
-**Full path, before a proposal doc exists:** post the record as **one comment** headed `## Decisions (grill, YYYY-MM-DD)`, with the `### D<n>:` headings, the facts you looked up, and any skipped questions. It's the record until `proposal` writes the doc.
+**Full path, before a proposal doc exists:** post the record as **one comment** headed `## Decisions (settle, YYYY-MM-DD)`, with the `### D<n>:` headings, the facts you looked up, and any skipped questions. It's the record until `proposal` writes the doc.
 
 ```bash
 gh api repos/OWNER/REPO/issues/N/comments --method POST -F body=@- <<'BODY'
@@ -106,7 +106,7 @@ Leave out a part with nothing in it.
 
 - **Your decisions:** the questions the owner skipped, if they want another round now.
 - **Then:** `proposal` (full path, no doc yet), "ready to implement" (short path, nothing open), or, for a reopened decision, the next step in the section below.
-- **Later:** on the full path, `to-tickets` once the proposal is decided.
+- **Later:** on the full path, `slice` once the proposal is decided.
 
 ## Reopening a decision
 
@@ -116,7 +116,7 @@ A decision is reopened in one of two ways, each with its own marker:
 
 Either way:
 
-1. Read the evidence (the ticket's comment, or the `Status: reopened` line and the fact-check rows it points to), then grill **that decision alone**.
+1. Read the evidence (the ticket's comment, or the `Status: reopened` line and the fact-check rows it points to), then settle **that decision alone**.
 2. **Fact-check the revised text before writing it.** An answer can bring in a new claim about the code or a platform ("the hook already parses the path", "nothing else reads this field"). Check each one the way `proposal` step 3 does: a probe or the source first; a fact the owner states as checked counts as ✅ with the source "owner, <where they said it>". Ask again if one turns out wrong. Record each check where the decision's facts live: a row in the doc's `## Fact-check` table, or, on the short path, a line in the issue's Problem or Idea with its source.
 3. Revise it **where it lives**. For a proposal doc that isn't merged yet, that's the open doc PR's branch (find it as `proposal` step 1 does: `Refs #N` in its body), checked out with `git fetch origin pull/P/head:<branch> && git switch <branch>`, never a fresh branch from `main`. A merged doc is edited on a new branch, through a PR. On the short path, it's the issue body.
    - The heading keeps the **same ID** and gets ` (revised YYYY-MM-DD)`, as `proposal`'s template does.

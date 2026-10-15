@@ -40,7 +40,7 @@ Stages, in the order that decides when several match (`docs/proposals/status.md`
 | in progress | tickets exist and some are open |
 | decided, full path | the doc on `main` is decided, no tickets yet |
 | proposal drafted | a doc PR is open, or the doc on `main` isn't decided |
-| decided, awaiting proposal | `grill`'s record is a comment, no doc yet |
+| decided, awaiting proposal | `settle`'s record (headed `settle` or, older, `grill`) is a comment, no doc yet |
 | decided, short path | decisions in the issue body, nothing open |
 | questions open | open questions, no doc yet |
 
@@ -60,7 +60,7 @@ Then say what's next, using the `steps` and `later` from the script. Name decisi
 
 Leave out a part with nothing in it.
 
-Unanswered `review_comments` come first under **Blocking now**, one line each with its author and link: the owner decides how each is answered. They don't change the stage. Then the owner steps, with the link (a PR to merge, an issue to close). Owner steps stay under **Blocking now**, never in the batch: you don't do them on the owner's behalf. An owner step that is answering questions (`grill`'s) goes under **Your decisions**, as a question of its own.
+Unanswered `review_comments` come first under **Blocking now**, one line each with its author and link: the owner decides how each is answered. They don't change the stage. Then the owner steps, with the link (a PR to merge, an issue to close). Owner steps stay under **Blocking now**, never in the batch: you don't do them on the owner's behalf. An owner step that is answering questions (`settle`'s) goes under **Your decisions**, as a question of its own.
 
 The `batch` goes under **Your decisions**, as one question: one item per batch entry, in the script's order, each naming every one of its `writes` ("add `ready-for-agent` to #38: its blocker #37 has closed"; "update #97–#99: edits to their bodies, shown to you first"). For an item with `shows_draft`, say its draft comes first. Offer nothing that isn't in the batch. **Then** says what the agent does with the chosen items; a step that waits on an owner step (the merge before "update #97–#99") runs once that's done. `later` goes under **Later**.
 
@@ -75,8 +75,8 @@ Read the answer strictly: "1, 3" chooses items 1 and 3 only, "all" every item, "
 The selection is the yes only for writes named in full up front. Carry out the chosen items in the batch's order:
 - **A fix:** run its `command`. Never offer a fix the script didn't list, and don't add `ready-for-agent` by hand to a ticket it left out: a `Blocked by: None` ticket with no label was paused on purpose.
 - **An agent step without `shows_draft`** (implementing a `ready-for-agent` ticket): carry it out.
-- **An agent step with `shows_draft`** (`to-tickets`' ticket bodies, `proposal`'s doc): run the skill that carries it out. It still shows its draft and waits for the owner's yes before it writes; choosing the item isn't that yes.
-- **Updating tickets after a revision** ("update #97–#99"): no skill does this yet (dev-flow#46), and `to-tickets` won't re-slice an issue that already has tickets, so don't hand it to `to-tickets`. Draft the edits to each ticket's body yourself from the merged doc, show them, and write them only after the owner's yes.
-- A skill that needs the owner's answers, like `grill`'s questions, still asks them.
+- **An agent step with `shows_draft`** (`slice`'s ticket bodies, `proposal`'s doc): run the skill that carries it out. It still shows its draft and waits for the owner's yes before it writes; choosing the item isn't that yes.
+- **Updating tickets after a revision** ("update #97–#99"): no skill does this yet (dev-flow#46), and `slice` won't re-slice an issue that already has tickets, so don't hand it to `slice`. Draft the edits to each ticket's body yourself from the merged doc, show them, and write them only after the owner's yes.
+- A skill that needs the owner's answers, like `settle`'s questions, still asks them.
 
 Don't carry out an item that isn't chosen, or a step whose owner step hasn't happened yet: say what it waits on. Tell the owner what you wrote (which labels you added, which PRs you opened); if a command fails, say which and why.

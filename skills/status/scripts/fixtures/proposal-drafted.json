@@ -4,7 +4,7 @@
  "note": "kacxx/dev-flow#35 rewound to 2026-10-14 23:09: PR #36 open at its first commit (52e991c, Status 2 open), main before it. Closed PRs and #36's created_at added 2026-10-15 for #38.",
  "expect": {
   "stage": "proposal drafted",
-  "next_action": "settle the reopened decision in dev-flow#36 with `grill`",
+  "next_action": "run `settle` on the reopened decision in dev-flow#36",
   "review_comments": [],
   "fixes": []
  },

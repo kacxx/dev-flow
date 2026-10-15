@@ -28,7 +28,7 @@ except ImportError:  # stdlib-only machines (e.g. a fresh Windows Python): stric
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # idea-to-tickets.md D5's phone set, plus status wherever the other account skills are (status.md D9)
-DEFAULT_SET = ["capture", "grill", "flag-decision", "status"]
+DEFAULT_SET = ["capture", "settle", "flag-decision", "status"]
 MAX_NAME, MAX_DESC = 64, 200
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 RESERVED = ("anthropic", "claude")

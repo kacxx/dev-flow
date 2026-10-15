@@ -11,7 +11,7 @@ import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SKILLS = os.path.join(ROOT, "skills")
-EXPECTED = {"capture", "grill", "proposal", "to-tickets", "flag-decision", "status"}
+EXPECTED = {"capture", "settle", "proposal", "slice", "flag-decision", "status"}
 
 SHAPE = """\
 **What's next**, in this order:
@@ -72,7 +72,7 @@ class HandoffShape(unittest.TestCase):
                     self.assertIsNone(problem(f.read()))
 
     def test_rewording_fails(self):
-        good = "## 6. Hand off\n\n" + SHAPE + "\n- **Then:** run `grill`.\n"
+        good = "## 6. Hand off\n\n" + SHAPE + "\n- **Then:** run `settle`.\n"
         self.assertIsNone(problem(good))
         self.assertIsNone(problem(good.replace("\n", "\r\n")))
         for old, new in [("asked together", "asked at once"),
@@ -82,7 +82,7 @@ class HandoffShape(unittest.TestCase):
                 self.assertIsNotNone(problem(good.replace(old, new)))
 
     def test_missing_or_misplaced_fails(self):
-        mapping = "\n- **Then:** run `grill`.\n"
+        mapping = "\n- **Then:** run `settle`.\n"
         self.assertIsNotNone(problem("## 6. Hand off\n\nGive the issue link.\n"))
         self.assertIsNotNone(problem("## 2. Draft\n\n" + SHAPE + mapping))
         self.assertIsNotNone(problem("## 6. Hand off\n\n" + SHAPE + "\n" + SHAPE + mapping))
