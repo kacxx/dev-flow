@@ -182,3 +182,7 @@ Found on the first run, before these fixes (0.90, 0.83, 1.00, 0.90 with the plug
 - Answers said they would run `to-tickets` to update #97–#99, which `to-tickets` won't do for an issue that already has tickets (#46). The skill now says to draft those edits directly and show them.
 
 The remaining `status-next-action` failure (1 of 3) is fair: that run said it couldn't reach GitHub and would hand the owner the drafted edits to apply, giving the write to the owner.
+
+### proposal-decided: review step — 16 Oct 2026 (0.12.1, PR #60)
+
+New regex grader `review-step`: the hand-off asks for a fresh code review of the doc PR (such as `/code-review`) before the owner's yes. Run with 3 runs and a no-plugin baseline: with the plugin, every other grader passed and all 3 answers named the review before the yes; the baseline named it 0/3. (The first version of the grader used `(?i)`, which the eval's JavaScript regex rejects; the fixed pattern was checked against the 6 recorded answers.) Score: proposal-decided 1.00 (0.00).
