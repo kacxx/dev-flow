@@ -233,7 +233,7 @@ class Markers(unittest.TestCase):
         pr = {"number": 5, "title": "doc", "body": "Refs #1", "head": {"sha": "abc"}}
         out = run(api(prs=[pr], files={5: ["docs/proposals/x.md"]}, docs={"docs/proposals/x.md?ref=abc": DOC}))
         self.assertEqual(out["stage"], "proposal drafted")
-        self.assertEqual(out["steps"], [{"who": "owner", "do": "review and merge r#5"}])
+        self.assertEqual(out["steps"], [{"who": "owner", "do": "run a fresh code review (such as `/code-review`) on r#5, then merge it"}])
 
     def test_closes_and_fixes_count_like_refs(self):
         for word in ("Closes", "Fixes"):

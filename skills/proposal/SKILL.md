@@ -1,11 +1,11 @@
 ---
 name: proposal
-description: Use when an idea's decisions are settled and need writing up as a decided design doc, or when reviewing a design-doc PR (not /code-review). Writes the doc and fact-checks every claim.
+description: Use when an idea's decisions are settled and need writing up as a decided design doc. Writes the doc and fact-checks its claims; a fresh review of the doc PR checks the design.
 ---
 
 # Proposal
 
-Turn an issue's decisions into one decided design doc, `docs/proposals/<name>.md`, and check every factual claim in it before it merges. This is the review step for doc PRs: a design doc has no code for `/code-review` to check, but it has claims that can be wrong and decisions that can contradict each other.
+Turn an issue's decisions into one decided design doc, `docs/proposals/<name>.md`, and check every factual claim in it before it merges. This checks what the doc says: its claims can be wrong, and its decisions can contradict each other. It doesn't replace a fresh review of the design (step 7), which finds what happens when the design meets real use.
 
 ## 1. Gather
 
@@ -173,7 +173,7 @@ Give what's next right after the status (step 6), so what's open comes before th
 
 Leave out a part with nothing in it.
 
-- **Blocking now:** the unchecked facts that block the merge (step 5), with what to check and how; the owner's yes to the draft; and, in a cloud session, the **Ready for review** click on a `decided` PR.
+- **Blocking now:** the unchecked facts that block the merge (step 5), with what to check and how; the owner running a fresh code review of the doc PR (such as `/code-review`) before saying yes: the fact-check checks what the doc says, and the review finds what happens when the design meets real use. Its findings are answered as `settle` questions or wording fixes; the owner's yes to the draft; and, in a cloud session, the **Ready for review** click on a `decided` PR.
 - **Your decisions:** each reopened decision with its options, and the open questions.
 - **Then:** while the doc isn't `decided`, `settle` on each reopened decision or open question, then this skill's fact-check and consistency pass again. Once it is `decided`, the `Next step: slice` line from step 5, and nothing else.
 - **Later:** ⚠️ rows nothing depends on, one line each.

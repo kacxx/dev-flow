@@ -393,7 +393,8 @@ def next_steps(stage, n, name, issue, labels, tickets, doc_prs, doc, needs, rela
         if reopened_prs:  # settle decides a reopened decision before proposal re-checks the doc
             steps = [owner("run `settle` on the reopened decision in " + ", ".join(f"{name}#{p['number']}" for p in reopened_prs))]
         elif ready_prs:
-            steps = [owner("review and merge " + ", ".join(f"{name}#{p['number']}" for p in ready_prs))]
+            ready = ", ".join(f"{name}#{p['number']}" for p in ready_prs)
+            steps = [owner(f"run a fresh code review (such as `/code-review`) on {ready}, then merge it")]
         elif doc_prs:
             steps = [agent(f"finish {prs} with `proposal`", [f"commits to the doc on {prs}'s branch"], True)]
         else:
