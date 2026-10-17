@@ -1,6 +1,7 @@
 # Idea → tickets flow (#1): proposal
 
-Status: **decided**. Ready to merge; the tickets are already sliced (#5–#12, by hand, before this status grammar existed). The Windows install (D5) was checked by #8.
+Status: **decided**. Merged; the tickets are already sliced (#5–#12, by hand, before this status grammar existed). The Windows install (D5) was checked by #8.
+Renamed since: `grill` is now `settle` and `to-tickets` is now `slice` (0.12.0, #57); this doc keeps the old names as written.
 
 ## Problem
 
