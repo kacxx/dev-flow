@@ -56,7 +56,7 @@ In this order:
 
 It's written into each skill's hand-off section in the same words, with a test that checks every SKILL.md has it. The skills can't share a file, because the phone skills are separate ZIPs.
 
-### D4: Stages and their markers (revised 2026-10-15, twice; revised 2026-10-17)
+### D4: Stages and their markers (revised 2026-10-15, twice; revised 2026-10-17, twice)
 | Stage | Marker |
 |---|---|
 | questions open | anything still listed under the issue's Open questions (not "None."), or skipped in the latest grill record, while no proposal doc exists. Covers "captured" and "grilling", which look the same. Once a doc exists, its Status line decides |
@@ -68,10 +68,18 @@ It's written into each skill's hand-off section in the same words, with a test t
 | in progress | sub-issues exist and some are open |
 | done | every sub-issue is closed, or the ready issue itself is closed |
 | reopened | a `needs-decision` child, or a `Status: reopened` line in the doc |
+| parked | the source issue is open and labelled `parked`: the owner put it on hold. It goes ahead of every other stage, and has no next action |
 
 A **doc PR** is an open PR that says `Refs #N`, `Closes #N` or `Fixes #N` **and** changes a file under `docs/proposals/`; a code PR that mentions the parent issue doesn't count.
 
 **Review comments** on the source issue, posted since dev-flow's last write there (the latest decisions record, doc PR or published tickets), are listed as "unanswered review comments", whoever wrote them. They don't change the stage, but they come first in the "blocking now" part when there are any.
+
+<details><summary>Superseded (2026-10-17, second revision)</summary>
+
+The table above, without the `parked` row; everything else was the same.
+
+Reason: parking an idea lived only in a comment, so `status` named a next action for issues the owner had put on hold (#45, #46, #47, #58 and #59 in the dev-flow audit, 2026-10-17). A `parked` label is now the marker. Approved by the owner with the audit's cleanup batches.
+</details>
 
 <details><summary>Superseded (2026-10-17)</summary>
 
@@ -159,7 +167,7 @@ The owner's Windows Claude Code and the phone are the same account, so `status` 
    - `fixes`: mechanical fixes, such as a ticket whose `Blocked by:` names issues that are now all closed but which has no `ready-for-agent` (D2).
 
    Defaults the decisions don't settle:
-   - When several stages match (aside-jot#95 has a ready Path line, a decided doc and open sub-issues), the stage is the **first** match in this order: reopened, revision in progress, done, in progress, decided full path, proposal drafted, decided awaiting proposal, decided short path, questions open.
+   - When several stages match (aside-jot#95 has a ready Path line, a decided doc and open sub-issues), the stage is the **first** match in this order: parked, reopened, revision in progress, done, in progress, decided full path, proposal drafted, decided awaiting proposal, decided short path, questions open.
    - Blockers come from the `Blocked by:` lines `to-tickets` writes, not from GitHub's native issue dependencies.
 3. **The D3 shape in every skill's hand-off** (D3). The same four-part wording goes into the hand-off section of all five skills and of `status`. A test (`scripts/test_handoff_shape.py`) checks that every `skills/*/SKILL.md` contains it word for word.
 4. **Tests** (D7):

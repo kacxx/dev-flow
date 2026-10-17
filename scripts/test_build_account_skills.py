@@ -190,6 +190,15 @@ class Build(unittest.TestCase):
             for parser, problems in self.each_parser(os.path.join(root, n)):
                 self.assertEqual(problems, [], f"{n} ({parser})")
 
+    def test_leftover_bytecode_folder_is_not_a_skill(self):
+        root = os.path.join(self.tmp, "skills")
+        for d in ("kept", os.path.join("old-name", "scripts", "__pycache__"), "no-skill-md"):
+            os.makedirs(os.path.join(root, d))
+        write(os.path.join(root, "kept", "SKILL.md"), "---\nname: kept\ndescription: Use when x.\n---\n")
+        write(os.path.join(root, "old-name", "scripts", "__pycache__", "x.cpython-313.pyc"), "")
+        write(os.path.join(root, "no-skill-md", "notes.txt"), "a real file")
+        self.assertEqual(real_skills(root), ["kept", "no-skill-md"])
+
     def test_named_build_keeps_other_zips(self):
         out = os.path.join(b.ROOT, "dist", "account-skills")
         os.makedirs(out, exist_ok=True)
@@ -202,10 +211,24 @@ class Build(unittest.TestCase):
         self.assertTrue(os.path.exists(keep))
 
 
-def real_skills():
-    """Skill folders under skills/: directories only, skipping dotfiles such as .DS_Store."""
-    root = os.path.join(b.ROOT, "skills")
-    return sorted(n for n in os.listdir(root) if not n.startswith(".") and os.path.isdir(os.path.join(root, n)))
+def only_bytecode(path):
+    """A folder left behind by a renamed skill: no SKILL.md, nothing but __pycache__ folders (ignored by git)."""
+    for dirpath, dirnames, filenames in os.walk(path):
+        if os.path.basename(dirpath) == "__pycache__":
+            dirnames[:] = []
+            continue
+        if filenames:
+            return False
+    return True
+
+
+def real_skills(root=None):
+    """Skill folders under skills/: directories only, skipping dotfiles such as .DS_Store and
+    folders that hold only __pycache__ (an old checkout keeps one after a rename, as to-tickets did)."""
+    root = root or os.path.join(b.ROOT, "skills")
+    return sorted(n for n in os.listdir(root)
+                  if not n.startswith(".") and os.path.isdir(os.path.join(root, n))
+                  and (os.path.exists(os.path.join(root, n, "SKILL.md")) or not only_bytecode(os.path.join(root, n))))
 
 
 if __name__ == "__main__":
