@@ -104,14 +104,7 @@ Reason: parking an idea lived only in a comment, so `status` named a next action
 
 A **doc PR** is an open PR that says `Refs #N` **and** changes a file under `docs/proposals/`; a code PR that mentions the parent issue doesn't count.
 
-**Review comments** on the source issue, posted since dev-flow's last write there (the latest decisions record, doc PR or published tickets), are listed as "unanswered review comments", whoever wrote them. They don't change the stage, but they come first in the "blocking now" part when there are any, except at done, where they go under "later", one line each.
-
-<details><summary>Superseded (2026-10-17, third revision)</summary>
-
 **Review comments** on the source issue, posted since dev-flow's last write there (the latest decisions record, doc PR or published tickets), are listed as "unanswered review comments", whoever wrote them. They don't change the stage, but they come first in the "blocking now" part when there are any.
-
-Reason: at done, the last dev-flow write is the newest ticket being published, so the owner's wrap-up comment on closing came out as blocking (#35, reported in #61). Settled in #61's D1; the owner's own comments still count at every stage (#61's D2).
-</details>
 
 Reason: `state.py` (`skills/status/scripts/state.py:156`) and `proposal` step 1 already accept `Refs|Closes|Fixes #N`, so D4's `Refs #N` alone disagreed with the code; settled for #45's question 3. The rest of D4 is unchanged.
 </details>
