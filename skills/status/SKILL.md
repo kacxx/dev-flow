@@ -63,7 +63,7 @@ Then say what's next, using the `steps` and `later` from the script. Name decisi
 
 Leave out a part with nothing in it.
 
-Unanswered `review_comments` come first under **Blocking now**, one line each with its author and link: the owner decides how each is answered. They don't change the stage. Then the owner steps, with the link (a PR to merge, an issue to close). Owner steps stay under **Blocking now**, never in the batch: you don't do them on the owner's behalf. An owner step that is answering questions (`settle`'s) goes under **Your decisions**, as a question of its own.
+Unanswered `review_comments` come first under **Blocking now**, one line each with its author and link: the owner decides how each is answered. At **done** they go under **Later** instead, after the script's `later` items, one line each with its author and link: a comment posted while the idea was being finished, such as the owner's own wrap-up, isn't blocking anything, but it may start a follow-up (dev-flow#61's D1). They don't change the stage. Then the owner steps, with the link (a PR to merge, an issue to close). Owner steps stay under **Blocking now**, never in the batch: you don't do them on the owner's behalf. An owner step that is answering questions (`settle`'s) goes under **Your decisions**, as a question of its own.
 
 Before handing off an `implement` step, check its tickets for open code PRs: the script doesn't match them yet (dev-flow#51's D4). List the open PRs, GET only:
 
