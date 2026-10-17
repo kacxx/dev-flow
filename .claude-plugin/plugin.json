@@ -1,6 +1,6 @@
 {
   "name": "dev-flow",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "description": "Idea \u2192 tickets workflow skills: capture (idea \u2192 issue, picks the path), settle (open questions → D<n> decisions), proposal (decided, fact-checked design doc), slice (vertical tickets linked to decisions), flag-decision (stop and flag a wrong decision mid-implementation), status (where an idea is, and the next action).",
   "author": {
     "name": "kacxx",
