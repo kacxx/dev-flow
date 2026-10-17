@@ -101,7 +101,7 @@ The skills use `gh api` (REST) everywhere, because `gh issue` and `gh pr` go thr
 
 ## Status
 
-Beta. All six skills are built. `capture`, `settle`, `proposal`, `slice` and `flag-decision` have been run for real: on dev-flow itself, on aside-jot, natively on Windows, and from the phone. `status` has so far been run only on this Mac, on dev-flow#35 and aside-jot#95. Not tried live yet: `flag-decision` in a real implementation run, and WSL. Known gaps in `status`: it doesn't see open code PRs for its tickets ([#51](https://github.com/kacxx/dev-flow/issues/51)), and it may not start when asked in plain words ([#52](https://github.com/kacxx/dev-flow/issues/52)). Nothing yet updates open tickets after a revision merges ([#46](https://github.com/kacxx/dev-flow/issues/46)), or closes the source issue when its tickets are done ([#47](https://github.com/kacxx/dev-flow/issues/47)).
+Beta. All six skills are built. `capture`, `settle`, `proposal`, `slice` and `flag-decision` have been run for real: on dev-flow itself, on aside-jot, natively on Windows, and from the phone. `status` has so far been run only on this Mac, on dev-flow#35 and aside-jot#95. Not tried live yet: `flag-decision` in a real implementation run, and WSL. Known gaps in `status`: it finds open code PRs for its tickets by hand, not in its script ([#51](https://github.com/kacxx/dev-flow/issues/51), D5), and it may not start when asked in plain words ([#52](https://github.com/kacxx/dev-flow/issues/52)). Nothing yet updates open tickets after a revision merges ([#46](https://github.com/kacxx/dev-flow/issues/46)), or closes the source issue when its tickets are done ([#47](https://github.com/kacxx/dev-flow/issues/47)).
 
 ## Developing
 
