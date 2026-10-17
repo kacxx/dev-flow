@@ -65,6 +65,14 @@ Leave out a part with nothing in it.
 
 Unanswered `review_comments` come first under **Blocking now**, one line each with its author and link: the owner decides how each is answered. They don't change the stage. Then the owner steps, with the link (a PR to merge, an issue to close). Owner steps stay under **Blocking now**, never in the batch: you don't do them on the owner's behalf. An owner step that is answering questions (`settle`'s) goes under **Your decisions**, as a question of its own.
 
+Before handing off an `implement` step, check its tickets for open code PRs: the script doesn't match them yet (dev-flow#51, D4). List the open PRs, GET only:
+
+```bash
+gh api --paginate 'repos/OWNER/REPO/pulls?state=open&per_page=100' --jq '.[] | "#\(.number) \(.title): \([(.body // "") | scan("(?i)\\b(?:refs|closes|fixes) #[0-9]+")] | join(", "))"'
+```
+
+An open PR belongs to ticket #T when its body says `Refs`, `Closes` or `Fixes #T`, the same rule as for doc PRs (`#40` is not `#401`). For each such ticket, put "merge #P (for #T)" under **Blocking now** as an owner step, with the PR's link, and take #T out of the `implement` step and its writes; drop the step once no ticket is left in it. Say only that the PR exists: no CI result or review state.
+
 The `batch` goes under **Your decisions**, as one question: one item per batch entry, in the script's order, each naming every one of its `writes` ("add `ready-for-agent` to #38: its blocker #37 has closed"; "update #97–#99: edits to their bodies, shown to you first"). For an item with `shows_draft`, say its draft comes first. Offer nothing that isn't in the batch. **Then** says what the agent does with the chosen items; a step that waits on an owner step (the merge before "update #97–#99") runs once that's done. `later` goes under **Later**.
 
 How to ask:
