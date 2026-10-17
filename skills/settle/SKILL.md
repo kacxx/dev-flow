@@ -108,6 +108,16 @@ Leave out a part with nothing in it.
 - **Then:** `proposal` (full path, no doc yet), "ready to implement" (short path, nothing open), or, for a reopened decision, the next step in the section below.
 - **Later:** on the full path, `slice` once the proposal is decided.
 
+**Parking an idea.** If the owner puts the idea on hold ("park it", "not now"), add the `parked` label to the issue, so `status` reports it as parked with no next action instead of naming work. Say why in one comment, with what would unpark it. Create the label first if the repo hasn't got it. Remove the label when the owner unparks it.
+
+```bash
+gh api repos/OWNER/REPO/labels/parked --silent \
+  || gh api repos/OWNER/REPO/labels --method POST -f name=parked -f description="On hold by the owner"
+gh api repos/OWNER/REPO/issues/N/labels --method POST -f 'labels[]=parked'
+# to unpark:
+gh api repos/OWNER/REPO/issues/N/labels/parked --method DELETE
+```
+
 ## Reopening a decision
 
 A decision is reopened in one of two ways, each with its own marker:

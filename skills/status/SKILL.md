@@ -34,6 +34,7 @@ Stages, in the order that decides when several match (`docs/proposals/status.md`
 
 | Stage | What it means |
 |---|---|
+| parked | the owner put the idea on hold (the issue is labelled `parked`) |
 | reopened | a decision was flagged (`needs-decision`) or reopened in the doc |
 | revision in progress | a doc PR is open on an idea that already has tickets |
 | done | every ticket is closed, or the issue itself is |
@@ -43,6 +44,8 @@ Stages, in the order that decides when several match (`docs/proposals/status.md`
 | decided, awaiting proposal | `settle`'s record (headed `settle` or, older, `grill`) is a comment, no doc yet |
 | decided, short path | decisions in the issue body, nothing open |
 | questions open | open questions, no doc yet |
+
+If `stage` is `parked`, say the idea is on hold and give the evidence line. There's no next action and nothing to offer: don't suggest work on it. The owner unparks it by removing the label. Stop there.
 
 If `stage` is `null`, say no stage matched and give the evidence line (for a ticket, it names the issue to run `status` on instead). Stop there.
 

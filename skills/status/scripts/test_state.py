@@ -48,7 +48,10 @@ class Fixtures(unittest.TestCase):
                 self.assertEqual([c["created_at"] for c in out["review_comments"]], fx["expect"]["review_comments"])
                 self.assertEqual([f["ticket"] for f in out["fixes"]], fx["expect"]["fixes"])
                 self.assertTrue(out["evidence"])
-                self.assertTrue(out["steps"] or out["fixes"], "no next step and nothing to offer")
+                if out["stage"] == "parked":
+                    self.assertEqual((out["steps"], out["fixes"], out["batch"]), ([], [], []), "parked offers nothing")
+                else:
+                    self.assertTrue(out["steps"] or out["fixes"], "no next step and nothing to offer")
                 for step in out["steps"]:
                     self.assertIn(step["who"], ("owner", "agent"))
 
@@ -207,6 +210,35 @@ DOC = "Status: **decided**. Ready to merge.\nSource: #1\n"
 
 
 class Markers(unittest.TestCase):
+    def test_parked_label_is_on_hold_with_no_next_action(self):
+        body = "## Open questions\n\n1. Which?\n"
+        out = run(api(body=body, labels=["parked"]))
+        self.assertEqual(out["stage"], "parked")
+        self.assertEqual(out["also_matched"], ["questions open"])
+        self.assertIsNone(out["next_action"])
+        self.assertEqual((out["steps"], out["fixes"], out["batch"]), ([], [], []))
+
+    def test_parked_outranks_tickets_and_offers_no_relabel(self):
+        blocked = issue(3, "Blocked by: #2\n", labels=())
+        out = run(api(labels=["parked"], subs=[issue(2, state_="closed"), blocked]))
+        self.assertEqual(out["stage"], "parked")
+        self.assertEqual(out["fixes"], [])
+
+    def test_closed_parked_issue_is_done(self):
+        out = run(api(state_="closed", labels=["parked"]))
+        self.assertEqual(out["stage"], "done")
+
+    def test_open_questions_heading_with_a_note_still_counts(self):
+        body = ("## Decisions\n\n### D1: Handled as a process step\nYes.\n\n"
+                "## Open questions (deferred with the challenge)\n\n1. What does it check?\n")
+        out = run(api(body=body))
+        self.assertEqual(out["stage"], "questions open")
+        self.assertNotIn("decided, short path", out["also_matched"])
+
+    def test_open_questions_heading_with_a_note_and_none(self):
+        body = "## Decisions\n\n### D1: x\nYes.\n\n## Open questions (after settle)\n\nNone.\n"
+        self.assertEqual(run(api(body=body))["stage"], "decided, short path")
+
     def test_code_pr_mentioning_the_issue_is_not_a_doc_pr(self):
         pr = {"number": 5, "title": "code", "body": "Refs #1", "head": {"sha": "abc"}}
         out = run(api(subs=[issue(2)], prs=[pr], files={5: ["cmd/main.go"]}, docs={"docs/proposals/x.md": DOC}))

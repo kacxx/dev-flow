@@ -111,6 +111,16 @@ BODY
 
 Edit the body rather than adding a comment: detail left in comments is how decisions got lost before.
 
+**Parking an idea.** If the owner puts the idea on hold ("park it", "not now"), add the `parked` label to the issue, so `status` reports it as parked with no next action instead of naming work. Say why in one comment, with what would unpark it. Create the label first if the repo hasn't got it. Remove the label when the owner unparks it.
+
+```bash
+gh api repos/OWNER/REPO/labels/parked --silent \
+  || gh api repos/OWNER/REPO/labels --method POST -f name=parked -f description="On hold by the owner"
+gh api repos/OWNER/REPO/issues/N/labels --method POST -f 'labels[]=parked'
+# to unpark:
+gh api repos/OWNER/REPO/issues/N/labels/parked --method DELETE
+```
+
 ## 6. Hand off
 
 Give the issue link, then what's next.

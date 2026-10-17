@@ -13,7 +13,9 @@ the fixes offered together for the owner's yes, each naming its writes. Read-onl
 keyed by API path, which is the fixture format test_state.py replays.
 
 Stages and markers are D4 of docs/proposals/status.md (dev-flow). When several
-match, the first in PRECEDENCE wins (the proposal's Shape 2). Review comments
+match, the first in PRECEDENCE wins (the proposal's Shape 2). An open issue
+labelled `parked` is on hold by the owner's choice: it reports "parked", with no
+next action and nothing offered. Review comments
 are D4's last paragraph; the relabelling fix is D2; the batch is D6.
 """
 import base64
@@ -23,6 +25,7 @@ import subprocess
 import sys
 
 PRECEDENCE = [
+    "parked",
     "reopened",
     "revision in progress",
     "done",
@@ -34,7 +37,9 @@ PRECEDENCE = [
     "questions open",
 ]
 PROPOSALS = "docs/proposals"
-READY, NEEDS_DECISION = "ready-for-agent", "needs-decision"
+READY, NEEDS_DECISION, PARKED = "ready-for-agent", "needs-decision", "parked"
+# An "Open questions" heading, optionally with a note in brackets: "## Open questions (deferred …)"
+OPEN_QUESTIONS = r"open questions(\s*\(.*\))?"
 # settle's decisions record; records from before the rename are headed (grill, …) (#56 D1)
 RECORD_HEADINGS = ("## Decisions (settle", "## Decisions (grill")
 
@@ -206,11 +211,13 @@ def compute(fetch, repo, n):
     record = records[-1]["body"] if records else None
     decided_doc = doc is not None and doc["status"] == "decided"
 
-    open_questions = is_open(section(strip_details(body), r"open questions"))
+    open_questions = is_open(section(strip_details(body), OPEN_QUESTIONS))
     to_check = is_open(section(strip_details(body), r"to check"))
     short_decisions = re.search(r"(?m)^## Decisions\s*$", body) is not None
 
     ev = {}
+    if PARKED in labels and issue["state"] == "open":
+        ev["parked"] = [f"#{n} is labelled {PARKED}: the owner put it on hold"]
     if needs or NEEDS_DECISION in labels or (doc and doc["reopened"]):
         ev["reopened"] = ([f"#{t} is labelled {NEEDS_DECISION}" for t in needs]
                           + ([f"#{n} is labelled {NEEDS_DECISION}"] if NEEDS_DECISION in labels else [])
@@ -326,7 +333,7 @@ def relabel_fixes(repo, stage, tickets, blocker_state):
     and has no label was paused on purpose, and a needs-decision ticket waits on `settle`:
     both are left alone. Each fix names the write it would make; nothing here makes it.
     """
-    if stage == "revision in progress":
+    if stage in ("revision in progress", "parked"):
         return []
     fixes = []
     for t in tickets:
@@ -363,7 +370,9 @@ def next_steps(stage, n, name, issue, labels, tickets, doc_prs, doc, needs, rela
     open_t = [t for t in tickets if t["state"] == "open"]
     prs = ", ".join(f"{name}#{p['number']}" for p in doc_prs)
     later = []
-    if stage == "reopened":
+    if stage == "parked":
+        steps = []  # on hold by the owner's choice: nothing to do until they unpark it
+    elif stage == "reopened":
         where = numbers(needs) if needs else (doc["path"] if doc and doc["reopened"] else f"#{n}")
         steps = [owner(f"run `settle` on the reopened decision in {where}")]
     elif stage == "revision in progress":
