@@ -1,7 +1,8 @@
 # Know where an idea is, and what's next (#35): proposal
 
-Status: **decided**. Ready to merge, then slice into tickets.
+Status: **decided**. Merged and sliced into tickets (#37–#41).
 Source: #35
+Renamed since: `grill` is now `settle` and `to-tickets` is now `slice` (0.12.0, #57); this doc keeps the old names as written.
 
 ## Problem
 
