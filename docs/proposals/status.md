@@ -159,8 +159,15 @@ CI tests for the script, run on recorded `gh` JSON fixtures, one per stage, incl
 ### D8: #35 absorbs #31
 D2 covers relabelling unblocked tickets, so #31 closes as covered by #35, with a link, and there's no second set of decisions for the same thing.
 
-### D9: No separate phone set
+### D9: Available wherever the other skills are (revised 2026-10-18)
+`status` is available wherever the other skills are.
+
+<details><summary>Superseded (2026-10-18)</summary>
+
 The owner's Windows Claude Code and the phone are the same account, so `status` is available wherever the other skills are.
+
+Reason: the owner dropped the phone route: "the 'phone' is just my personal account" (#72). dev-flow's skills no longer ship as claude.ai account skills, so there's no phone set to be in. Settled in #72's D4.
+</details>
 
 ## Shape
 
