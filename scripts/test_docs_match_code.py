@@ -90,7 +90,7 @@ class D4MatchesStatePy(unittest.TestCase):
 
 class Logs(unittest.TestCase):
     def test_no_ready_to_merge_status_on_main(self):
-        # A doc PR's own draft says "Ready to merge" by design (proposal's template),
+        # A doc PR may still say "Ready to merge" (older template wording, or written by hand),
         # so this only holds once it's on main.
         if not on_main():
             self.skipTest("only checked on main")

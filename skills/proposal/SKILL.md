@@ -49,7 +49,7 @@ On a branch (or the existing PR's branch), with these sections in this order. Th
 ```markdown
 # <Title> (#<issue>): proposal
 
-Status: **<status>**. <Don't merge yet: … | Ready to merge, then slice into tickets.>
+Status: **<status>**. <Don't merge yet: … | Slice into tickets once merged.>
 Source: #<issue>
 
 ## Problem
