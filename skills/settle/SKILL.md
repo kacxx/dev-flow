@@ -43,7 +43,7 @@ Ask the **whole frontier at once**, numbered, each with your recommended answer,
 ❓ **Q2 - …**
 ```
 
-**The MVP check opens the first round.** On the first `settle` run for a short-path or full-path issue (step 1 found no `### D<n>: Smallest version` and no earlier `settle` record), Q1 is the MVP check, asked before any design question, in three parts:
+**The MVP check opens the first round.** On the first `settle` run for a short-path or full-path issue (step 1 found no `### D<n>: Smallest version` and no earlier decisions record: no `## Decisions` in the body, and no `## Decisions (settle, …)` or older `## Decisions (grill, …)` comment), Q1 is the MVP check, asked before any design question, in three parts:
 1. What is the smallest version that answers the stated problem?
 2. Can it be tried today without building anything?
 3. What signal would justify going bigger?
@@ -119,7 +119,7 @@ Leave out a part with nothing in it.
 - **Then:** `proposal` (full path, no doc yet), "ready to implement" (short path, nothing open), or, for a reopened decision, the next step in the section below.
 - **Later:** on the full path, `slice` once the proposal is decided.
 
-**Try it first.** After a stop on the MVP check (step 4): **Blocking now:** the owner tries the smallest version, watching for the recorded signal. **Then:** if the signal shows, `settle` again on the questions left open. No label.
+**Try it first.** After a stop on the MVP check (step 4), these replace the bullets above: **Blocking now:** the owner tries the smallest version, watching for the recorded signal. **Then:** if the signal shows, `settle` again on the questions left open. No label.
 
 **Parking an idea.** If the owner puts the idea on hold ("park it", "not now"), add the `parked` label to the issue, so `status` reports it as parked with no next action instead of naming work. Say why in one comment, with what would unpark it. Create the label first if the repo hasn't got it. Remove the label when the owner unparks it.
 
