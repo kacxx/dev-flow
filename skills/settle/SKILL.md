@@ -70,7 +70,7 @@ A decision contains only what the owner accepted or answered: the recommendation
 
 The MVP check's answer is the **first decision** of the run's record, `### D<n>: Smallest version`, with all three parts: the smallest version, whether it can be tried today, and the signal for going bigger.
 
-**Smallest version triable today → stop.** When the answer is that the smallest version can be tried today without building anything, record that decision with its signal, leave every other question under Open questions, and ask no more rounds. Go to step 5 to write the record (leave the `Path:` line and labels as they are), then hand off "try it first" (step 6).
+**Smallest version triable today → stop.** When the answer is that the smallest version can be tried today without building anything, record that decision with its signal, leave every other question under Open questions, and ask no more rounds. Go to step 5 to write the record (leave the `Path:` line as it is), then park the issue with the parking step (step 6): the `parked` label, and one comment saying "try it first", with the recorded signal as what would unpark it. Without the label, `status` reads the record as work to do. Then hand off "try it first".
 
 Recompute the frontier: settled decisions unblock questions that depended on them. Ask the next round. Stop when the frontier is empty: every question decided or explicitly skipped, nothing silently assumed.
 
@@ -119,7 +119,7 @@ Leave out a part with nothing in it.
 - **Then:** `proposal` (full path, no doc yet), "ready to implement" (short path, nothing open), or, for a reopened decision, the next step in the section below.
 - **Later:** on the full path, `slice` once the proposal is decided.
 
-**Try it first.** After a stop on the MVP check (step 4), these replace the bullets above: **Blocking now:** the owner tries the smallest version, watching for the recorded signal. **Then:** if the signal shows, `settle` again on the questions left open. No label.
+**Try it first.** After a stop on the MVP check (step 4), these replace the bullets above: **Blocking now:** the owner tries the smallest version, watching for the recorded signal. **Then:** if the signal shows, the owner removes the `parked` label and runs `settle` again on the questions left open.
 
 **Parking an idea.** If the owner puts the idea on hold ("park it", "not now"), add the `parked` label to the issue, so `status` reports it as parked with no next action instead of naming work. Say why in one comment, with what would unpark it. Create the label first if the repo hasn't got it. Remove the label when the owner unparks it.
 
