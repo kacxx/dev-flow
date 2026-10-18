@@ -47,14 +47,21 @@ It reports, and offers each mechanical fix (such as adding `ready-for-agent` to 
 Reason: as written, it would relabel a ticket with `Blocked by: None` whose label had been removed on purpose (kacxx/aside-jot#97), undoing a deliberate pause. Found in the review on PR #36.
 </details>
 
-### D3: The shared "what's next" shape, in every skill
+### D3: The shared "what's next" shape, in every skill (revised 2026-10-18)
 In this order:
 1. what's blocking now, and who acts;
 2. the owner's decisions, asked together;
 3. what the agent does once they're answered;
 4. later items, one line each.
 
+It's written into each skill's hand-off section in the same words, with a test that checks every SKILL.md has it. Each SKILL.md is what an agent loads, so the shape sits in the hand-off it governs rather than behind a pointer to another file; the test keeps the copies identical.
+
+<details><summary>Superseded (2026-10-18)</summary>
+
 It's written into each skill's hand-off section in the same words, with a test that checks every SKILL.md has it. The skills can't share a file, because the phone skills are separate ZIPs.
+
+Reason: #72 dropped the phone route, so there are no phone ZIPs to keep apart, and both install routes carry the whole `skills/` folder. The copies stay: the shape is seven lines, no skill reads a file outside its own folder, and a shared file would add a read every agent has to remember to do. Settled in #77's D1.
+</details>
 
 ### D4: Stages and their markers (revised 2026-10-15, twice; revised 2026-10-17, three times)
 | Stage | Marker |
@@ -187,7 +194,7 @@ Reason: the owner dropped the phone route: "the 'phone' is just my personal acco
 4. **Tests** (D7):
    - `skills/status/scripts/test_state.py` runs `state.py` against recorded `gh api` JSON under `skills/status/scripts/fixtures/`, one fixture per stage, including the aside-jot#95 state as recorded on 2026-10-15, whose expected stage is **revision in progress** with the next action "merge aside-jot#100, then update #97–#99". `scripts/run_tests.py` picks it up, so CI runs it.
    - An eval case, `evals/status-next-action/`, puts a recorded `state.py` output in the prompt. It's graded on the next action, who takes it, and the four-part shape.
-5. **Where it's available** (D9): wherever the other skills are. Changing the phone set in `docs/proposals/idea-to-tickets.md` (its D5) and `build_account_skills.py`'s default is a separate change, not this one.
+5. **Where it's available** (D9): wherever the other skills are.
 6. **README.** The Status section's known-gap line about #31 is replaced, and `status` is added to the skills list and the usage table.
 
 ## Fact-check
@@ -196,7 +203,8 @@ Reason: the owner dropped the phone route: "the 'phone' is just my personal acco
 |---|---|---|
 | Every D4 marker can be read through `gh api` | ✅ issue body and `Path:` line, comments (`## Decisions (grill, …)`), sub-issues with state and labels, open PRs filtered on `Refs #N`, and a doc's Status and `Source:` lines through the contents API | probe on kacxx/aside-jot#95 (body, sub-issues #97–#99, PR #100 `Refs #95`, `follow-up-jots.md` `Source: #95`, Status `decided`) and #78 |
 | A bundled script travels in the account-skill ZIP (D1, D3) | ✅ the ZIP holds the whole skill folder | probe: `build()` on a `status/scripts/state.py` folder gave `status/SKILL.md`, `status/scripts/state.py`, `status/NOTICE`; `scripts/build_account_skills.py` |
-| The phone skills are separate ZIPs and can't share a file (D3) | ✅ each skill is built into its own ZIP, holding only its own folder plus NOTICE | `scripts/build_account_skills.py` `build()` |
+| The phone skills are separate ZIPs and can't share a file (D3's original reason; superseded by #77) | ✅ each skill is built into its own ZIP, holding only its own folder plus NOTICE | `scripts/build_account_skills.py` `build()` |
+| No skill reads a file outside its own folder, and the plugin carries the whole `skills/` folder (D3, revised by #77) | ✅ no SKILL.md or bundled script opens a path outside its skill; `slice`'s "the one copy is in `skills/flag-decision/SKILL.md`" is a note, and `check_pointer.py` matches the line with its own regex. The plugin's marketplace `source` is the repo root, so the install copies every skill folder | `skills/*/SKILL.md`, `skills/*/scripts/`; `skills/slice/scripts/check_pointer.py`; `.claude-plugin/marketplace.json` (`"source": "./"`) |
 | Cloud sessions have Python to run the script (D1 in cloud sessions) | ✅ "Python 3.x with pip, …" is listed under installed tools | https://code.claude.com/docs/en/cloud-environments#installed-tools |
 | An eval case can be graded without Bash or `gh` (D7) | ✅ the existing `proposal` and `tickets` cases put their inputs in the prompt and run with no Bash | `evals/RESULTS.md`; `evals/proposal-*/prompt.md` |
 | A multi-select question is available (D6) | ⚠️ `AskUserQuestion` has `multiSelect` on the desktop and in the terminal, but the docs don't say whether cloud or mobile sessions have it. Nothing blocks: on the phone, the same batch can go as a numbered list answered with shorthand ("1, 3"), which `grill` already accepts | this session's tool list; https://code.claude.com/docs/en/tools-reference |
@@ -218,4 +226,3 @@ Reason: the owner dropped the phone route: "the 'phone' is just my personal acco
 ## Risks
 - **Stage precedence:** a mixed issue like aside-jot#95 needs the order in Shape 2. A wrong order would name the wrong next action. The fixtures cover #95's state.
 - **The shape test is word for word:** any rewording of the shared shape must change all six skills at once. That's the point of the test, but it makes small edits noisier.
-- **Account-skill ZIPs:** while skills reach cloud sessions as account-skill ZIPs, `status` is one more ZIP to re-upload whenever it changes (D9; the separate change to the phone set may remove this).
