@@ -29,7 +29,7 @@ Every step that writes to GitHub shows you the draft first and waits for your ye
 
 ## Running the skills
 
-Each skill takes plain text: name the repo and the issue, doc or idea it should work on. Run it as a slash command, `/dev-flow:<skill> <what to work on>`, or just ask ("settle owner/repo#12"); the descriptions are written so Claude picks the right skill. On the phone, where the skills are account skills, ask for them by name: "use the `capture` skill on …".
+Each skill takes plain text: name the repo and the issue, doc or idea it should work on. Run it as a slash command, `/dev-flow:<skill> <what to work on>`, or just ask ("settle owner/repo#12"); the descriptions are written so Claude picks the right skill.
 
 | Skill | Give it | Example |
 |---|---|---|
@@ -90,12 +90,7 @@ To update after a new version (the version is in `.claude-plugin/plugin.json`), 
 
 **In each project that uses it:** add the one-line pointer from [`skills/flag-decision/SKILL.md`](skills/flag-decision/SKILL.md#the-claudemd-pointer) to the project's `CLAUDE.md` (or the `AGENTS.md` it imports). It makes an implementing agent stop and flag a wrong decision instead of redesigning around it, even an agent without the plugin. `slice` checks for the line and offers it if it's missing.
 
-**Phone (Claude Code cloud sessions from the Code tab):** these don't load plugins, but they do load claude.ai account skills. The account-skill set is `capture`, `settle`, `flag-decision` and `status` (`status` joins the default build in #39, which also stops ZIPs carrying test files and fixtures; build it by name before then and its ZIP includes about 664 KB of test fixtures):
-1. Build the ZIPs with `python3 -I scripts/build_account_skills.py` (use `python` on Windows, where `python3` is often the Microsoft Store stub). This writes `dist/account-skills/<name>.zip` after checking each skill's name, description and frontmatter.
-2. Upload each ZIP on claude.ai under **Customize → Skills** (code execution must be on).
-3. Re-upload after a skill changes: account skills don't follow plugin versions. After the rename in 0.12.0, delete the old `grill` account skill once `settle` is uploaded.
-
-Phone sessions start on a fresh `claude/…` branch, and the local `main` can be behind. Bring the branch you need up to date first: `git fetch origin && git checkout BRANCH && git merge --ff-only origin/BRANCH`.
+Claude Code cloud sessions start on a fresh `claude/…` branch, and the local `main` can be behind. Bring the branch you need up to date first: `git fetch origin && git checkout BRANCH && git merge --ff-only origin/BRANCH`.
 
 The skills use `gh api` (REST) everywhere, because `gh issue` and `gh pr` go through GraphQL, which fails in cloud sessions. Where cloud sessions block GitHub search, each skill falls back to listing issues and filtering them.
 
@@ -111,7 +106,7 @@ Beta. All six skills are built. `capture`, `settle`, `proposal`, `slice` and `fl
   - `scripts/` for the ZIP builder and the test runner;
   - `docs/` for the proposal and the path-tuning log.
 - **Tests:** `python3 -I scripts/run_tests.py` (`python` on Windows) runs every `test_*.py`. That includes a frontmatter check on every skill, and the jq filters in the skills' search fallbacks, run as written. CI runs the same command on every PR and on pushes to `main`, on Ubuntu and Windows, with and without PyYAML.
-- **Releases:** bump `version` in `.claude-plugin/plugin.json` on every change, because installed plugins only update when it changes. If `capture`, `settle`, `flag-decision` or `status` changed, rebuild and re-upload their ZIPs.
+- **Releases:** bump `version` in `.claude-plugin/plugin.json` on every change, because installed plugins only update when it changes.
 - **After each real run:** add a row to [`docs/path-tuning.md`](docs/path-tuning.md), and turn what was clumsy into an issue (`capture` works for that too).
 
 ## Credits
