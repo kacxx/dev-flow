@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Every skill's hand-off carries the shared "what's next" shape, word for word. Run: python3 -I scripts/test_handoff_shape.py (or `python` on Windows)
 
-The skills can't share a file (each account skill is its own ZIP), so the wording is
-copied into each SKILL.md and this test keeps the copies identical
+Each SKILL.md is what an agent loads, so the wording sits in the hand-off it governs
+rather than behind a pointer to another file, and this test keeps the copies identical
 (docs/proposals/status.md, D3). Rewording it means changing every skill and SHAPE here.
 """
 import os
