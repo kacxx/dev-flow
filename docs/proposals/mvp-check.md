@@ -1,6 +1,6 @@
 # An MVP check before design (#67): proposal
 
-Status: **decided**. Slice into tickets once merged.
+Status: **decided**. Merged and sliced into tickets (#80).
 Source: #67
 
 ## Problem
