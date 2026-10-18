@@ -119,7 +119,7 @@ Leave out a part with nothing in it.
 - **Then:** `proposal` (full path, no doc yet), "ready to implement" (short path, nothing open), or, for a reopened decision, the next step in the section below.
 - **Later:** on the full path, `slice` once the proposal is decided.
 
-**Try it first.** After a stop on the MVP check (step 4), these replace the bullets above: **Blocking now:** the owner tries the smallest version, watching for the recorded signal. **Then:** if the signal shows, the owner removes the `parked` label and runs `settle` again on the questions left open.
+**Try it first.** After a stop on the MVP check (step 4), these replace the bullets above: **Blocking now:** the owner tries the smallest version, watching for the recorded signal. **Then:** if the signal shows, the owner runs `settle` again on the questions left open, then removes the `parked` label.
 
 **Parking an idea.** If the owner puts the idea on hold ("park it", "not now"), add the `parked` label to the issue, so `status` reports it as parked with no next action instead of naming work. Say why in one comment, with what would unpark it. Create the label first if the repo hasn't got it. Remove the label when the owner unparks it.
 
