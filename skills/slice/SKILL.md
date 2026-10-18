@@ -157,4 +157,4 @@ Leave out a part with nothing in it.
 
 - **Your decisions:** any decision no ticket implements, named, and the pointer line or file offered above.
 - **Then:** the tickets that can start now (labelled `ready-for-agent`), for an agent to implement, and writing the pointer once the owner says yes.
-- **Later:** each blocked ticket, one line each, saying it gets the label when its blockers close. For a proposal doc, also updating its Status line to `Status: **decided**. Merged and sliced into tickets (#…).`, naming the published tickets: `slice` doesn't edit the doc itself.
+- **Later:** each blocked ticket, one line each, saying it gets the label when its blockers close. For a proposal doc, also that the owner updates its Status line to `Status: **decided**. Merged and sliced into tickets (#…).`, naming the published tickets: `slice` doesn't edit the doc itself.
