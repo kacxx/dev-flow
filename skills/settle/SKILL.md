@@ -43,6 +43,13 @@ Ask the **whole frontier at once**, numbered, each with your recommended answer,
 ❓ **Q2 - …**
 ```
 
+**The MVP check opens the first round.** On the first `settle` run for a short-path or full-path issue (step 1 found no `### D<n>: Smallest version` and no earlier `settle` record), Q1 is the MVP check, asked before any design question, in three parts:
+1. What is the smallest version that answers the stated problem?
+2. Can it be tried today without building anything?
+3. What signal would justify going bigger?
+
+Give your recommended answer to each part, as for any question. An idea that's already small answers "this is the smallest version". The rest of the frontier is asked in the same round, as Q2 onwards. A later `settle` run on the same issue doesn't ask it again, and neither does reopening a decision. Ready-path issues never get it.
+
 Every open question the issue lists must appear in this round, unless it depends on another question in this round (it waits for a later round) or a fact you found settles it. Say which, in one line, for each question you hold back: never drop one silently, even if it looks trivial (a name is still a decision).
 
 End the round with: *Answer "yes" to accept all, or per question: "1 yes, 2 no: X, 3 skip".*
@@ -60,6 +67,10 @@ After each round, record every settled answer as a decision heading:
 ```
 
 A decision contains only what the owner accepted or answered: the recommendation they said yes to (including its "why" line, if it had one), or their own alternative in their words. Add nothing else: no reasons, mechanisms, names or consequences that weren't in the question, the recommendation or the answer. Anything extra is an unapproved decision. If the answer leaves something open, that's a question for the next round.
+
+The MVP check's answer is the **first decision** of the run's record, `### D<n>: Smallest version`, with all three parts: the smallest version, whether it can be tried today, and the signal for going bigger.
+
+**Smallest version triable today → stop.** When the answer is that the smallest version can be tried today without building anything, record that decision with its signal, leave every other question under Open questions, and ask no more rounds. Go to step 5 to write the record (leave the `Path:` line and labels as they are), then hand off "try it first" (step 6).
 
 Recompute the frontier: settled decisions unblock questions that depended on them. Ask the next round. Stop when the frontier is empty: every question decided or explicitly skipped, nothing silently assumed.
 
@@ -107,6 +118,8 @@ Leave out a part with nothing in it.
 - **Your decisions:** the questions the owner skipped, if they want another round now.
 - **Then:** `proposal` (full path, no doc yet), "ready to implement" (short path, nothing open), or, for a reopened decision, the next step in the section below.
 - **Later:** on the full path, `slice` once the proposal is decided.
+
+**Try it first.** After a stop on the MVP check (step 4): **Blocking now:** the owner tries the smallest version, watching for the recorded signal. **Then:** if the signal shows, `settle` again on the questions left open. No label.
 
 **Parking an idea.** If the owner puts the idea on hold ("park it", "not now"), add the `parked` label to the issue, so `status` reports it as parked with no next action instead of naming work. Say why in one comment, with what would unpark it. Create the label first if the repo hasn't got it. Remove the label when the owner unparks it.
 
