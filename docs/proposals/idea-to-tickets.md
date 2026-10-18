@@ -55,12 +55,18 @@ The procedure lives in the plugin as a short **`flag-decision`** skill: comment 
 Reason: the #18 review gave the reopen marker a single owner. During implementation it is the `needs-decision` label plus the flag comment, not a `Status: reopened — #<ticket>` line in the doc (review on #1).
 </details>
 
-### D5: Devices (revised again 12 Oct, after the phone probe)
+### D5: Devices (revised again 12 Oct, after the phone probe; revised 18 Oct, #72)
 - **Source:** this repo. Skills are written and versioned here.
 - **Mac and Windows:** the Claude Code plugin while the skills are still changing. Mac first; Windows confirmed with one install.
-- **Phone (Claude Code cloud sessions, from the Code tab):** once the skills have settled after the pilots, `capture`, `grill` and `flag-decision` are uploaded as **claude.ai account skills**. `flag-decision` is included because flow 2 also runs from the phone, and an agent implementing a ticket there has no plugin. The probe confirmed that cloud sessions load account skills. Account skills also sync into terminal Claude Code, so they reach every project (aside-jot, shipledger, …) without copying anything into each repo.
 - **Not used:** copying the skills into each project's `.claude/skills/`. It works (the probe loaded one live from the branch), but every repo's copy would drift.
 - **The Android chat app:** out of v1.
+
+<details><summary>Superseded (18 Oct): the phone route</summary>
+
+- **Phone (Claude Code cloud sessions, from the Code tab):** once the skills have settled after the pilots, `capture`, `grill` and `flag-decision` are uploaded as **claude.ai account skills**. `flag-decision` is included because flow 2 also runs from the phone, and an agent implementing a ticket there has no plugin. The probe confirmed that cloud sessions load account skills. Account skills also sync into terminal Claude Code, so they reach every project (aside-jot, shipledger, …) without copying anything into each repo.
+
+Reason: the owner dropped the phone route: "the 'phone' is just my personal account" (#72). The uploaded copies had drifted, as Risks predicted, and the owner removed them from claude.ai on 18 Oct. Settled in #72's D3.
+</details>
 
 <details><summary>Superseded (12 Oct, first revision): "cloud sessions don't load plugins, so account skills"</summary>
 
