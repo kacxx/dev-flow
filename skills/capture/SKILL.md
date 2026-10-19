@@ -29,6 +29,8 @@ Results mix issues and PRs: a PR is the work for an issue, not a duplicate of it
 
 If the problem or the idea is unclear, ask one short question. Don't interview: settling the design is `settle`'s job. Look up facts yourself (files, existing behaviour, other issues); never ask the owner for something you can read.
 
+If the idea turns on a key term with more than one reasonable meaning (what counts as "reviewed", "done", "stale"), that's unclear too: ask what the owner means, as your one question, and wait for the answer before drafting. Don't pick a meaning from context, and don't write the question down and carry on.
+
 ## 3. Draft the issue
 
 The sections always appear in this order (leave out the optional ones that don't apply):
@@ -36,7 +38,10 @@ The sections always appear in this order (leave out the optional ones that don't
 ```markdown
 ## Problem
 
-<what goes wrong today, with a concrete example if there is one>
+<what the owner said goes wrong, quoted or restated with nothing added>
+
+Facts looked up:
+- <a fact, with its source (file and commit, issue, command)>
 
 ## Idea
 
@@ -60,9 +65,13 @@ Path: <ready|short|full> — <one-line reason>
 
 The last line records the settled path in the issue, so `settle` and `proposal` in a later session can see it. It has no override prompt: that's for the owner in chat, not for the issue.
 
+Problem opens with what the owner said, quoted or restated with nothing added: no framing of your own, and none borrowed from earlier issues or the chat. Facts you looked up go under `Facts looked up:` beneath it, each with its source and no framing sentence. Leave the list out if there are none.
+
 Idea says **what** changes, not **how**: restate the outcome the owner asked for and any constraints they gave, and add nothing of your own. Every detail you would add (a behaviour, safeguard, name, mechanism, format, or where something lives) goes into Open questions as a choice, even when the answer seems obvious. Settling it is `settle`'s job, where it gets recorded as a decision.
 
-Open questions are **decisions**, not facts. A fact you can look up goes into Problem or Idea, already looked up. If there are none, write "None."
+Open questions are **decisions**, not facts. A fact you can look up goes under `Facts looked up:`, already looked up. If there are none, write "None."
+
+An open question asks the question. List options only if the owner named them; don't offer designs from earlier issues, other repos or the chat. `settle` brings its own recommendation when it asks.
 
 If a fact matters but you can't look it up in this session (no repo access, no shell), don't turn it into an open question. List it under `## To check`, so `settle` looks it up before asking anything. An issue with anything under To check is never `ready-for-agent`: an implementer would be working on an unchecked assumption.
 
@@ -70,7 +79,7 @@ If a fact matters but you can't look it up in this session (no repo access, no s
 
 Check these in order and take the **first** that matches, then state the result and the reason under the draft:
 
-1. **Full** if the idea needs design: a new interface or command, a cross-cutting change, or more than about three tickets. This applies even when there are no open questions; the design questions just haven't been asked yet. Next: `settle`, then `proposal` (a decided doc), then `slice`.
+1. **Full** if the idea, as the owner stated it, needs design: a new interface or command, a cross-cutting change, or more than about three tickets. This applies even when there are no open questions; the design questions just haven't been asked yet. Judge the idea as stated, not a version you imagine: "may need a new command" doesn't count. When in doubt, it's short. Next: `settle`, then `proposal` (a decided doc), then `slice`.
 2. **Short** if there are open questions the owner can answer now. Next: `settle` in the issue; the decisions go into the issue body as `### D<n>:` headings. No proposal doc.
 3. **Ready** only if there are no open questions, nothing under To check, and no design. Add `## Acceptance criteria` and label it `ready-for-agent`: the issue *is* the ticket. If To check is the only thing in the way, it's **short**: `settle` looks the facts up first.
 
