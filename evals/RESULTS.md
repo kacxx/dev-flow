@@ -189,16 +189,22 @@ New regex grader `review-step`: the hand-off asks for a fresh code review of the
 
 ## settle: facts and constraints — 22 Oct 2026 (0.16.0, #90)
 
-Two new cases, both with Matt Pocock's public `grilling` SKILL.md pinned at 49dd158 as the fixture (fetched with WebFetch, run with `--allow-tools WebFetch`). 3 runs each, no-plugin baseline, judge sonnet, on the final (trimmed) skill text.
+Two new cases, both with Matt Pocock's public `grilling` SKILL.md pinned at 49dd158 as the fixture (fetched with WebFetch, run with `--allow-tools WebFetch`). Final run on the committed skill text (167 lines, 2,330 words) and graders: all five settle cases, 3 runs each, no-plugin baseline, judge sonnet.
 
 | Case | With | Without | What it checks |
 |---|---|---|---|
-| settle-check-facts | 1.00 | 0.80 | the issue's wrong claim ("grilling asks the user for any fact it needs") is corrected before or in the round, and the recommendation isn't built on it |
+| settle-check-facts | 0.73 | 0.67 | the issue's wrong claim ("grilling asks the user for any fact it needs") is corrected, the recommendation isn't built on it, and the round has its shape |
 | settle-constraints | 0.92 | 0.75 | the 15-line constraint rules out embedding the 30-line file as it is: the recommendation fits, and the round says so |
+| settle-first-round | 1.00 | 0.20 | |
+| settle-record | 0.93 | 0.20 | |
+| settle-shorthand | 0.92 | 0.25 | |
 
-On this run the baseline also caught the wrong claim and didn't build on it (3/3), so the difference is the round's shape. In an earlier run against the untrimmed text, the baseline built its recommendation on the claim in 2/3 (0.53, plugin 0.87). The one `settle-constraints` miss was the closing "Answer yes" line.
+- `settle-check-facts`: every plugin run recommended looking the fact up and cited grilling's actual rule. The two misses are judges: one run stated the right rule without saying the issue's claim was wrong (`claim-corrected`), and one was failed by `not-built-on-claim` with a correct recommendation. The baseline's gap is mostly the round's shape (`one-round` 0/3). Across the four runs of this case on the way here, the facts graders alone (`claim-corrected`, `not-built-on-claim`) gave the plugin a lead of +0.27, 0, 0 and −0.13: on this case the baseline (Opus 5.5 with WebFetch) mostly checks the claim too, and the plugin's steady lead is the round format.
+- `settle-constraints`: the recommendation fitted the constraint in every run with and without the plugin; the plugin adds the round's shape. One miss was the closing "Answer yes" line.
+- `settle-shorthand`: one run wrote decisions as bold lines, not `### D<n>:` headings.
 
-Existing cases, compared with `main` (0.15.0) on the same day:
-- `settle-first-round` failed on `main` too (0.40, 0/3): its regex expected `Q1 -` with a hyphen, and runs now write `–` or `—`; its `no-premature-record` judge failed clean rounds. The regex now accepts any dash, and `no-premature-record` is a regex (no `## Decisions` or `### D<n>:` before the "Answer yes" line), checked against the 6 recorded answers from both branches. Branch: 1.00 on those answers.
-- `settle-record` is flaky on both: 6 runs each, `main` 0.63 (1/6 pass), branch 0.80 (3/6 pass). The misses are records that reword the accepted recommendation, which the `decisions-in-order` phrases catch, plus the `done` judge. Not fixed here.
-- `settle-shorthand`: 1.00 (0.50).
+Grader fixes in `settle-first-round`, which also failed on `main` (0.15.0) on the same day (0.40, 0/3):
+- `all-four-in-one-message` expected `Q1 -` with a hyphen; runs write `–`, `—` or `**Q1** -`. It now accepts those, as `settle-check-facts`' `one-round` does.
+- `no-premature-record` was an LLM judge that failed clean rounds. It's now a regex: fail on a `## Decisions` or `### D<n>:` heading at the start of a line anywhere in the response, and require the "Answer yes" line. Self-tested on five texts (including a prose mention of `## Decisions`, and a record written after the round) and the 9 recorded answers from `main` and this branch.
+
+`settle-record` was flaky earlier the same day on both sides (6 runs each: `main` 0.63, branch 0.80): records reword an accepted recommendation, which the `decisions-in-order` phrases catch.
