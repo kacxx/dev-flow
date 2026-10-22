@@ -1,6 +1,5 @@
 ---
-type: llm
+type: regex
 weight: 1
+pattern: '^(?![\s\S]*(?:^|\n)[ \t>]*(?:## Decisions|### D[0-9]+:|\*\*D[0-9]+:))'
 ---
-
-Score 1 only if the response does NOT record decisions or write a decisions record yet: it asks the round and waits.
