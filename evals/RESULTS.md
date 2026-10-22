@@ -186,3 +186,19 @@ The remaining `status-next-action` failure (1 of 3) is fair: that run said it co
 ### proposal-decided: review step — 16 Oct 2026 (0.12.1, PR #60)
 
 New regex grader `review-step`: the hand-off asks for a fresh code review of the doc PR (such as `/code-review`) before the owner's yes. Run with 3 runs and a no-plugin baseline: with the plugin, every other grader passed and all 3 answers named the review before the yes; the baseline named it 0/3. (The first version of the grader used `(?i)`, which the eval's JavaScript regex rejects; the fixed pattern was checked against the 6 recorded answers.) Score: proposal-decided 1.00 (0.00).
+
+## settle: facts and constraints — 22 Oct 2026 (0.16.0, #90)
+
+Two new cases, both with Matt Pocock's public `grilling` SKILL.md pinned at 49dd158 as the fixture (fetched with WebFetch, run with `--allow-tools WebFetch`). 3 runs each, no-plugin baseline, judge sonnet, on the final (trimmed) skill text.
+
+| Case | With | Without | What it checks |
+|---|---|---|---|
+| settle-check-facts | 1.00 | 0.80 | the issue's wrong claim ("grilling asks the user for any fact it needs") is corrected before or in the round, and the recommendation isn't built on it |
+| settle-constraints | 0.92 | 0.75 | the 15-line constraint rules out embedding the 30-line file as it is: the recommendation fits, and the round says so |
+
+On this run the baseline also caught the wrong claim and didn't build on it (3/3), so the difference is the round's shape. In an earlier run against the untrimmed text, the baseline built its recommendation on the claim in 2/3 (0.53, plugin 0.87). The one `settle-constraints` miss was the closing "Answer yes" line.
+
+Existing cases, compared with `main` (0.15.0) on the same day:
+- `settle-first-round` failed on `main` too (0.40, 0/3): its regex expected `Q1 -` with a hyphen, and runs now write `–` or `—`; its `no-premature-record` judge failed clean rounds. The regex now accepts any dash, and `no-premature-record` is a regex (no `## Decisions` or `### D<n>:` before the "Answer yes" line), checked against the 6 recorded answers from both branches. Branch: 1.00 on those answers.
+- `settle-record` is flaky on both: 6 runs each, `main` 0.63 (1/6 pass), branch 0.80 (3/6 pass). The misses are records that reword the accepted recommendation, which the `decisions-in-order` phrases catch, plus the `done` judge. Not fixed here.
+- `settle-shorthand`: 1.00 (0.50).

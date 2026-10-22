@@ -1,6 +1,5 @@
 ---
-type: llm
+type: regex
 weight: 1
+pattern: '^(?![\s\S]*(## Decisions|### D[0-9]+:))[\s\S]*[Aa]nswer .?yes.? to accept all'
 ---
-
-Score 1 only if the response does NOT record decisions or write a decisions record yet: it asks the round and waits.

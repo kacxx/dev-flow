@@ -21,13 +21,14 @@ If the issue's Path line or a linked PR points at a proposal doc (`docs/proposal
 Collect:
 - the **Open questions**;
 - the **To check** list (facts `capture` couldn't look up);
-- every **existing decision** (`### D<n>:` headings in the body, comments or proposal doc). New decisions continue the numbering from the highest ID found; never reuse an ID.
+- every **existing decision** (`### D<n>:` headings in the body, comments or proposal doc). New decisions continue the numbering from the highest ID found; never reuse an ID;
+- the owner's **constraints**: `Constraint:` decisions, or limits the issue or document states.
 
-Look up every To check fact **before** the first round, with sub-agents (repo files, issues, docs). Finding facts is your job, never the owner's. A fact that answers a question settles it without asking; a fact that changes a question changes the round. Keep the facts you found: step 5 writes them back.
+**Check the facts before you ask.** Finding facts is your job, never the owner's. With sub-agents (repo files, issues, docs), look up every To check fact and every claim a question or your recommendation rests on, from the issue, a pasted document or the owner's answers; the rest of a document is `proposal`'s to check. A fact that answers a question settles it without asking; a fact that changes a question changes the round. A claim you can't check doesn't hold its question: ask it with the claim marked **unchecked**, and add it to To check with what's missing. Keep each fact with its source, and "(one source)" if only one was checked: step 5 writes them back.
 
 ## 2. Map the questions
 
-Treat the questions as a **design tree**: some answers depend on others. The **frontier** is every question whose prerequisites are already settled, so it can be asked now without guessing at an answer you haven't heard yet. Add any question the facts or earlier answers raise; drop any they settle.
+Treat the questions as a **design tree**: some answers depend on others. The **frontier** is every question whose prerequisites are already settled, so it can be asked now without guessing at an answer you haven't heard yet. A lookup still running is an unsettled prerequisite: only the questions that rest on it wait. Add any question the facts or earlier answers raise; drop any they settle.
 
 ## 3. Ask a round
 
@@ -50,6 +51,8 @@ Ask the **whole frontier at once**, numbered, each with your recommended answer,
 
 Give your recommended answer to each part, as for any question. An idea that's already small answers "this is the smallest version". The rest of the frontier is asked in the same round, as Q2 onwards. A later `settle` run on the same issue doesn't ask it again, and neither does reopening a decision. Ready-path issues never get it.
 
+**Constraints shape the design.** If the issue or document doesn't state the constraints that could change which option wins (how much work, a performance budget, what mustn't break), ask for them in the first round, next to the MVP check; questions whose recommendation rests on them wait. Each question says whether its recommendation fits each constraint. If none fits, say which constraint each option breaks, and offer a smaller option that fits, or relaxing the constraint.
+
 Every open question the issue lists must appear in this round, unless it depends on another question in this round (it waits for a later round) or a fact you found settles it. Say which, in one line, for each question you hold back: never drop one silently, even if it looks trivial (a name is still a decision).
 
 End the round with: *Answer "yes" to accept all, or per question: "1 yes, 2 no: X, 3 skip".*
@@ -67,6 +70,8 @@ After each round, record every settled answer as a decision heading:
 ```
 
 A decision contains only what the owner accepted or answered: the recommendation they said yes to (including its "why" line, if it had one), or their own alternative in their words. Add nothing else: no reasons, mechanisms, names or consequences that weren't in the question, the recommendation or the answer. Anything extra is an unapproved decision. If the answer leaves something open, that's a question for the next round.
+
+Record a constraint as `### D<n>: Constraint: <short title>`, and check settled decisions against a new one: ask again any it breaks (next round, or by Reopening a decision once the record is written).
 
 The MVP check's answer is the **first decision** of the run's record, `### D<n>: Smallest version`, with all three parts: the smallest version, whether it can be tried today, and the signal for going bigger.
 
