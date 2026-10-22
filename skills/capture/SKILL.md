@@ -73,7 +73,7 @@ Open questions are **decisions**, not facts. A fact you can look up goes under `
 
 An open question asks the question. List options only if the owner named them; don't offer designs from earlier issues, other repos or the chat. `settle` brings its own recommendation when it asks.
 
-If a fact matters but you can't look it up in this session (no repo access, no shell), don't turn it into an open question. List it under `## To check`, so `settle` looks it up before asking anything. An issue with anything under To check is never `ready-for-agent`: an implementer would be working on an unchecked assumption.
+If a fact matters but you can't look it up in this session (no repo access, no shell), don't turn it into an open question. List it under `## To check`, so `settle` looks it up before asking a question that rests on it. An issue with anything under To check is never `ready-for-agent`: an implementer would be working on an unchecked assumption.
 
 ## 4. Pick the path
 

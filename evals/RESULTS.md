@@ -186,3 +186,28 @@ The remaining `status-next-action` failure (1 of 3) is fair: that run said it co
 ### proposal-decided: review step — 16 Oct 2026 (0.12.1, PR #60)
 
 New regex grader `review-step`: the hand-off asks for a fresh code review of the doc PR (such as `/code-review`) before the owner's yes. Run with 3 runs and a no-plugin baseline: with the plugin, every other grader passed and all 3 answers named the review before the yes; the baseline named it 0/3. (The first version of the grader used `(?i)`, which the eval's JavaScript regex rejects; the fixed pattern was checked against the 6 recorded answers.) Score: proposal-decided 1.00 (0.00).
+
+## settle: facts and constraints — 22 Oct 2026 (0.16.0, #90)
+
+Two new cases, both with Matt Pocock's public `grilling` SKILL.md pinned at 49dd158 as the fixture (fetched with WebFetch, run with `--allow-tools WebFetch`). Final run on the committed skill text (167 lines, 2,341 words) and graders: all five settle cases, 3 runs each, no-plugin baseline, judge sonnet. `settle-first-round` was re-run after its `recommendations` grader was fixed (below).
+
+| Case | With | Without | What it checks |
+|---|---|---|---|
+| settle-check-facts | 1.00 | 0.80 | the issue's wrong claim ("grilling asks the user for any fact it needs") is corrected, the recommendation isn't built on it, and the round has its shape |
+| settle-constraints | 0.92 | 0.67 | the 15-line constraint rules out embedding the 30-line file as it is: the recommendation fits, and the round says so |
+| settle-first-round | 1.00 | 0.40 | |
+| settle-record | 0.80 | 0.20 | |
+| settle-shorthand | 1.00 | 0.50 | |
+
+**The facts rule shows no measurable gain on Opus 5.5, because the model already checks.** In `settle-check-facts` the baseline corrected the claim and didn't build on it in every run of this final run. Across the five runs of this case on the way here, the facts graders alone (`claim-corrected`, `not-built-on-claim`) gave the plugin +0.27, 0, 0, −0.13 and 0. The plugin's steady lead is the round format (`one-round`). The case also allows no sub-agent, so the rule's sub-agent lookup never runs, and nothing tests that only the questions resting on a running lookup wait. A harder test is #94.
+
+`settle-constraints`: the recommendation fitted the constraint in every run with and without the plugin. The plugin adds the round's shape and, more often, saying that the file as it is would break the constraint. One plugin miss was the closing "Answer yes" line.
+
+Grader fixes in `settle-first-round`, which also failed on `main` (0.15.0) on the same day (0.40, 0/3):
+- `all-four-in-one-message` expected `Q1 -` with a hyphen; runs write `–`, `—` or `**Q1** -`. It now accepts those, as `settle-check-facts`' `one-round` does.
+- `no-premature-record` was an LLM judge that failed clean rounds. It's now a regex that fails on `## Decisions`, `### D<n>:` or `**D<n>:` at a line start (indented or `>`-quoted too), anywhere in the response. Self-tested on eight texts and the 6 recorded rounds from `main` and this branch.
+- `recommendations` failed a round that asked for constraints with no recommended answer, which the skill now requires (#90 D13). A constraints question is now exempt.
+
+Not graded: one `settle-first-round` run skipped the MVP check (from 0.14, not this change).
+
+`settle-record` is flaky on both sides (6 runs each earlier the same day: `main` 0.63, branch 0.80): records reword an accepted recommendation, which the `decisions-in-order` phrases catch, plus the `done` judge (#94).
