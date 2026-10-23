@@ -247,18 +247,3 @@ New case `slice-cold-read` (#96 D14): a decided short-path issue, an approved br
 Two of the three new `slice-neutral` runs drafted one ticket for D1–D3; the third drafted two and failed the `vertical` judge. The 6 runs span two versions of step 5's text. Graders unchanged.
 
 **Not graded:** sending the reader. The eval can't run a sub-agent (every case allows only `Skill`), so whether the reader gets only the bodies, decisions and code is checked by hand on the first live run (#96 D14). Which group a finding lands in isn't graded either: across the kept runs, the staging-data finding was sorted as a real gap, a default and a known blocker.
-
-**Bisect and split (PR #100 review, round 2).** Graders unchanged throughout.
-
-| Variant | slice-neutral (with) | slice-cold-read (with) |
-|---|---|---|
-| `main` (0.16.0) | 1.00 (6 runs) | 0.20 |
-| Pushed fix round (`f94950a`) | 0.69 (6 runs) | 1.00 |
-| Same, step 3's "every ticket implements a decision" sentence reverted | 0.78 (1.00, 0.67, 0.67) | not run |
-| Step 5's detail moved to `skills/slice/cold-read.md`, SKILL.md keeps a pointer (pushed) | 0.83 (1.00, 1.00, 0.50) | 0.20, not measurable (below) |
-
-- Reverting the step 3 sentence didn't bring `slice-neutral` back: all three runs again made a ticket for the doc's undecided duplicate-heading risk, two of them with no D-number on its `Implements:` line.
-- With step 5 in its own file, the one `slice-neutral` miss drafted a single ticket for D1–D3.
-- `slice-cold-read` can't measure the split version: each run loaded `slice`, tried to read `cold-read.md`, and the eval's "don't ask" mode denied Read (and Grep). It then sorted without the labels. The case allows only `Skill`; nothing in the case was changed to grant Read.
-
-**Known issue:** `slice-neutral` is below `main` in every variant tried (0.69–0.83 against 1.00); the misses are a single ticket for D1–D3, or a ticket for the undecided risk. The cold read on the split version is unmeasured in this eval, and depends on the session being allowed to read files in the skill's directory.
