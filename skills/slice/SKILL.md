@@ -48,7 +48,7 @@ Break the work into **tracer-bullet** tickets:
 - Each slice fits in one fresh agent context.
 - Any prefactoring comes first.
 
-Give each ticket the decisions it implements and its **blocking edges**: the tickets that must finish before it can start. A ticket with no blockers can start immediately. Every decision should be implemented by at least one ticket; say so if one isn't (it may be out of scope, or need a ticket). Every ticket implements at least one decision: work no decision covers (a risk the doc names but doesn't decide, a gap you spot) isn't a ticket. Raise it as a question for the owner instead.
+Give each ticket the decisions it implements and its **blocking edges**: the tickets that must finish before it can start. A ticket with no blockers can start immediately. Every decision should be implemented by at least one ticket; say so if one isn't (it may be out of scope, or need a ticket). Every ticket implements a decision: work none covers (an undecided risk, a gap you spot) is a question for the owner, not a ticket.
 
 **Wide refactors are the exception.** One mechanical change whose blast radius spans the codebase (renaming a shared field, retyping a common symbol) can't land green as one slice. Sequence it as **expand–contract**: expand (add the new form beside the old), migrate the call sites in batches (each its own ticket, blocked by the expand), then contract (remove the old form, blocked by every batch).
 
@@ -69,14 +69,14 @@ Iterate until the owner approves. **Stop here until they do:** no cold read, and
 
 ## 5. Cold read
 
-Tickets can look complete and still leave a developer guessing. Once the owner has approved the breakdown, and before publishing, a fresh reader reads them cold, and what it finds is settled with the owner. Skip this step if the source has `Path: ready`.
+Once the owner has approved the breakdown, and before publishing, a fresh reader reads the tickets cold. Skip this step if the source has `Path: ready`.
 
-**Write the full bodies.** Draft every approved ticket's full body in the step 6 template, with `T<n>` in place of issue numbers. The reader reads these, and the owner approves them, not only step 4's summary.
+**Write the full bodies** of the approved tickets in the step 6 template, with `T<n>` for issue numbers. The reader reads these, and the owner approves them.
 
-**Send it to a fresh reader.** Start a sub-agent and give it only what an implementer would have: the drafted bodies, the decisions or doc their `Implements:` line points to, and the repo's name or path, so it explores the code itself. Nothing from this conversation: no summaries, reasons or answers the owner gave. Give it this prompt, with the bodies and decisions pasted in:
+**Send them to a fresh reader:** a sub-agent given only what an implementer would have: the bodies, the decisions or doc their `Implements:` line points to, and the repo's name or path. Nothing from this conversation. Its prompt:
 
 ```
-You're about to implement these tickets in <OWNER/REPO>, and nobody is around to ask. Read the tickets, the decisions they point to, and the code. For each ticket, say:
+You're about to implement these tickets in <OWNER/REPO>, and nobody is around to ask. Read only: don't build, edit or post anything. Read the tickets, the decisions they point to, and the code. For each ticket, say:
 1. What would you build?
 2. Where would you build it?
 3. How would you know you're done?
@@ -88,40 +88,29 @@ List the guesses; don't answer them.
 <the decisions or doc they point to>
 ```
 
-With no sub-agent tool, give the owner the same prompt to run in a fresh session, and wait for its findings. If the findings are already given (the owner pasted them), sort them and don't send another reader.
+With no sub-agent tool, the owner runs the prompt in a fresh session. If the findings are already given, sort them without sending another reader.
 
-**Sort the findings.** Put each one in one group, one line each, giving the group, the ticket and the reason. Label every line with its group as below, even under a heading per group:
+**Sort the findings,** one line each, every line labelled with its group, even under a heading per group:
 
 ```
 - **real gap:** T1 — <finding>. <the decision the owner has to make>
-- **default:** T2 — <finding>. Proposed: <value>
-- **known blocker:** T1 — <finding>. <what has to happen first>
+- **default:** T2 — <something a developer would otherwise pick alone>. Proposed: <value>
+- **known blocker:** T1 — <something outside the tickets that isn't true yet>. <what has to happen first>
 ```
 
-- **real gap:** a decision the owner has to make.
-- **default:** something a developer would otherwise pick alone. Propose a value.
-- **known blocker:** something outside the tickets that isn't true yet, such as another team publishing a value. It isn't a decision.
+Show the sort, then the full bodies with their `## Defaults`, even while real gaps are open, and ask the owner to confirm the sort and the values, or to move items. **Publish nothing until they confirm.**
 
-Show the sort, then the full bodies with each ticket's `## Defaults`, even while real gaps are open (the bodies change when they're settled), and ask the owner to confirm the sort and the values, or to move items between groups. The reader can't tell which guesses the owner cares about; seeing the sort, the owner can catch a decision hiding inside a default. **Publish nothing until they confirm.**
+**Defaults** go after Acceptance criteria as `## Defaults`, one line each, with no D-numbers; a ticket with none has no section. An implementer who finds one wrong changes it and says so in the PR, not through `flag-decision`.
 
-**Defaults** go into the ticket as `## Defaults`, after Acceptance criteria, one line each. They don't get D-numbers. A ticket with none has no section. An implementer who finds one wrong changes it and says so in the PR; `flag-decision` is for decisions, not defaults.
+**Real gaps** go to `settle`, run in this session with the gaps as its questions, without writing them under Open questions first. Tell it not to set `Path: ready` or `ready-for-agent` on the source issue.
+- **Short path:** once they're decided, redraft the affected tickets, get the breakdown approved again (step 4), and read again.
+- **Full path:** stop. `slice` is re-run once `settle` and `proposal` have the doc decided again. List the gaps under **Your decisions**, and write nothing else.
 
-**Real gaps** go to `settle`: run it in this session with the gaps as its questions, without writing them under Open questions first. Tell it not to set `Path: ready` or `ready-for-agent` on the source issue: the source is being sliced, and the label would put all the work up as one ticket.
-- **Short path:** once they're decided, redraft the affected tickets, show the changed breakdown for approval again (step 4), and run the cold read again.
-- **Full path:** stop. The new decisions go into the proposal doc through `settle` and `proposal`, and `slice` is re-run once the doc is decided again. List the gaps under **Your decisions** in the hand-off, and write nothing else.
+**Known blockers** (for now; dev-flow#99 replaces this): list each under **Later**, and publish its ticket without `ready-for-agent`.
 
-**Known blockers** (for now; dev-flow#99 replaces this): list each under **Later** in the hand-off, and publish the ticket it touches without `ready-for-agent`.
+**Rounds.** A round is one read and its sort, including one after a redraft. Stop when a round raises only defaults and blockers already recorded, and publish. If real gaps remain after round 2, ask the owner whether to continue.
 
-**Rounds.** A round is one cold read and its sort, including one after a redraft. Stop when a round raises nothing but defaults and blockers already recorded, and publish. If real gaps are still open after round 2's sort, ask the owner whether to continue rather than starting a third round.
-
-If the owner stops there, the remaining gaps go on the source issue as open questions: edit its body's `## Open questions` (`status` reads only the body). Then publish, leaving `ready-for-agent` off every ticket a remaining gap touches (the tickets cited for it in the sort), and name them in the hand-off. Known gap: on the full path, `status` doesn't read the source issue's Open questions once a doc exists, so it won't show them.
-
-```bash
-gh api repos/OWNER/REPO/issues/N --jq .body           # current body, to edit
-gh api repos/OWNER/REPO/issues/N --method PATCH -F body=@- <<'BODY'
-<the body, with the remaining gaps under ## Open questions>
-BODY
-```
+If the owner stops, write the remaining gaps into the source issue body's `## Open questions` (`status` reads only the body). Then publish, leaving `ready-for-agent` off every ticket a remaining gap was cited against, and name them in the hand-off. Known gap: on the full path, `status` ignores the source's Open questions once a doc exists.
 
 ## 6. Publish
 
@@ -151,7 +140,7 @@ Parent: #N
 - `## Defaults` only when step 5 approved some for this ticket.
 - Avoid file paths and code snippets in the body: they go stale fast. The exception is a snippet a prototype produced that states a decision more precisely than prose (a schema, a state machine); trim it to the decision-rich part and say it came from a prototype.
 
-**Labels.** `ready-for-agent` means an agent can start it now, so only tickets with **no** open blockers get it. A blocked ticket gets the label when its blockers close; the report lists which. A ticket a known blocker or a remaining gap touches (step 5) doesn't get it either.
+**Labels.** `ready-for-agent` means an agent can start it now, so only tickets with **no** open blockers get it. A blocked ticket gets the label when its blockers close; the report lists which. Nor does a ticket held back in step 5.
 
 Write through `gh api` (not `gh issue`, which uses GraphQL and fails in cloud sessions).
 
@@ -183,7 +172,7 @@ gh api repos/OWNER/REPO/issues/N/sub_issues --method POST -F sub_issue_id=<id>
 
 If any call fails, **stop**: report the `T<n> → #<number>` mapping so far and the error. A re-run picks up from the existing children. If only the sub-issue link fails (the repo may not have sub-issues enabled), keep the `Parent: #N` line, say the link failed, and carry on.
 
-**The source issue** isn't closed or rewritten, except for the Open questions edit when the owner stops the cold read early (step 5). If it's a short-path issue carrying `ready-for-agent`, remove the label once the children are published, so the work can't be picked up twice:
+**The source issue** isn't closed or rewritten, except for step 5's early-stop edit. If it's a short-path issue carrying `ready-for-agent`, remove the label once the children are published, so the work can't be picked up twice:
 
 ```bash
 gh api repos/OWNER/REPO/issues/N/labels/ready-for-agent --method DELETE
@@ -216,6 +205,6 @@ List the published tickets with their numbers, what each implements and what blo
 
 Leave out a part with nothing in it.
 
-- **Your decisions:** any decision no ticket implements, named, and the pointer line or file offered above. On the full path, when step 5 stopped on real gaps, the gaps.
-- **Then:** the tickets that can start now (labelled `ready-for-agent`), for an agent to implement, and writing the pointer once the owner says yes. When step 5 stopped on the full path: `settle` on the gaps, then `proposal`, then `slice` again.
-- **Later:** each blocked ticket, one line each, saying it gets the label when its blockers close. Each known blocker, with the ticket it holds back. After an early stop, the tickets left without the label, with the open questions that hold them. For a proposal doc, also that the owner updates its Status line to `Status: **decided**. Merged and sliced into tickets (#…).`, naming the published tickets: `slice` doesn't edit the doc itself.
+- **Your decisions:** any decision no ticket implements, named, and the pointer line or file offered above. The real gaps a full-path step 5 stopped on.
+- **Then:** the tickets that can start now (labelled `ready-for-agent`), for an agent to implement, and writing the pointer once the owner says yes. After that stop: `settle`, `proposal`, then `slice` again.
+- **Later:** each blocked ticket, one line each, saying it gets the label when its blockers close. Each ticket step 5 held back, with its blocker or open question. For a proposal doc, also that the owner updates its Status line to `Status: **decided**. Merged and sliced into tickets (#…).`, naming the published tickets: `slice` doesn't edit the doc itself.

@@ -234,6 +234,16 @@ New case `slice-cold-read` (#96 D14): a decided short-path issue, an approved br
 - A run with open real gaps showed the sort but no ticket bodies, and another grouped findings under headings without labelling each line. Step 5 now says to show the bodies while gaps are open, and to label every line.
 - With the new step, `slice-neutral` runs turned the doc's undecided risk (a duplicate heading) into a ticket that implements no decision, failing `implements-headers` (branch 0.61–0.89 across five batches). Step 3 now says every ticket implements a decision, and undecided work is raised as a question.
 
-**Still open:** `slice-neutral` is below `main` (0.83 against 1.00). The miss in the final run drafted one ticket for D1–D3, which a two-ticket regex fails; whether one ticket is wrong here is a grader question as much as a skill one. `slice-devflow`'s `coverage` judge fails on `main` too (1 of 3 passes there).
+**Still open:** `slice-neutral` is below `main`. Its misses draft one ticket for D1–D3, which the two-ticket regexes (`implements-headers`, `t-numbering`) fail; whether one ticket is wrong here is a grader question as much as a skill one. `slice-devflow`'s `coverage` judge fails on `main` too (1 of 3 passes there).
+
+**Fix round (PR #100 review):** the reader's prompt now says "Read only: don't build, edit or post anything", and step 5 was cut to its rules (SKILL.md 2,494 → 2,192 words). Then 3 more runs:
+
+| Case | Runs | Scores | With | Without |
+|---|---|---|---|---|
+| slice-neutral | 3 more, on the shorter text | 0.67, 0.50, 0.50 | 0.56 | 0.11 |
+| slice-neutral | all 6 (3 above + 3 in the table) | | 0.69 | 0.08 |
+| slice-cold-read | 3, plugin arm only | 1.00 ×3 | 1.00 | not run |
+
+Two of the three new `slice-neutral` runs drafted one ticket for D1–D3; the third drafted two and failed the `vertical` judge. The 6 runs span two versions of step 5's text. Graders unchanged.
 
 **Not graded:** sending the reader. The eval can't run a sub-agent (every case allows only `Skill`), so whether the reader gets only the bodies, decisions and code is checked by hand on the first live run (#96 D14). Which group a finding lands in isn't graded either: across the kept runs, the staging-data finding was sorted as a real gap, a default and a known blocker.
