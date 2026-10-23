@@ -21,7 +21,7 @@ What each skill does:
 1. **`capture`** turns the idea into one GitHub issue (Problem, Idea, Open questions), looks up the facts itself, and picks the path. The path is recorded in the issue, so later sessions know it.
 2. **`settle`** works through the open questions with you in rounds. Each round asks every question that can be asked now, each with a recommended answer, so "yes" accepts them all. Before asking a question, it looks up the facts the question depends on, including claims in a pasted document, and checks each recommendation against your constraints (how much work, a performance budget, what mustn't break). Each answer becomes a numbered decision, `### D1: …`. On the short and full paths, the first round opens with an MVP check: the smallest version that answers the problem, whether it can be tried today without building anything, and what would justify going bigger. If it can be tried today, `settle` stops there, parks the issue and hands off "try it first".
 3. **`proposal`** (full path only) writes the decisions up as `docs/proposals/<name>.md` and **fact-checks every claim** in it against the code, the docs or a live probe. A wrong claim reopens the decision it supports, and the doc can't merge until its status is exactly `decided`. `proposal` checks the facts; a fresh code review of the doc PR (such as `/code-review`) checks the design, and asks whether a smaller version would do. Run that review before saying yes, and answer its findings with `settle` or as wording fixes.
-4. **`slice`** slices a decided doc, or a short-path issue that needs more than one ticket, into vertical, tracer-bullet tickets. Each ticket names the decisions it implements and the tickets that block it. Nothing is published until you approve the breakdown.
+4. **`slice`** slices a decided doc, or a short-path issue that needs more than one ticket, into vertical, tracer-bullet tickets. Each ticket names the decisions it implements and the tickets that block it. Before anything is published, a fresh agent reads the drafted tickets cold and lists every point where it would have to guess. `slice` sorts each one into a real gap (back to `settle`), a default (written into the ticket's `## Defaults`, for your yes) or a known blocker. Nothing is published until you approve the breakdown and the sort.
 5. **`flag-decision`** is for the agent implementing a ticket. If the work shows a decision is wrong, impossible or contradicted by the code, it stops, posts the evidence, labels the ticket `needs-decision`, and hands the decision back to `settle`, so nothing gets quietly redesigned inside a ticket.
 6. **`status`** tells you where an idea is and what's next, at any point. Given the source issue, a bundled script reads its state on GitHub (the issue, its comments, the doc PRs, the proposal doc and the tickets). `status` then names the stage and the next action, and says who takes it. It lists any review comments since dev-flow last wrote on the issue. It also offers mechanical fixes for your yes, such as adding `ready-for-agent` to a ticket whose blockers have all closed.
 
@@ -45,7 +45,7 @@ What you answer back:
 - **`capture`** shows the draft and the path it picked. Reply "yes" to post it, or "ready", "short" or "full" to change the path.
 - **`settle`** asks a round of numbered questions, each with a recommendation. Reply "yes" to accept them all, or per question, for example `1 yes, 2 no: use labels, 3 skip`. "Skip" leaves that question open. It then shows the decisions record and writes it after your yes.
 - **`proposal`** pushes the doc to a draft PR, then shows you the status, what changed and the full fact-check table. Reply "yes" when you're happy; it marks the PR ready only once the status is `decided`. Run a fresh code review of the doc PR (such as `/code-review`) before you reply "yes".
-- **`slice`** shows the breakdown as T1, T2 …, with what each implements and what blocks it. Ask for merges or splits, or reply "yes" to publish.
+- **`slice`** shows the breakdown as T1, T2 …, with what each implements and what blocks it. Ask for merges or splits, or reply "yes". It then shows the cold read's findings, sorted, with the full ticket bodies and their proposed defaults. Move any finding to another group or change a value, or reply "yes" to publish. After two rounds that still find real gaps, it asks whether to go on.
 - **`status`** gives the stage, then what's next. If it offers fixes, reply "yes" or name the ones you want. It writes only the fixes you pick, and runs the agent's next step only if you say yes.
 - **`flag-decision`** stops on its own. Your part is the next step it names: `settle` on that decision.
 
@@ -60,6 +60,8 @@ Implements: D2, D4 — docs/proposals/jot-status-check.md
 Blocked by: #82
 Parent: #78
 ```
+
+After Acceptance criteria, a ticket can carry `## Defaults`: choices a developer would otherwise make alone, approved by you when the ticket was sliced. They don't get D-numbers; an implementer who finds one wrong changes it and says so in the PR.
 
 **Labels:** `ready-for-agent` means an agent can start the ticket now. `needs-decision` means `flag-decision` has put it on hold until `settle` revises the decision.
 
