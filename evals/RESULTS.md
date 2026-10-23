@@ -211,3 +211,53 @@ Grader fixes in `settle-first-round`, which also failed on `main` (0.15.0) on th
 Not graded: one `settle-first-round` run skipped the MVP check (from 0.14, not this change).
 
 `settle-record` is flaky on both sides (6 runs each earlier the same day: `main` 0.63, branch 0.80): records reword an accepted recommendation, which the `decisions-in-order` phrases catch, plus the `done` judge (#94).
+
+## slice: cold read — 23 Oct 2026 (0.17.0, #98)
+
+New case `slice-cold-read` (#96 D14): a decided short-path issue, an approved breakdown, and seven cold-reader findings given in the prompt (two the owner has to decide, a size limit and a log format a developer would pick, a team that hasn't shipped a field yet, and so on). It grades the sort into the three groups (regex on the `**real gap:**`, `**default:**` and `**known blocker:**` labels), a `## Defaults` section with a value (regex), and that nothing is published (judge). Written and run on `main` before the skill changed. 3 runs per case, no-plugin baseline, judge sonnet.
+
+| Case | `main` (0.16.0) | This branch | Without |
+|---|---|---|---|
+| slice-cold-read | 0.20 | 1.00 | 0.13 |
+| slice-neutral | 1.00 (6 runs) | 0.83 | 0.06 |
+| slice-devflow | 0.78 | 0.78 | 0.94 |
+| slice-undecided | not re-run | 1.00 | 0.00 |
+
+`main` columns are the plugin arm only, on the same prompts and graders as the branch.
+
+**Fixes to the case while writing it:**
+- The prompt first ended "Carry on from there". Every run, with and without the plugin, sent the seven findings to `settle` as questions, so `slice` never ran. It now ends "Carry on slicing from there, with the `slice` skill"; the `main` column is from after that fix.
+- `three-groups` first accepted only `**real gap:**`. Runs with a correct sort wrote `**real gap: T1**` and `**Real gap: T1**`; it now accepts the ticket inside the bold and a capital first letter, and still fails on group headings alone (`**Real gaps**`). Self-tested on five texts (#94).
+
+**Skill fixes the runs found:**
+- Step 4's first wording ("nothing before the cold read either") let a `slice-neutral` run go on into the cold read without approval. Step 4 now stops until the owner approves.
+- A run with open real gaps showed the sort but no ticket bodies, and another grouped findings under headings without labelling each line. Step 5 now says to show the bodies while gaps are open, and to label every line.
+- With the new step, `slice-neutral` runs turned the doc's undecided risk (a duplicate heading) into a ticket that implements no decision, failing `implements-headers` (branch 0.61–0.89 across five batches). Step 3 now says every ticket implements a decision, and undecided work is raised as a question.
+
+**Still open:** `slice-neutral` is below `main`. Its misses draft one ticket for D1–D3, which the two-ticket regexes (`implements-headers`, `t-numbering`) fail; whether one ticket is wrong here is a grader question as much as a skill one. `slice-devflow`'s `coverage` judge fails on `main` too (1 of 3 passes there).
+
+**Fix round (PR #100 review):** the reader's prompt now says "Read only: don't build, edit or post anything", and step 5 was cut to its rules (SKILL.md 2,494 → 2,192 words). Then 3 more runs:
+
+| Case | Runs | Scores | With | Without |
+|---|---|---|---|---|
+| slice-neutral | 3 more, on the shorter text | 0.67, 0.50, 0.50 | 0.56 | 0.11 |
+| slice-neutral | all 6 (3 above + 3 in the table) | | 0.69 | 0.08 |
+| slice-cold-read | 3, plugin arm only | 1.00 ×3 | 1.00 | not run |
+
+Two of the three new `slice-neutral` runs drafted one ticket for D1–D3; the third drafted two and failed the `vertical` judge. The 6 runs span two versions of step 5's text. Graders unchanged.
+
+**Not graded:** sending the reader. The eval can't run a sub-agent (every case allows only `Skill`), so whether the reader gets only the bodies, decisions and code is checked by hand on the first live run (#96 D14). Which group a finding lands in isn't graded either: across the kept runs, the staging-data finding was sorted as a real gap, a default and a known blocker.
+
+**Bisect (PR #100 review, round 2).** Graders unchanged throughout.
+
+| Variant | slice-neutral (with) | slice-cold-read (with) |
+|---|---|---|
+| `main` (0.16.0) | 1.00 (6 runs) | 0.20 |
+| Fix round, step 5 inline (`f94950a`; the PR's content after the revert) | 0.69 (6 runs) | 1.00 |
+| Same, step 3's "every ticket implements a decision" sentence reverted | 0.78 (1.00, 0.67, 0.67) | not run |
+| Step 5's detail moved to `skills/slice/cold-read.md` (`bfef873`, reverted) | 0.83 (1.00, 1.00, 0.50) | 0.20, not measurable |
+
+- Reverting the step 3 sentence didn't bring `slice-neutral` back: all three runs again made a ticket for the doc's undecided duplicate-heading risk, two of them with no D-number on its `Implements:` line.
+- With step 5 in its own file, the one `slice-neutral` miss drafted a single ticket for D1–D3. `slice-cold-read` couldn't measure it: each run tried to read `cold-read.md` and the eval's "don't ask" mode denied Read (and Grep), so it sorted without the labels. The split was reverted so the case can measure step 5.
+
+**Known issue, accepted for now:** `slice-neutral` is below `main` in every variant tried (0.69–0.83 against 1.00). The misses are a single ticket for D1–D3, or a ticket for the undecided risk. Followed up in its own issue.
