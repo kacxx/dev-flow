@@ -71,7 +71,7 @@ Iterate until the owner approves. **Stop here until they do:** no cold read, and
 
 Once the owner has approved the breakdown, and before publishing, a fresh reader reads the tickets cold. Skip this step if the source has `Path: ready`.
 
-**Write the full bodies** of the approved tickets in the step 6 template, with `T<n>` for issue numbers. The reader reads these, and the owner approves them.
+**Write the full bodies** of the approved tickets in the step 6 template, with `T<n>` and `B<n>` for issue numbers. The reader reads these, and the owner approves them.
 
 **Send them to a fresh reader:** a sub-agent given only what an implementer would have: the bodies, the decisions or doc their `Implements:` line points to, and the repo's name or path. Nothing from this conversation. Its prompt:
 
@@ -95,7 +95,7 @@ With no sub-agent tool, the owner runs the prompt in a fresh session. If the fin
 ```
 - **real gap:** T1 — <finding>. <the decision the owner has to make>
 - **default:** T2 — <something a developer would otherwise pick alone>. Proposed: <value>
-- **known blocker:** T1 — <something outside the tickets that isn't true yet>. <what has to happen first>
+- **known blocker:** T1 — <something outside the tickets that isn't true yet>. Track: <title> (<owner>)
 ```
 
 Show the sort, then the full bodies with their `## Defaults`, even while real gaps are open, and ask the owner to confirm the sort and the values, or to move items. **Publish nothing until they confirm.**
@@ -106,7 +106,7 @@ Show the sort, then the full bodies with their `## Defaults`, even while real ga
 - **Short path:** once they're decided, redraft the affected tickets, get the breakdown approved again (step 4), and read again.
 - **Full path:** stop. `slice` is re-run once `settle` and `proposal` have the doc decided again. List the gaps under **Your decisions**, and write nothing else.
 
-**Known blockers** (for now; dev-flow#99 replaces this): list each under **Later**, and publish its ticket without `ready-for-agent`.
+**Known blockers** go on the ticket's `Blocked by:`: a tracking issue proposed with the sort, titled with the blocker and who owns it, drafted as `B<n>`, or the issue the owner says already tracks it. One outside this repo is a full link or the tracker's key, never `owner/repo#N`, nor `#` right before a digit (write `AB 1234`): `status` reads every `#N` as an issue here.
 
 **Rounds.** A round is one read and its sort, including one after a redraft. Stop when a round raises only defaults and blockers already recorded, and publish. If real gaps remain after round 2, ask the owner whether to continue.
 
@@ -114,7 +114,7 @@ If the owner stops, write the remaining gaps into the source issue body's `## Op
 
 ## 6. Publish
 
-Publish the tickets the owner confirmed in step 5 as GitHub issues **in dependency order** (blockers first), so each `Blocked by:` can name a real issue number: replace each `T<n>` with the number the earlier ticket got. Each body uses this template:
+Publish the tickets the owner confirmed in step 5 as GitHub issues **in dependency order** (blockers first), so each `Blocked by:` can name a real issue number: replace each `T<n>` and `B<n>` with its recorded number. Each body uses this template:
 
 ```markdown
 Implements: D2, D4 — docs/proposals/<name>.md
@@ -136,11 +136,11 @@ Parent: #N
 ```
 
 - `Implements:` points at the proposal doc, or at the issue on the short path (`Implements: D2 — #N`).
-- `Blocked by:` lists real issue numbers, or `None (can start immediately)`.
+- `Blocked by:` lists real issue numbers and external links, or `None (can start immediately)`.
 - `## Defaults` only when step 5 approved some for this ticket.
 - Avoid file paths and code snippets in the body: they go stale fast. The exception is a snippet a prototype produced that states a decision more precisely than prose (a schema, a state machine); trim it to the decision-rich part and say it came from a prototype.
 
-**Labels.** `ready-for-agent` means an agent can start it now, so only tickets with **no** open blockers get it. A blocked ticket gets the label when its blockers close; the report lists which. Nor does a ticket held back in step 5.
+**Labels.** `ready-for-agent` means an agent can start it now, so only tickets with **no** open blockers get it, and none held back in step 5. A blocked ticket gets the label when its blockers close; the report lists which. The owner labels one whose only blockers are external by hand.
 
 Write through `gh api` (not `gh issue`, which uses GraphQL and fails in cloud sessions).
 
@@ -150,9 +150,12 @@ Write through `gh api` (not `gh issue`, which uses GraphQL and fails in cloud se
 gh api repos/OWNER/REPO/labels/ready-for-agent --silent \
   || gh api repos/OWNER/REPO/labels --method POST -f name=ready-for-agent   # create only if missing; a real error stops here
 gh api --paginate repos/OWNER/REPO/issues/N/sub_issues --jq '.[] | "#\(.number) \(.title)"'   # children already published
+gh api --paginate 'repos/OWNER/REPO/issues?state=all&per_page=100' --jq '.[] | select(.body // "" | contains("Blocks a ticket under #N.")) | "#\(.number) \(.state) \(.title)"'   # tracking issues
 ```
 
 A ticket whose title is already a child of `#N` was published by an earlier run: reuse its number, don't create it again.
+
+**Tracking issues** come first, so tickets can cite their `#N`; record `B<n> → #<number>`. Reuse one listed above for the same blocker, open or closed (closed means resolved). Otherwise create one with no labels, no `Parent:` and no sub-issue link, so `status` skips it. Its body names only the source issue (`Blocks a ticket under #N.`); the owner closes it.
 
 **Then, for each ticket in dependency order**, create it, link it, and record `T<n> → #<number>` before moving on:
 
@@ -162,15 +165,15 @@ TITLE=$(cat <<'TITLE'
 TITLE
 )
 gh api repos/OWNER/REPO/issues --method POST -f title="$TITLE" -F body=@- --jq '"\(.number) \(.id)"' <<'BODY'
-<ticket body, with each Blocked by T<n> replaced by its recorded #number>
+<ticket body, with each T<n> and B<n> replaced by its recorded #number>
 BODY
-# only if this ticket has no open blockers:
+# only if no open blockers here or elsewhere, and not held back in step 5:
 gh api repos/OWNER/REPO/issues/<number>/labels --method POST -f 'labels[]=ready-for-agent'
 # link it under the source issue: sub_issue_id is the new issue's id (not its number)
 gh api repos/OWNER/REPO/issues/N/sub_issues --method POST -F sub_issue_id=<id>
 ```
 
-If any call fails, **stop**: report the `T<n> → #<number>` mapping so far and the error. A re-run picks up from the existing children. If only the sub-issue link fails (the repo may not have sub-issues enabled), keep the `Parent: #N` line, say the link failed, and carry on.
+If any call fails, **stop**: report the `T<n>` and `B<n>` mapping so far and the error. A re-run picks up from the existing children and tracking issues. If only the sub-issue link fails (the repo may not have sub-issues enabled), keep the `Parent: #N` line, say the link failed, and carry on.
 
 **The source issue** isn't closed or rewritten, except for step 5's early-stop edit. If it's a short-path issue carrying `ready-for-agent`, remove the label once the children are published, so the work can't be picked up twice:
 
@@ -205,6 +208,7 @@ List the published tickets with their numbers, what each implements and what blo
 
 Leave out a part with nothing in it.
 
+- **Blocking now:** each open tracking issue, naming who owns it.
 - **Your decisions:** any decision no ticket implements, named, and the pointer line or file offered above. The real gaps a full-path step 5 stopped on.
 - **Then:** the tickets that can start now (labelled `ready-for-agent`), for an agent to implement, and writing the pointer once the owner says yes. After that stop: `settle`, `proposal`, then `slice` again.
-- **Later:** each blocked ticket, one line each, saying it gets the label when its blockers close. Each ticket step 5 held back, with its blocker or open question. For a proposal doc, also that the owner updates its Status line to `Status: **decided**. Merged and sliced into tickets (#…).`, naming the published tickets: `slice` doesn't edit the doc itself.
+- **Later:** each blocked ticket, one line each, saying it gets the label when its blockers close; one that also has an external blocker waits for the owner to label it by hand, so say no to `status`'s offer. Each ticket step 5 held back or whose only blockers are external, with its blocker or open question. For a proposal doc, also that the owner updates its Status line to `Status: **decided**. Merged and sliced into tickets (#…).`, naming the published tickets: `slice` doesn't edit the doc itself.
