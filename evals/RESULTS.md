@@ -261,3 +261,41 @@ Two of the three new `slice-neutral` runs drafted one ticket for D1–D3; the th
 - With step 5 in its own file, the one `slice-neutral` miss drafted a single ticket for D1–D3. `slice-cold-read` couldn't measure it: each run tried to read `cold-read.md` and the eval's "don't ask" mode denied Read (and Grep), so it sorted without the labels. The split was reverted so the case can measure step 5.
 
 **Known issue, accepted for now:** `slice-neutral` is below `main` in every variant tried (0.69–0.83 against 1.00). The misses are a single ticket for D1–D3, or a ticket for the undecided risk. Followed up in its own issue.
+
+## slice: known blockers — 24 Oct 2026 (0.17.1, #99)
+
+Step 5's interim known-blocker rule is replaced: each known blocker gets a proposed tracking issue with the sort, or the link the owner gives (#96 D6, D11). No new case (#99 Defaults). 3 runs per case, no-plugin baseline, judge sonnet.
+
+| Case | Scores (with) | With | Without |
+|---|---|---|---|
+| slice-neutral | 0.50, 1.00, 1.00 | 0.83 | 0.00 |
+| slice-cold-read | 0.60, 0.60, 1.00 | 0.73 | 0.20 |
+| slice-cold-read, 3 more (plugin arm only) | 1.00 ×3 | 1.00 | not run |
+| slice-cold-read on `main` (0.17.0), same day (plugin arm only) | 1.00, 1.00, 0.20 | 0.73 | not run |
+
+- `slice-neutral` stays above `main`'s 0.69 (#101). The one miss drafted a single ticket for D1–D3, as before.
+- `slice-cold-read`'s two misses in the first batch grouped the findings under headings without labelling each line (`three-groups`). `main` missed the same way on the same day, and the next three branch runs all passed, so it reads as variance rather than this change.
+- Every branch run proposed a tracking issue for the catalog team's `category` field, naming the team as its owner. Creating it, searching for a duplicate title and writing a full link aren't graded (the eval can't reach GitHub); they're checked by hand on the first live run.
+
+**Fix round (pre-push review):** the tracking issue's body names only the source issue, and the ticket's `Blocked by:` links back through GitHub's cross-reference, with no edit after publishing. The skill's additions cut from +268 to +146 words (SKILL.md 2,338). Graders unchanged. 3 runs per case, no-plugin baseline:
+
+| Case | Scores (with) | With | Without |
+|---|---|---|---|
+| slice-neutral | 1.00, 0.50, 0.67 | 0.72 | 0.06 |
+| slice-cold-read | 1.00, 0.60, 1.00 | 0.87 | 0.20 |
+
+- `slice-neutral` is still at or above `main`'s 0.69 (#101). One miss drafted a single ticket for D1–D3; the other failed the `vertical` judge.
+- `slice-cold-read`'s miss bolded the whole finding (`**Known blocker: T1 — staging has …**`), which `three-groups` doesn't accept. All three runs proposed a tracking issue for the catalog team's field, naming the owner.
+- Seen but not graded: the drafted bodies shown with the sort kept `Blocked by: None` for the ticket with a known blocker, since its tracking issue has no number yet. Whether the published ticket names it is checked on the first live run.
+
+**Fix round (PR #103 review), 26 Oct 2026:** a proposed tracking issue is drafted as `B<n>` on the ticket's `Blocked by:`, and step 6 replaces `T<n>` and `B<n>` with their numbers, recording `B<n> → #<number>` in the mapping and the failure report. An existing tracking issue is found by its body (`Blocks a ticket under #N.`), open or closed; a closed one is resolved, and reused rather than created again. External blockers keep their links whole, but never put `#` right before a digit (`AB 1234`). The sort template shows `Track: <title> (<owner>)`, and the Later line and label comment use the reviewer's wording. SKILL.md 2,384 words. Graders unchanged. 3 runs per case, no-plugin baseline:
+
+| Case | Scores (with) | With | Without |
+|---|---|---|---|
+| slice-neutral | 0.67, 0.50, 0.67 | 0.61 | 0.17 |
+| slice-cold-read | 1.00 ×3 | 1.00 | 0.20 |
+| slice-neutral on `main` (0.17.0), same day (plugin arm only) | 0.67 ×3 | 0.67 | not run |
+
+- `slice-neutral` is below the 0.69 recorded for `main` in #101, but `main` scored 0.67 on the same day, and every miss is #101's pattern: two runs made a ticket for the doc's undecided risk (the duplicate heading) and failed `vertical`; one drafted a single ticket for D1–D3. This round changes steps 5–7, not step 3.
+- `slice-cold-read`: every run drafted `Blocked by: B1` with a `Track:` line naming the catalog team.
+- Not graded (the eval stops before publishing): replacing `B<n>`, the tracking-issue lookup, and reusing a closed one. The lookup command was run against kacxx/dev-flow: it parses and lists open and closed issues.
