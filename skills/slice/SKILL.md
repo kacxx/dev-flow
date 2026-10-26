@@ -60,6 +60,8 @@ Show the breakdown as a list numbered **T1, T2 …** (not `#1`: before publishin
 - **Blocked by:** other tickets as `T<n>`, or "none"
 - **What it delivers:** the end-to-end behaviour it makes work
 
+On `Path: ready`, list existing children (step 5) and show their lines with the breakdown.
+
 Ask the owner:
 - Is the granularity right (too coarse, too fine)?
 - Are the blocking edges right? Does each ticket only depend on tickets that genuinely gate it?
@@ -70,6 +72,8 @@ Iterate until the owner approves. **Stop here until they do:** no cold read, and
 ## 5. Cold read
 
 Once the owner has approved the breakdown, and before publishing, a fresh reader reads the tickets cold. Skip this step if the source has `Path: ready`.
+
+**Existing children** are sorted, not sent to the reader: open sub-issues (step 6's first listing) and open issues with `Parent: #N` (step 1's fallback without the label). Skip one titled exactly like a drafted ticket (step 6 reuses it) or kept in the plan by a decision; one out of scope still counts.
 
 **Write the full bodies** of the approved tickets in the step 6 template, with `T<n>` and `B<n>` for issue numbers. The reader reads these, and the owner approves them.
 
@@ -96,6 +100,7 @@ With no sub-agent tool, the owner runs the prompt in a fresh session. If the fin
 - **real gap:** T1 — <finding>. <the decision the owner has to make>
 - **default:** T2 — <something a developer would otherwise pick alone>. Proposed: <value>
 - **known blocker:** T1 — <something outside the tickets that isn't true yet>. Track: <title> (<owner>)
+- **existing child:** #40 — <title>. <why: no ticket replaces it / D3 puts it out of scope>. Proposed: keep | move out | close[, replaced by T2]
 ```
 
 Show the sort, then the full bodies with their `## Defaults`, even while real gaps are open, and ask the owner to confirm the sort and the values, or to move items. **Publish nothing until they confirm.**
@@ -108,7 +113,7 @@ Show the sort, then the full bodies with their `## Defaults`, even while real ga
 
 **Known blockers** go on the ticket's `Blocked by:`: a tracking issue proposed with the sort, titled with the blocker and who owns it, drafted as `B<n>`, or the issue the owner says already tracks it. One outside this repo is a full link or the tracker's key, never `owner/repo#N`, nor `#` right before a digit (write `AB 1234`): `status` reads every `#N` as an issue here.
 
-**Rounds.** A round is one read and its sort, including one after a redraft. Stop when a round raises only defaults and blockers already recorded, and publish. If real gaps remain after round 2, ask the owner whether to continue.
+**Rounds.** A round is one read and its sort, including one after a redraft. Stop when a round raises only defaults, blockers and existing children already sorted, and publish. If real gaps remain after round 2, ask the owner whether to continue.
 
 If the owner stops, write the remaining gaps into the source issue body's `## Open questions` (`status` reads only the body). Then publish, leaving `ready-for-agent` off every ticket a remaining gap was cited against, and name them in the hand-off. Known gap: on the full path, `status` ignores the source's Open questions once a doc exists.
 
@@ -149,7 +154,7 @@ Write through `gh api` (not `gh issue`, which uses GraphQL and fails in cloud se
 ```bash
 gh api repos/OWNER/REPO/labels/ready-for-agent --silent \
   || gh api repos/OWNER/REPO/labels --method POST -f name=ready-for-agent   # create only if missing; a real error stops here
-gh api --paginate repos/OWNER/REPO/issues/N/sub_issues --jq '.[] | "#\(.number) \(.title)"'   # children already published
+gh api --paginate repos/OWNER/REPO/issues/N/sub_issues --jq '.[] | "#\(.number) \(.id) \(.state) \(.title)"'   # children already published
 gh api --paginate 'repos/OWNER/REPO/issues?state=all&per_page=100' --jq '.[] | select(.body // "" | contains("Blocks a ticket under #N.")) | "#\(.number) \(.state) \(.title)"'   # tracking issues
 ```
 
@@ -173,7 +178,19 @@ gh api repos/OWNER/REPO/issues/<number>/labels --method POST -f 'labels[]=ready-
 gh api repos/OWNER/REPO/issues/N/sub_issues --method POST -F sub_issue_id=<id>
 ```
 
-If any call fails, **stop**: report the `T<n>` and `B<n>` mapping so far and the error. A re-run picks up from the existing children and tracking issues. If only the sub-issue link fails (the repo may not have sub-issues enabled), keep the `Parent: #N` line, say the link failed, and carry on.
+If any call fails, **stop**: report the `T<n>` and `B<n>` mapping so far and the error. A re-run picks up from the published children and tracking issues. If only the sub-issue link fails (the repo may not have sub-issues enabled), keep the `Parent: #N` line, say the link failed, and carry on.
+
+**Then existing children** as confirmed, each commented with the decision or ticket; no new parent unless the owner names one.
+
+```bash
+# close:
+gh api repos/OWNER/REPO/issues/<child> --method PATCH -f state=closed -f state_reason=not_planned
+# move out: unlink only a sub-issue (its id, from the listing above)
+gh api repos/OWNER/REPO/issues/N/sub_issue --method DELETE -F sub_issue_id=<id>
+# and remove only its Parent: #N line, if it has one
+BODY=$(gh api repos/OWNER/REPO/issues/<child> --jq '.body | split("\n") | map(select(test("^Parent: #N\\s*$") | not)) | join("\n")') \
+  && gh api repos/OWNER/REPO/issues/<child> --method PATCH -f body="$BODY"
+```
 
 **The source issue** isn't closed or rewritten, except for step 5's early-stop edit. If it's a short-path issue carrying `ready-for-agent`, remove the label once the children are published, so the work can't be picked up twice:
 
@@ -198,7 +215,7 @@ It reads `CLAUDE.md`, `.claude/CLAUDE.md` and `AGENTS.md`, follows their `@….m
 - `no instruction file`: offer to create `CLAUDE.md` with it.
 - `could not check: …`: report the files and reasons it gives. Don't offer a line.
 
-List the published tickets with their numbers, what each implements and what blocks it. Then say what's next.
+List the published tickets with their numbers, what each implements and what blocks it, and the existing children closed or moved out. Then say what's next.
 
 **What's next**, in this order:
 1. **Blocking now:** what's blocking, and who acts.
