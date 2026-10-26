@@ -299,3 +299,39 @@ Step 5's interim known-blocker rule is replaced: each known blocker gets a propo
 - `slice-neutral` is below the 0.69 recorded for `main` in #101, but `main` scored 0.67 on the same day, and every miss is #101's pattern: two runs made a ticket for the doc's undecided risk (the duplicate heading) and failed `vertical`; one drafted a single ticket for D1–D3. This round changes steps 5–7, not step 3.
 - `slice-cold-read`: every run drafted `Blocked by: B1` with a `Track:` line naming the catalog team.
 - Not graded (the eval stops before publishing): replacing `B<n>`, the tracking-issue lookup, and reusing a closed one. The lookup command was run against kacxx/dev-flow: it parses and lists open and closed issues.
+
+## slice: existing children — 26 Oct 2026 (0.18.0, #102)
+
+Before the cold read, slice lists the source's open children (sub-issues and `Parent: #N` issues) and sorts each one the plan doesn't account for as an `existing child:` line: keep, move out or close. On `Path: ready` the lines go with the breakdown in step 4; step 6 closes or moves out each one as confirmed. The reader's input is unchanged (D3). SKILL.md 2,384 → 2,504 words (+120, D9). No new case, and graders unchanged. Neither slice case has existing children (the eval can't reach GitHub), so the new group isn't graded. Judge sonnet, all runs the same day.
+
+| Case | Runs | Scores (with) | With | Without |
+|---|---|---|---|---|
+| slice-neutral | 3, no-plugin baseline | 0.67, 0.67, 0.50 | 0.61 | 0.17 |
+| slice-neutral | 3 more, plugin arm only | 0.50, 0.67, 0.67 | 0.61 | not run |
+| slice-neutral | all 6 | | 0.61 | |
+| slice-cold-read | 3, no-plugin baseline | 1.00 ×3 | 1.00 | 0.13 |
+| slice-neutral on `main` (0.17.1) | 3, plugin arm only | 0.67, 1.00, 1.00 | 0.89 | not run |
+| slice-neutral on `main` (0.17.1) | 3 more, plugin arm only | 0.50, 0.67, 0.67 | 0.61 | not run |
+| slice-neutral on `main` (0.17.1) | all 6 | | 0.75 | |
+
+- **D10 not met on these runs:** `slice-neutral` is 0.61 over 6 runs, below `main`'s 0.69 in #101 and below `main`'s 0.75 the same day. Every miss on both sides is #101's pattern: a ticket for the doc's undecided duplicate-heading risk (`vertical`), or a single ticket for D1–D3 (`implements-headers`, `t-numbering`). No branch run mentioned existing children; each stopped at step 4. The second batches ran in parallel and scored the same on both (0.61), so the gap is the first batch, where `main` had two clean runs.
+- `slice-cold-read` is unchanged at 1.00.
+- Not graded (the eval stops before publishing and can't reach GitHub): listing the children, the `existing child:` lines, and closing or moving out in step 6. The two listing commands were run against kacxx/dev-flow #96 and #98: the sub-issue listing shows each child's state, and the `Parent: #N` filter parses.
+
+**Fix round (PR #105 review), 26 Oct 2026:**
+- **Listing and step 6 commands:** step 6's listing prints each child's `id`. Step 6 gives full commands for closing as not planned and for unlinking (only a child that's a sub-issue). Removing a `Parent: #N` line fetches the body and PATCHes it back with only that line gone, and doesn't PATCH if the fetch fails.
+- **Step 4:** on `Path: ready`, step 4 now lists existing children and shows their lines with the breakdown, and step 5's skip sentence is back to its original wording.
+- **Stop rule:** rounds stop when they raise only defaults, blockers and existing children already sorted.
+- **Hand-off:** it lists the children closed or moved out.
+
+#102's D9 was revised to about 2,580 words, and D10 to "within `main`'s same-day range over 6+ runs" (#101's latest comment). SKILL.md is 2,580 words. Graders unchanged. Branch and `main` ran 6 runs each in parallel, plugin arm only:
+
+| Case | Scores (with) | With |
+|---|---|---|
+| slice-neutral (0.18.0) | 1.00, 1.00, 0.50, 0.67, 0.67, 0.67 | 0.75 |
+| slice-neutral on `main` (0.17.1), same time | 0.50, 1.00, 0.67, 1.00, 0.67, 0.67 | 0.75 |
+
+- **D10 (revised) is met:** the branch's 0.75 is level with `main`'s 0.75 in the same batch. It is also inside `main`'s range across today's batches: 0.61–0.89 per 3-run batch, and 0.75 for both of its 6-run sets. The first round's 0.61 (6 runs) is also inside that range.
+- **The misses:** they are #101's pattern on both sides: a ticket for the undecided risk (`vertical`), or one ticket for D1–D3 (`implements-headers`, `t-numbering`). No branch run mentioned existing children.
+- **Checked outside the eval:** the new `Parent: #N` filter was run with jq on a body that has CRLF line endings and trailing spaces. It removes only the exact `Parent: #4` lines and keeps `Parent: #40`. The listing with `id` was run against kacxx/dev-flow #96.
+- **Not graded:** none of the step 6 writes have been tried on GitHub yet.
